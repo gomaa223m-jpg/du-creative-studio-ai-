@@ -5,11 +5,21 @@
 :root{--navy:#10243a;--blue:#176b9b;--teal:#16a89a;--ink:#172b3b;--muted:#617487;--line:#dce6ed}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f2f7fa;color:var(--ink);line-height:1.8}header{padding:42px 18px;background:linear-gradient(120deg,var(--navy),var(--blue),var(--teal));color:#fff;text-align:center}header h1{font-size:clamp(24px,5vw,38px);margin:0}header p{margin:8px 0 0}.wrap{max-width:980px;margin:26px auto;padding:0 14px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin:16px 0;box-shadow:0 8px 25px #10243a0a}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:650px){.grid{grid-template-columns:1fr}}label{font-weight:bold;display:block;margin:8px 0 3px}input,select,textarea{width:100%;padding:12px;border:1px solid #cbd9e2;border-radius:10px;font:inherit;background:#fff}textarea{min-height:100px;resize:vertical}button,.link{display:inline-block;border:0;border-radius:10px;padding:11px 16px;margin:6px 3px 0 0;background:var(--teal);color:white;font:inherit;cursor:pointer;text-decoration:none}button.secondary,.link.secondary{background:var(--navy)}button.light{background:#e8f4f5;color:#126b69}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f6fafc;border:1px solid var(--line);padding:16px;border-radius:12px;min-height:150px;font:15px/1.9 Tahoma,Arial}.muted{color:var(--muted);font-size:13px}.pill{display:inline-block;background:#e7f6f4;color:#126b69;padding:3px 10px;border-radius:20px;font-size:12px}footer{text-align:center;padding:22px;color:var(--muted)}
 
 .saved-list{display:grid;gap:10px;margin-top:14px}.saved-item{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.saved-item strong{display:block}.saved-actions{display:flex;gap:6px;flex-wrap:wrap}.saved-actions button{margin:0}.empty{padding:16px;text-align:center;color:var(--muted);background:#f6fafc;border-radius:12px}.status{font-size:13px;color:#126b69;min-height:24px}
+
+.easybar{position:sticky;top:0;z-index:50;background:#ffffffed;backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:8px 10px;display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
+.easybar a{font-size:13px;text-decoration:none;color:var(--navy);background:#edf4f8;padding:7px 12px;border-radius:9px;font-weight:bold}
+.easybar a.primary{background:var(--teal);color:#fff}
+.stepnote{background:#eef8f7;border:1px solid #ccebe6;border-radius:12px;padding:12px 14px;margin:12px 0;color:#175b59}
+button.bigstart{font-size:17px;font-weight:bold;padding:14px 20px;background:linear-gradient(110deg,#087f78,#16a89a);box-shadow:0 5px 14px #16a89a30}
+@media(max-width:520px){.easybar{justify-content:stretch}.easybar a{flex:1;text-align:center;padding:8px 5px;font-size:12px}.wrap{margin:12px auto;padding:0 10px}.card{padding:16px}}
 </style></head>
 <body><header><span class="pill">نسخة مجانية</span><h1>EDU CREATIVE STUDIO AI</h1><p>استوديو مستر محمد جمعة لصناعة المحتوى التعليمي</p><strong>معانا دائماً أنت الأفضل</strong></header>
+<nav class="easybar" id="easyBar" aria-label="التنقل السريع">
+<a class="primary" href="#start">ابدأ الآن</a><a href="#exportCenter">تصدير الملفات</a><a href="#videoStudio">صناعة فيديو</a><a href="#arabLibrary">المكتبة</a><a href="#savedProjects">مشاريعي</a>
+</nav>
 <main class="wrap">
-<section class="card"><h2>🚀 أنشئ حقيبتك التعليمية من العنوان فقط</h2>
-<p>اكتب عنوان الدرس أو الموضوع، وسيُجهّز الاستوديو حزمة إنتاج تعليمية تشمل التحضير، وأوراق العمل، والعروض، وسيناريوهات الفيديو، والكتب التفاعلية، والأنشطة والتقويم والإنفوجرافيك.</p>
+<section class="card" id="start"><h2>🚀 ابدأ من هنا — اكتب عنوان الدرس فقط</h2>
+<div class="stepnote"><strong>طريقة الاستخدام في 3 خطوات بسيطة:</strong><br>١) اكتب عنوان الدرس فقط. ٢) اضغط «ابدأ مع ChatGPT» لنسخ الطلب وفتح المحادثة. ٣) الصق الطلب، وبعد استلام المحتوى انسخه إلى مركز التصدير لتنزيل ملفاتك.</div>
 <label for="topic">عنوان الموضوع أو الدرس</label>
 <input id="topic" placeholder="مثال: الاتزان الكيميائي — أو: الطاقة والشغل">
 <div class="muted">لا تحتاج إلى تعبئة بقية الحقول. سيقترح النظام المرحلة والمخرجات المناسبة، ويصرّح بأي افتراض غير مؤكد.</div>
@@ -24,10 +34,10 @@
 <input id="pages" value="عدد مناسب يغطّي المحتوى كاملاً">
 <textarea id="reference"></textarea>
 </div>
-<button id="make">جهّز الحزمة التعليمية كاملة</button>
+<button id="make">جهّز الحزمة التعليمية</button><button class="bigstart" id="easyStart">ابدأ مع ChatGPT الآن ←</button>
 <button class="secondary" id="clear">مسح العنوان</button>
 </section>
-<section class="card"><h2>🧠 البرومبت الجاهز</h2><pre id="out">أدخل بيانات الدرس ثم اضغط «إنشاء البرومبت».</pre><button id="copy">نسخ البرومبت</button><button class="secondary" id="downloadPrompt">تنزيل البرومبت TXT</button><button class="light" id="printPrompt">طباعة البرومبت</button><a class="link secondary" id="chat" href="https://chatgpt.com/" target="_blank" rel="noopener">فتح ChatGPT</a><a class="link secondary" href="https://claude.ai/" target="_blank" rel="noopener">Claude</a><a class="link secondary" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a><button class="light" id="launchChatGPT">إرسال إلى ChatGPT</button><button class="light" id="launchClaude">إرسال إلى Claude</button><button class="light" id="launchGemini">إرسال إلى Gemini</button><p class="muted">انسخ البرومبت ثم افتح المنصة والصقه. الأداة نفسها مجانية وتعمل دون مفتاح API. انسخ البرومبت إلى إحدى المنصات المجانية المتاحة، مع ملاحظة أن لكل منصة حدود استخدام قد تتغير. إنشاء ملفات العرض والفيديو فعلياً يتم عبر المنصة أو أدوات التصدير التي تختارها.</p></section>
+<section class="card"><h2>🧠 البرومبت الجاهز</h2><pre id="out">أدخل بيانات الدرس ثم اضغط «إنشاء البرومبت».</pre><button id="copy">نسخ البرومبت</button><button class="secondary" id="downloadPrompt">تنزيل البرومبت TXT</button><button class="light" id="printPrompt">طباعة البرومبت</button><a class="link secondary" id="chat" href="https://chatgpt.com/" target="_blank" rel="noopener">فتح ChatGPT</a><a class="link secondary" href="https://claude.ai/" target="_blank" rel="noopener">Claude</a><a class="link secondary" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a><button class="light" id="launchChatGPT">إرسال إلى ChatGPT</button><button class="light" id="launchClaude">إرسال إلى Claude</button><button class="light" id="launchGemini">إرسال إلى Gemini</button><p class="muted">زر «ابدأ مع ChatGPT الآن» ينسخ الطلب ويفتح ChatGPT في تبويب جديد؛ الصق الطلب هناك واضغط إرسال. الأداة نفسها مجانية وتعمل دون مفتاح API. انسخ البرومبت إلى إحدى المنصات المجانية المتاحة، مع ملاحظة أن لكل منصة حدود استخدام قد تتغير. إنشاء ملفات العرض والفيديو فعلياً يتم عبر المنصة أو أدوات التصدير التي تختارها.</p></section>
 
 <section class="card" id="exportCenter"><h2>📦 مركز تصدير الحقيبة التعليمية</h2>
 <p>بعد أن تنتج المنصة الذكية المحتوى الكامل، الصقه هنا. يمكنك بعدها تنزيل الحقيبة بصيغ متعددة أو طباعة نسخة PDF.</p>
@@ -147,6 +157,19 @@ function launchAI(url){const prompt=$('out').textContent;if(!prompt||prompt.star
 $('launchChatGPT').addEventListener('click',()=>launchAI('https://chatgpt.com/'));
 $('launchClaude').addEventListener('click',()=>launchAI('https://claude.ai/new'));
 $('launchGemini').addEventListener('click',()=>launchAI('https://gemini.google.com/app'));
+$('easyStart').addEventListener('click',()=>{
+ const topic=$('topic').value.trim();
+ if(!topic){$('topic').focus();$('topic').placeholder='اكتب عنوان الدرس هنا أولاً';return}
+ const prompt=build();$('out').textContent=prompt;
+ const tab=window.open('https://chatgpt.com/','_blank');
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(prompt).then(()=>{
+   $('exportStatus').textContent='تم نسخ طلب الدرس. افتح محادثة ChatGPT والصقه ثم أرسل.';
+  }).catch(()=>{$('exportStatus').textContent='افتح ChatGPT وانسخ الطلب من مربع «البرومبت الجاهز».'});
+ }else{$('exportStatus').textContent='افتح ChatGPT وانسخ الطلب من مربع «البرومبت الجاهز».'}
+ if(!tab){$('exportStatus').textContent='المتصفح منع فتح ChatGPT؛ اسمح بالنوافذ المنبثقة أو افتحه من زر ChatGPT ثم الصق الطلب.'}
+ $('out').scrollIntoView({behavior:'smooth',block:'start'});
+});
 $('downloadPrompt').addEventListener('click',()=>{const text=$('out').textContent;if(!text||text.startsWith('أدخل بيانات')){alert('أنشئ البرومبت أولاً');return}const blob=new Blob([text],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='educational-content-prompt.txt';a.click();URL.revokeObjectURL(url)});
 $('printPrompt').addEventListener('click',()=>{const text=$('out').textContent;if(!text||text.startsWith('أدخل بيانات')){alert('أنشئ البرومبت أولاً');return}const w=window.open('','_blank');if(!w){alert('اسمح بالنوافذ المنبثقة للطباعة');return}w.document.write('<html lang="ar" dir="rtl"><meta charset="utf-8"><title>البرومبت التعليمي</title><style>body{font-family:Tahoma;padding:30px;line-height:2;white-space:pre-wrap}</style><body></body></html>');w.document.body.textContent=text;w.document.close();w.print()});
 $('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('out').textContent);$('copy').textContent='تم النسخ ✓';setTimeout(()=>$('copy').textContent='نسخ البرومبت',1800)}catch(e){$('out').focus();}});
