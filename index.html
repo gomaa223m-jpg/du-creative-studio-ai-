@@ -53,6 +53,22 @@
 <p class="status" id="exportStatus" aria-live="polite"></p>
 </section>
 
+<section class="card" id="arabLibrary">
+<h2>📚 المكتبة التعليمية العربية الشاملة</h2>
+<p>دليل قابل للبحث يجمع منصات التعلم المفتوح، والمصادر العربية، والبوابات الرسمية لوزارات التعليم في الدول العربية. اختر الدولة أو المجال، أو اكتب اسم المنصة أو المادة. بعض بوابات الوزارات خدماتها مخصصة للمنتسبين وقد تتطلب حساباً.</p>
+<div class="grid">
+<div><label for="librarySearch">ابحث في المكتبة</label><input id="librarySearch" type="search" placeholder="مثال: كيمياء، رياضيات، اختبارات، كتب..."></div>
+<div><label for="libraryCountry">الدولة</label><select id="libraryCountry"><option value="">كل الدول</option><option>السعودية</option><option>مصر</option><option>الإمارات</option><option>الأردن</option><option>الكويت</option><option>قطر</option><option>البحرين</option><option>عُمان</option><option>المغرب</option><option>الجزائر</option><option>تونس</option><option>فلسطين</option><option>العراق</option><option>لبنان</option><option>ليبيا</option><option>اليمن</option><option>سوريا</option><option>السودان</option><option>موريتانيا</option><option>الصومال</option><option>جيبوتي</option><option>عربي / دولي</option></select></div>
+<div><label for="libraryType">نوع المصدر</label><select id="libraryType"><option value="">كل الأنواع</option><option value="منصة تعلم">منصات تعلم</option><option value="محتوى مفتوح">محتوى مفتوح ومكتبات</option><option value="بوابة رسمية">بوابات وزارات التعليم</option><option value="تدريب المعلمين">تطوير مهني للمعلمين</option></select></div>
+<div><label for="libraryStage">المرحلة / المجال</label><select id="libraryStage"><option value="">كل المراحل والمجالات</option><option>رياض الأطفال</option><option>ابتدائي</option><option>متوسط / إعدادي</option><option>ثانوي</option><option>جامعي وبحثي</option><option>معلمون وتطوير مهني</option><option>علوم ورياضيات</option><option>جميع المراحل</option></select></div>
+</div>
+<div class="grid" style="margin-top:10px">
+<div class="empty"><strong id="libraryCount">0</strong><br>مصدر في الدليل</div>
+<div class="empty">تُفتح المصادر في مواقعها الأصلية؛ قد تتغير شروط التسجيل والإتاحة.</div>
+</div>
+<div id="libraryResults" class="saved-list" aria-live="polite"></div>
+<p class="muted">تنبيه حقوقي: المكتبة دليل وصول وليست مستودعاً لنسخ الكتب أو المحتوى المحمي. استخدم المواد وفق تراخيصها وشروط أصحابها، وتحقق من توافقها مع منهج بلدك قبل اعتمادها.</p>
+</section>
 <section class="card" id="videoStudio">
 <h2>🎬 استوديو إنتاج الفيديو التعليمي المجاني</h2>
 <p>حوّل محتوى الدرس إلى فيديو شرائح متحركة بدقة 1080p، مع إمكانية إضافة تعليق صوتي مسجل من جهازك. تتم المعالجة داخل المتصفح ولا تحتاج إلى مفتاح API.</p>
@@ -172,6 +188,55 @@ $('exportLesson').addEventListener('click',()=>{const t=extractByTerms(['الت�
 $('exportVideoPlan').addEventListener('click',()=>{const t=extractByTerms(['الفيديوهات التعليمية','سيناريو الفيديو','الفيديو التعليمي']);const source=t||needContent();if(!source)return;const lines=source.split(/\\r?\\n/).filter(Boolean);const srt=lines.filter(x=>/تعليق صوتي|المشهد|مشهد|لقطة|الثانية|00:|مدة الفيديو/.test(x)).map((x,i)=>{const start=i*8;const fmt=n=>[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':')+',000';return (i+1)+'\\n'+fmt(start)+' --> '+fmt(start+7)+'\\n'+x}).join('\\n\\n');saveBlob(safeFileName($('topic').value)+'-خطة-الفيديو.txt',source,'text/plain;charset=utf-8');if(srt)saveBlob(safeFileName($('topic').value)+'-ترجمة-مبدئية.srt',srt,'text/plain;charset=utf-8');$('exportStatus').textContent='تم تصدير خطة الفيديو'+(srt?' وملف ترجمة مبدئي SRT.':'؛ لم تُستخرج أسطر مناسبة للترجمة.')});
 $('exportPptx').addEventListener('click',async()=>{const t=needContent();if(!t)return;const btn=$('exportPptx');btn.disabled=true;btn.textContent='جارٍ تجهيز PowerPoint...';try{if(!window.PptxGenJS){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}const pptx=new window.PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='مستر محمد جمعة';pptx.subject=$('topic').value;pptx.title='عرض '+$('topic').value;pptx.lang='ar-SA';const parts=splitSections(t);const blocks=[];for(const part of parts){const lines=part.text.join('\\n').split(/(?<=[.!؟])\\s+|\\n/).filter(Boolean);if(!lines.length)continue;blocks.push({title:part.title,body:lines})}let slide=pptx.addSlide();slide.background={color:'10243A'};slide.addText($('topic').value||'عرض تعليمي',{x:.7,y:1.5,w:12,h:1.1,fontFace:'Arial',fontSize:30,bold:true,color:'FFFFFF',align:'center',rtlMode:true});slide.addText('إعداد مستر محمد جمعة',{x:1,y:3,w:11,h:.6,fontFace:'Arial',fontSize:20,color:'8EE4D8',align:'center',rtlMode:true});for(const part of blocks){let chunks=[];let current='';for(const line of part.body){if((current+'\\n'+line).length>620&&current){chunks.push(current);current=line}else current+=(current?'\\n':'')+line}if(current)chunks.push(current);for(let i=0;i<chunks.length;i++){const s=pptx.addSlide();s.background={color:'F5F9FC'};s.addText(part.title+(chunks.length>1?' ('+(i+1)+'/'+chunks.length+')':''),{x:.55,y:.35,w:12.2,h:.65,fontFace:'Arial',fontSize:23,bold:true,color:'12577D',align:'right',rtlMode:true,breakLine:false});s.addText(chunks[i],{x:.75,y:1.25,w:11.8,h:5.5,fontFace:'Arial',fontSize:18,color:'172B3B',align:'right',valign:'top',rtlMode:true,breakLine:false,fit:'shrink'});s.addText('مستر محمد جمعة',{x:.7,y:7.05,w:12,h:.25,fontFace:'Arial',fontSize:10,color:'168F88',align:'center'})}}await pptx.writeFile({fileName:safeFileName($('topic').value)+'-عرض.pptx'});$('exportStatus').textContent='تم إنشاء ملف PowerPoint PPTX قابل للتحرير.'}catch(e){$('exportStatus').textContent='تعذر إنشاء PPTX. تحقق من اتصال الإنترنت ثم أعد المحاولة؛ يمكنك استخدام تصدير HTML كبديل.'}finally{btn.disabled=false;btn.textContent='إنشاء PowerPoint PPTX'}});
 
+
+
+const libraryItems=[
+{n:'منصة عين الإثرائية',c:'السعودية',t:'منصة تعلم',s:'جميع المراحل',d:'مصادر ودروس وقنوات تعليمية مرتبطة بالتعليم السعودي.',u:'https://ien.edu.sa/',tags:'عين إثرائية دروس مناهج قنوات'},
+{n:'منصة مدرستي',c:'السعودية',t:'بوابة رسمية',s:'جميع المراحل',d:'بوابة التعليم الإلكتروني التابعة لوزارة التعليم؛ قد تتطلب حساباً مدرسياً.',u:'https://schools.madrasati.sa/',tags:'مدرستي واجبات فصول تعلم'},
+{n:'منصة شمس للموارد التعليمية المفتوحة',c:'السعودية',t:'محتوى مفتوح',s:'جميع المراحل',d:'موارد تعليمية مفتوحة قابلة للبحث والمشاركة وفق رخص كل مورد.',u:'https://shms.sa/',tags:'شمس موارد مفتوحة OER أوراق عمل عروض'},
+{n:'المكتبة الرقمية السعودية',c:'السعودية',t:'محتوى مفتوح',s:'جامعي وبحثي',d:'بوابة للمصادر الأكاديمية والكتب والأبحاث؛ قد يتطلب الوصول المؤسسي.',u:'https://sdl.edu.sa/',tags:'كتب أبحاث مجلات جامعات'},
+{n:'بنك المعرفة المصري',c:'مصر',t:'محتوى مفتوح',s:'جميع المراحل',d:'منصة وطنية للمعرفة ومصادر التعلم والبحث العلمي.',u:'https://www.ekb.eg/',tags:'بنك المعرفة كتب علوم أبحاث تعليم'},
+{n:'وزارة التربية والتعليم والتعليم الفني',c:'مصر',t:'بوابة رسمية',s:'جميع المراحل',d:'البوابة الرسمية للوزارة وإعلانات وخدمات التعليم.',u:'https://moe.gov.eg/',tags:'مناهج كتب امتحانات الوزارة'},
+{n:'منصة مدرسة',c:'الإمارات',t:'منصة تعلم',s:'جميع المراحل',d:'محتوى عربي مجاني في العلوم والرياضيات واللغة العربية.',u:'https://madrasa.org/',tags:'فيديو علوم كيمياء فيزياء رياضيات أحياء عربي'},
+{n:'وزارة التربية والتعليم',c:'الإمارات',t:'بوابة رسمية',s:'جميع المراحل',d:'البوابة الرسمية للتعليم والخدمات المدرسية.',u:'https://www.moe.gov.ae/',tags:'مناهج تعليم'},
+{n:'منصة درسك',c:'الأردن',t:'منصة تعلم',s:'ابتدائي',d:'منصة تعلم وطنية؛ تحقق من استمرار الخدمات وإتاحتها الحالية.',u:'https://darsak.gov.jo/',tags:'دروس فيديو مناهج'},
+{n:'وزارة التربية والتعليم',c:'الأردن',t:'بوابة رسمية',s:'جميع المراحل',d:'الموقع الرسمي للوزارة ومصادرها وإعلاناتها.',u:'https://moe.gov.jo/',tags:'مناهج كتب امتحانات'},
+{n:'وزارة التربية',c:'الكويت',t:'بوابة رسمية',s:'جميع المراحل',d:'بوابة الوزارة الرسمية والخدمات التعليمية.',u:'https://www.moe.edu.kw/',tags:'مناهج كتب تعليم'},
+{n:'وزارة التربية والتعليم والتعليم العالي',c:'قطر',t:'بوابة رسمية',s:'جميع المراحل',d:'البوابة الرسمية للوزارة وخدمات التعليم.',u:'https://www.edu.gov.qa/',tags:'مناهج تعليم'},
+{n:'وزارة التربية والتعليم',c:'البحرين',t:'بوابة رسمية',s:'جميع المراحل',d:'البوابة الرسمية للوزارة والخدمات والمبادرات التعليمية.',u:'https://www.moe.gov.bh/',tags:'مناهج مدارس'},
+{n:'وزارة التربية والتعليم',c:'عُمان',t:'بوابة رسمية',s:'جميع المراحل',d:'البوابة الرسمية للوزارة ومصادر التعليم.',u:'https://moe.gov.om/',tags:'مناهج كتب تعليم'},
+{n:'بوابة TelmidTICE',c:'المغرب',t:'منصة تعلم',s:'جميع المراحل',d:'بوابة موارد ودروس رقمية للتعليم المدرسي المغربي؛ تحقق من توفر المحتوى.',u:'https://telmidtice.men.gov.ma/',tags:'دروس رقمية فيديو مناهج'},
+{n:'وزارة التربية الوطنية والتعليم الأولي والرياضة',c:'المغرب',t:'بوابة رسمية',s:'جميع المراحل',d:'الموقع الرسمي للوزارة المغربية.',u:'https://www.men.gov.ma/',tags:'مناهج كتب تعليم'},
+{n:'وزارة التربية الوطنية',c:'الجزائر',t:'بوابة رسمية',s:'جميع المراحل',d:'الموقع الرسمي لقطاع التربية الوطنية.',u:'https://www.education.gov.dz/',tags:'مناهج كتب تعليم'},
+{n:'وزارة التربية',c:'تونس',t:'بوابة رسمية',s:'جميع المراحل',d:'البوابة الرسمية لوزارة التربية التونسية.',u:'https://www.education.gov.tn/',tags:'مناهج كتب تعليم'},
+{n:'وزارة التربية والتعليم العالي',c:'فلسطين',t:'بوابة رسمية',s:'جميع المراحل',d:'البوابة الرسمية للوزارة الفلسطينية.',u:'https://www.moe.edu.ps/',tags:'مناهج كتب تعليم'},
+{n:'وزارة التربية',c:'العراق',t:'بوابة رسمية',s:'جميع المراحل',d:'بوابة الوزارة الرسمية؛ تحقق من الخدمات المتاحة.',u:'https://moedu.gov.iq/',tags:'مناهج كتب تعليم'},
+{n:'وزارة التربية والتعليم العالي',c:'لبنان',t:'بوابة رسمية',s:'جميع المراحل',d:'الموقع الرسمي للوزارة اللبنانية.',u:'https://www.mehe.gov.lb/',tags:'مناهج تعليم'},
+{n:'وزارة التربية والتعليم',c:'ليبيا',t:'بوابة رسمية',s:'جميع المراحل',d:'بوابة الوزارة الرسمية؛ قد تتغير الخدمات والروابط.',u:'https://moe.gov.ly/',tags:'مناهج تعليم'},
+{n:'وزارة التربية والتعليم',c:'اليمن',t:'بوابة رسمية',s:'جميع المراحل',d:'بوابة الوزارة؛ تحقق من عمل الموقع وتوفر المواد.',u:'https://moe.gov.ye/',tags:'مناهج تعليم'},
+{n:'وزارة التربية',c:'سوريا',t:'بوابة رسمية',s:'جميع المراحل',d:'الموقع الرسمي لوزارة التربية؛ تحقق من الوصول وتحديث المحتوى.',u:'https://moed.gov.sy/',tags:'مناهج كتب تعليم'},
+{n:'وزارة التربية والتعليم',c:'السودان',t:'بوابة رسمية',s:'جميع المراحل',d:'بوابة الوزارة؛ قد تتأثر الإتاحة بالظروف المحلية.',u:'https://moe.gov.sd/',tags:'مناهج تعليم'},
+{n:'وزارة التهذيب الوطني وإصلاح النظام التعليمي',c:'موريتانيا',t:'بوابة رسمية',s:'جميع المراحل',d:'بوابة قطاع التعليم الرسمي.',u:'https://www.education.gov.mr/',tags:'مناهج تعليم'},
+{n:'وزارة التربية والثقافة والتعليم العالي',c:'الصومال',t:'بوابة رسمية',s:'جميع المراحل',d:'بوابة الوزارة الرسمية.',u:'https://moe.gov.so/',tags:'مناهج تعليم'},
+{n:'وزارة التربية الوطنية والتكوين المهني',c:'جيبوتي',t:'بوابة رسمية',s:'جميع المراحل',d:'بوابة قطاع التعليم الرسمية.',u:'https://www.education.gov.dj/',tags:'مناهج تعليم'},
+{n:'إدراك',c:'عربي / دولي',t:'منصة تعلم',s:'معلمون وتطوير مهني',d:'مساقات عربية مجانية في مجالات متعددة والتعلم المستمر.',u:'https://www.edraak.org/',tags:'دورات تدريب مهارات معلم تعليم'},
+{n:'رواق',c:'عربي / دولي',t:'منصة تعلم',s:'جامعي وبحثي',d:'مساقات عربية مفتوحة في تخصصات أكاديمية ومهارية.',u:'https://www.rwaq.org/',tags:'دورات جامعة مساقات'},
+{n:'نفهم',c:'عربي / دولي',t:'منصة تعلم',s:'جميع المراحل',d:'شروحات تعليمية عربية ومحتوى مدرسي؛ تحقق من تغطية منهج بلدك.',u:'https://www.nafham.com/',tags:'شرح فيديو مناهج دروس'},
+{n:'أكاديمية خان بالعربية',c:'عربي / دولي',t:'محتوى مفتوح',s:'جميع المراحل',d:'دروس وتمارين مجانية في الرياضيات والعلوم وموضوعات أخرى.',u:'https://ar.khanacademy.org/',tags:'رياضيات علوم تمارين شرح'},
+{n:'منصة اليونسكو للتعلم',c:'عربي / دولي',t:'محتوى مفتوح',s:'معلمون وتطوير مهني',d:'بوابة دولية للتعلم ومصادر التعليم والابتكار.',u:'https://www.unesco.org/en/education',tags:'تعليم معلم تقارير موارد'},
+{n:'OER Commons',c:'عربي / دولي',t:'محتوى مفتوح',s:'معلمون وتطوير مهني',d:'مستودع عالمي للموارد التعليمية المفتوحة؛ راجع لغة المورد ورخصته.',u:'https://www.oercommons.org/',tags:'موارد مفتوحة خطط دروس أوراق عمل'}
+];
+function renderLibrary(){
+ const q=($('librarySearch').value||'').trim().toLocaleLowerCase('ar');
+ const country=$('libraryCountry').value,type=$('libraryType').value,stage=$('libraryStage').value;
+ const found=libraryItems.filter(x=>(!country||x.c===country)&&(!type||x.t===type)&&(!stage||x.s===stage||x.s==='جميع المراحل')&&(!q||(x.n+' '+x.c+' '+x.t+' '+x.s+' '+x.d+' '+x.tags).toLocaleLowerCase('ar').includes(q)));
+ $('libraryCount').textContent=found.length;
+ const root=$('libraryResults');root.innerHTML='';
+ if(!found.length){root.innerHTML='<div class="empty">لا توجد نتائج مطابقة. جرّب كلمة أخرى أو اختر «كل الدول».</div>';return}
+ found.forEach(x=>{const item=document.createElement('article');item.className='saved-item';const info=document.createElement('div');const title=document.createElement('strong');title.textContent=x.n;const meta=document.createElement('span');meta.className='muted';meta.textContent=x.c+' · '+x.t+' · '+x.s;const desc=document.createElement('p');desc.className='muted';desc.textContent=x.d;info.append(title,meta,desc);const a=document.createElement('a');a.className='link secondary';a.href=x.u;a.target='_blank';a.rel='noopener noreferrer';a.textContent='زيارة المصدر ↗';item.append(info,a);root.append(item)});
+}
+['librarySearch','libraryCountry','libraryType','libraryStage'].forEach(id=>$(id).addEventListener(id==='librarySearch'?'input':'change',renderLibrary));
+renderLibrary();
 
 const videoCanvas=$('videoCanvas'),vctx=videoCanvas.getContext('2d');
 let videoScenes=[],videoFrame=0,videoPreviewTimer=null;
