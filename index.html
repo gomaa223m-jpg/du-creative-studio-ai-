@@ -8,8 +8,26 @@
 </style></head>
 <body><header><span class="pill">نسخة مجانية</span><h1>EDU CREATIVE STUDIO AI</h1><p>استوديو مستر محمد جمعة لصناعة المحتوى التعليمي</p><strong>معانا دائماً أنت الأفضل</strong></header>
 <main class="wrap">
-<section class="card"><h2>✨ أنشئ مشروعك التعليمي</h2><div class="grid"><div><label for="topic">عنوان الدرس أو الموضوع</label><input id="topic" placeholder="مثال: الحساب الكيميائي"></div><div><label for="grade">المرحلة والمادة</label><input id="grade" placeholder="مثال: كيمياء ثاني ثانوي"></div><div><label for="kind">نوع المنتج</label><select id="kind"><option>حزمة تعليمية شاملة بكل المخرجات</option><option>وحدة تعليمية كاملة</option><option>مقرر أو فصل دراسي متكامل</option><option>حزمة درس متكاملة</option><option>محتوى تعليمي وشرح مبسط</option><option>عرض تقديمي احترافي</option><option>فيديو تعليمي وسيناريو مشاهد</option><option>إنفوجرافيك تعليمي</option><option>ورقة عمل تفاعلية</option><option>اختبار مع نموذج إجابة</option><option>كراسة تعليمية</option></select></div><div><label for="style">النمط البصري</label><select id="style"><option>حديث واحترافي</option><option>إنفوجرافيك علمي</option><option>أنيميشن ثلاثي الأبعاد</option><option>أسلوب كتاب مدرسي</option><option>مبسّط وجذاب للطلاب</option></select></div></div><div class="grid"><div><label for="duration">زمن الدرس</label><input id="duration" placeholder="مثال: 45 دقيقة"></div><div><label for="difficulty">مستوى المحتوى</label><select id="difficulty"><option>متدرج لجميع المستويات</option><option>مبتدئ</option><option>متوسط</option><option>متقدم</option><option>موهوبون وتحديات عليا</option></select></div><div><label for="slides">عدد شرائح العرض</label><input id="slides" type="number" min="1" max="100" placeholder="مثال: 15"></div><div><label for="pages">عدد صفحات أوراق العمل/الإنفوجرافيك</label><input id="pages" type="number" min="1" max="100" placeholder="مثال: 4"></div></div><label for="reference">المرجع أو نص الدرس (اختياري)</label><textarea id="reference" placeholder="ألصق نص الدرس أو اكتب اسم الوحدة/الكتاب والطبعة..."></textarea><label for="notes">تفاصيل إضافية</label><textarea id="notes" placeholder="عدد الشرائح، أهداف الدرس، مستوى الصعوبة، شروط الطباعة، أمثلة مطلوبة..."></textarea><button id="make">إنشاء البرومبت</button><button class="secondary" id="clear">مسح الحقول</button></section>
-<section class="card"><h2>🧠 البرومبت الجاهز</h2><pre id="out">أدخل بيانات الدرس ثم اضغط «إنشاء البرومبت».</pre><button id="copy">نسخ البرومبت</button><button class="secondary" id="downloadPrompt">تنزيل البرومبت TXT</button><button class="light" id="printPrompt">طباعة البرومبت</button><a class="link secondary" id="chat" href="https://chatgpt.com/" target="_blank" rel="noopener">فتح ChatGPT</a><a class="link secondary" href="https://claude.ai/" target="_blank" rel="noopener">Claude</a><a class="link secondary" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a><p class="muted">انسخ البرومبت ثم افتح المنصة والصقه. الأداة نفسها مجانية وتعمل دون مفتاح API. انسخ البرومبت إلى إحدى المنصات المجانية المتاحة، مع ملاحظة أن لكل منصة حدود استخدام قد تتغير. إنشاء ملفات العرض والفيديو فعلياً يتم عبر المنصة أو أدوات التصدير التي تختارها.</p></section>
+<section class="card"><h2>🚀 أنشئ حقيبتك التعليمية من العنوان فقط</h2>
+<p>اكتب عنوان الدرس أو الموضوع، وسيُجهّز الاستوديو أمراً إنتاجياً شاملاً يغطي التخطيط والشرح والأنشطة والتقويم والعروض والفيديو والإنفوجرافيك وأوراق العمل.</p>
+<label for="topic">عنوان الموضوع أو الدرس</label>
+<input id="topic" placeholder="مثال: الاتزان الكيميائي — أو: الطاقة والشغل">
+<div class="muted">لا تحتاج إلى تعبئة بقية الحقول. سيقترح النظام المرحلة والمخرجات المناسبة، ويصرّح بأي افتراض غير مؤكد.</div>
+<div id="hiddenDefaults" hidden>
+<input id="grade" value="استنتج المرحلة المناسبة من عنوان الموضوع؛ وإن تعذر فاطلب من النموذج التصريح بالافتراض">
+<select id="kind"><option selected>حزمة تعليمية شاملة بكل المخرجات</option></select>
+<select id="style"><option selected>حديث واحترافي</option></select>
+<textarea id="notes">أنشئ جميع المخرجات المناسبة دون الحاجة إلى تفاصيل إضافية.</textarea>
+<input id="duration" value="حدد زمنياً بما يناسب الموضوع">
+<select id="difficulty"><option selected>متدرج لجميع المستويات</option></select>
+<input id="slides" value="عدد مناسب يغطّي المحتوى كاملاً">
+<input id="pages" value="عدد مناسب يغطّي المحتوى كاملاً">
+<textarea id="reference"></textarea>
+</div>
+<button id="make">جهّز الحزمة التعليمية كاملة</button>
+<button class="secondary" id="clear">مسح العنوان</button>
+</section>
+<section class="card"><h2>🧠 البرومبت الجاهز</h2><pre id="out">أدخل بيانات الدرس ثم اضغط «إنشاء البرومبت».</pre><button id="copy">نسخ البرومبت</button><button class="secondary" id="downloadPrompt">تنزيل البرومبت TXT</button><button class="light" id="printPrompt">طباعة البرومبت</button><a class="link secondary" id="chat" href="https://chatgpt.com/" target="_blank" rel="noopener">فتح ChatGPT</a><a class="link secondary" href="https://claude.ai/" target="_blank" rel="noopener">Claude</a><a class="link secondary" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a><button class="light" id="launchChatGPT">إرسال إلى ChatGPT</button><button class="light" id="launchClaude">إرسال إلى Claude</button><button class="light" id="launchGemini">إرسال إلى Gemini</button><p class="muted">انسخ البرومبت ثم افتح المنصة والصقه. الأداة نفسها مجانية وتعمل دون مفتاح API. انسخ البرومبت إلى إحدى المنصات المجانية المتاحة، مع ملاحظة أن لكل منصة حدود استخدام قد تتغير. إنشاء ملفات العرض والفيديو فعلياً يتم عبر المنصة أو أدوات التصدير التي تختارها.</p></section>
 
 <section class="card" id="savedProjects"><h2>💾 مشاريعي المحفوظة</h2>
 <p class="muted">تُحفظ المشاريع على هذا المتصفح والجهاز فقط. يمكنك تصدير نسخة احتياطية لنقلها إلى جهاز آخر.</p>
@@ -20,51 +38,63 @@
 <p class="status" id="saveStatus" aria-live="polite"></p>
 <div id="savedList" class="saved-list"><div class="empty">لا توجد مشاريع محفوظة حتى الآن.</div></div>
 </section>
-<section class="card"><h3>🛡️ الخصوصية والاستخدام</h3><p>لا نطلب بيانات شخصية، ولا تُرسل مدخلاتك إلى خادم من هذه الصفحة. تعمل الأداة داخل المتصفح. للاستفادة من التوليد الفعلي عبر API يلزم إعداد خادم آمن وقد تكون هناك رسوم لدى مزود الخدمة.</p></section>
+<section class="card"><h3>🛡️ الخصوصية والاستخدام</h3><p>تعمل واجهة الاستوديو مجاناً دون مفتاح API. عند فتح ChatGPT أو Claude أو Gemini، تنتقل إلى موقع الخدمة وتلصق البرومبت بنفسك؛ لا يوجد ربط حسابات أو إرسال تلقائي مباشر. تخضع خدمات الذكاء الاصطناعي لحدود خططها المجانية وسياساتها، وقد تحتاج بعض المخرجات إلى تقسيم بسبب حدود طول المحادثة.</p></section>
 </main><footer>إعداد مستر محمد جمعة · EDU CREATIVE STUDIO AI</footer>
 <script>
 const $=id=>document.getElementById(id);
 function build(){
-const topic=$('topic').value.trim()||'موضوع يحدده المعلم';
-const grade=$('grade').value.trim()||'حدد المرحلة والمادة والمنهج';
-const kind=$('kind').value;const style=$('style').value;const notes=$('notes').value.trim()||'لا توجد تفاصيل إضافية';
-const duration=$('duration').value.trim()||'يقترح وفق طبيعة الدرس';const difficulty=$('difficulty').value;const slides=$('slides').value||'عدد مناسب';const pages=$('pages').value||'عدد مناسب';const reference=$('reference').value.trim()||'لم يرفق مرجع';
-return `أنت EDU CREATIVE STUDIO AI، فريق تربوي متكامل يضم خبير مناهج ومعلم مادة ومصمم خبرات تعلم ومدققاً علمياً ولغوياً ومصمم عروض وإنفوجرافيك وكاتب سيناريو.
+const topic=$('topic').value.trim();
+if(!topic)return 'اكتب عنوان الموضوع أولاً ثم اضغط «جهّز الحزمة التعليمية كاملة».';
+return `أنت EDU CREATIVE STUDIO AI، استوديو إنتاج تعليمي احترافي متعدد التخصصات. مهمتك تحويل العنوان وحده إلى حزمة تعليمية متكاملة من الألف إلى الياء، جاهزة للمعلم والطالب.
 
-بيانات المشروع:
-الموضوع: ${topic}
-المرحلة والمادة والمنهج: ${grade}
-نوع الحزمة: ${kind}
-النمط البصري: ${style}
-متطلبات المعلم: ${notes}
-زمن التعلم: ${duration}
-مستوى الصعوبة: ${difficulty}
-عدد الشرائح: ${slides}
-عدد الصفحات: ${pages}
-المرجع: ${reference}
+عنوان الموضوع: ${topic}
+المرحلة والمادة: استنتج الأنسب من الموضوع والسياق. إذا لم يمكن الجزم، اذكر افتراضك بوضوح ولا تنسب المحتوى إلى منهج رسمي دون مرجع.
+لغة الإنتاج: العربية الفصحى، واتجاه RTL.
+الهوية: إعداد مستر محمد جمعة — «معانا دائماً أنت الأفضل».
 
-المهمة: أنشئ حزمة تعليمية متكاملة جاهزة للتطبيق، لا مجرد أفكار أو خطة مختصرة. غطِّ رحلة التعلم من التخطيط إلى الشرح والتطبيق والتقويم والإنتاج. إذا كان الموضوع واسعاً فقسّمه إلى وحدات ودروس، وإذا كان محدوداً فعمّقه دون حشو. لا تتوقف لطرح أسئلة؛ اذكر افتراضاتك عند نقص البيانات.
+قواعد التنفيذ:
+- لا تطلب من المعلم تفاصيل إضافية. اتخذ قرارات تربوية وتصميمية معقولة، وصرّح بالافتراضات.
+- أنشئ المحتوى النهائي فعلياً، لا تكتفِ بخطة أو قائمة أفكار أو برومبتات فرعية.
+- تحرّ الدقة العلمية واللغوية والحسابية، وراجع كل قانون ورمز ووحدة ومثال وإجابة.
+- لا تختلق مصادر أو أرقام صفحات أو نسباً إلى كتاب أو منهج. ميّز المعلومة المؤكدة من الافتراض، واذكر ما يحتاج مراجعة.
+- اجعل المحتوى متدرجاً من التمهيد إلى الإتقان، ومناسباً للمرحلة المفترضة، مع مراعاة الفروق الفردية.
 
-1) التخطيط التربوي: وصف الوحدة والدرس، المتطلبات السابقة، المفاهيم والمفردات، أهداف قابلة للقياس، خريطة تسلسل المحتوى والزمن، سؤال افتتاحي مرتبط بالحياة، وخطة تنفيذ للمعلم تشمل التهيئة والشرح والاستقصاء والنقاش والإغلاق.
-2) المحتوى العلمي: شرح متدرج مناسب للعمر، تعريفات ومصطلحات وقوانين ورموز ووحدات وخطوات حل، أمثلة حياتية، أمثلة محلولة خطوة بخطوة، تطبيقات متدرجة، جداول مقارنة وخرائط مفاهيم وملخصات، والأخطاء الشائعة والتصورات البديلة.
-3) التعلم النشط: أنشطة فردية وثنائية وجماعية، تعلم تعاوني، استقصاء أو تجربة آمنة عند ملاءمة المادة، أسئلة تفكير ناقد، تحديات للموهوبين، دعم علاجي للمتعثرين، وتمايز يراعي الفروق الفردية.
-4) التقويم: تقويم قبلي وبنائي وختامي، أسئلة اختيار من متعدد وصواب/خطأ مع التصحيح وإكمال وتفسير ومسائل وتطبيق وأسئلة تفكير عليا، نموذج إجابة مفصل مع تفسير وخطوات الحل، سلم تقدير للمهمات الأدائية، ومعايير نجاح واضحة.
-5) أوراق العمل: نسخة طالب بلا إجابات، ونسخة معلم منفصلة بالإجابات، بمستويات متدرجة، وتعليمات واضحة ومساحة مناسبة للإجابة.
-6) العرض التقديمي: مخطط شريحة بشريحة يتضمن العنوان والنص المختصر ووصف الصورة/الرسم وملاحظات شرح المعلم، مع افتتاحية وخاتمة وأسئلة تفاعلية.
-7) الفيديو: سيناريو تعليمي بمقدمة جذابة وتعليق صوتي وتقسيم مشاهد ووصف الحركة والمرئيات والنصوص الظاهرة وتوقيت تقريبي لكل مشهد.
-8) الإنفوجرافيك: تقسيم المحتوى إلى لوحات/صفحات، عنوان ورسالة رئيسية ونصوص قصيرة ووصف بصري دقيق لكل لوحة.
-9) موارد إضافية: بطاقات مراجعة، ملخص سريع، واجب منزلي، مهمة إثرائية، ومفردات أساسية.
-10) ضمان الجودة: راجع المعلومات والحسابات والمصطلحات والوحدات، وتأكد من توافق الأهداف والأنشطة والأسئلة والإجابات. لا تخترع نصوصاً من كتاب أو تنسب المحتوى إلى منهج رسمي. إذا أرفق المعلم مرجعاً فالتزم به وميّز الإضافات؛ وعند غيابه صرّح بأن المواءمة الرسمية تحتاج مراجعة نسخة المنهج. لا تختلق مصادر أو روابط، وحدد ما يحتاج تحققاً. لا تقترح أنشطة أو تجارب خطرة.
+أنتج الحزمة بالترتيب التالي:
+1. بطاقة الموضوع: وصف موجز، أهميته، الفئة المستهدفة، المتطلبات السابقة، المفاهيم والمفردات الأساسية.
+2. التخطيط: أهداف تعلم قابلة للقياس، نواتج التعلم، خريطة مفاهيم، تسلسل الدروس، زمن مقترح، خطة تدريس خطوة بخطوة، وأسئلة تمهيدية.
+3. الشرح الكامل: شرح واضح ومفصل ومتدرج، أمثلة من الحياة، تعريفات، قوانين أو قواعد عند وجودها، خطوات تطبيق وحل، جداول مقارنة، وأخطاء شائعة وتصحيحها.
+4. التفاعل: أسئلة استكشافية، تعلم تعاوني، أنشطة فردية وجماعية، تطبيق عملي أو استقصاء آمن إن كان مناسباً، ومهمات للموهوبين ودعم علاجي.
+5. بنك الأسئلة: أسئلة قصيرة ومتوسطة وعليا ومتنوعة، مع توزيع مناسب للصعوبة، ثم نموذج إجابة مفصل ومبرر في قسم مستقل.
+6. أوراق العمل: ورقة طالب جاهزة للطباعة بلا إجابات، ثم دليل معلم منفصل بالإجابات وسلم تقدير ومعايير نجاح.
+7. العرض التقديمي: محتوى شرائح كامل شريحة بشريحة؛ عنوان، نص الشاشة، وصف المرئيات، اقتراح تصميم، وملاحظات إلقاء للمعلم. اجعل النص على الشريحة موجزاً والشرح في ملاحظات المتحدث.
+8. الفيديو التعليمي: سيناريو كامل بمقدمة مشوقة، تعليق صوتي، مشاهد مرتبة، حركة ورسوم مقترحة، نصوص الشاشة، وتوقيت تقريبي.
+9. الإنفوجرافيك: مخطط صفحات/لوحات، عنوان ورسالة ونصوص قصيرة دقيقة ووصف بصري لكل لوحة، مع الحفاظ على وضوح العربية.
+10. التمايز والإثراء: دعم المتعثرين، أنشطة إثرائية، تحديات التفكير العليا، وأسئلة ربط بالحياة.
+11. التقويم: قبلي وبنائي وختامي، بطاقة خروج، واجب منزلي، مشروع أو مهمة أداء، وسلالم تقييم واضحة.
+12. الملخص والمراجعة: ملخص مركز، بطاقات سؤال/جواب، قائمة مصطلحات، وخريطة مراجعة سريعة.
+13. دليل المعلم: تجهيزات، إدارة الوقت، أسئلة متوقعة، إجاباتها، تنبيهات تربوية وعلمية، وخطة بديلة عند ضيق الوقت.
+14. تدقيق نهائي: جدول تحقق من الأهداف والشرح والأنشطة والتقويم والإجابات، وتصحيح أي تعارض قبل تسليم المنتج.
 
-معايير الإخراج: عربية فصحى سليمة واتجاه RTL، عناوين وترقيم وجداول عند الحاجة، تصميم ${style} متناسق ومقروء، فصل نسخة الطالب عن نسخة المعلم والإجابات، وعدم حذف عناصر أساسية. قدم المحتوى النهائي فعلياً. إذا تعذر إنشاء ملف مباشر فأخرج محتوى منسقاً قابلاً للنسخ إلى Word أو PowerPoint أو أدوات التصميم. أضف: إعداد مستر محمد جمعة. الشعار: معانا دائماً أنت الأفضل.
+تنسيق الإخراج:
+- ابدأ بفهرس واضح ثم أنجز كل قسم كاملاً.
+- افصل مواد الطالب عن دليل المعلم والإجابات.
+- استخدم الجداول عند الحاجة، وعناوين مرقمة، ونصوصاً قابلة للنسخ إلى Word وPowerPoint وأدوات التصميم.
+- لا تحشر النصوص داخل الشرائح أو الإنفوجرافيك. اقترح رسوماً مناسبة ولا تضع صوراً زخرفية بلا قيمة تعليمية.
+- إذا كان الموضوع واسعاً، قسّمه إلى وحدات متتابعة مع إكمال جميع الأقسام لكل وحدة.
+- إذا طال الناتج، قسّمه إلى أجزاء مرقمة متتابعة دون إسقاط أي مخرج.
 
-ابدأ بفهرس المخرجات ثم نفّذ جميع الأقسام بالتفصيل. لا تختصر بسبب طول الإجابة؛ قسّم الناتج إلى أجزاء مرقمة متتابعة عند الحاجة.`
+ابدأ الآن. لا تسأل المعلم؛ أنت مسؤول عن بناء الحزمة بأفضل حكم مهني ممكن.`
 }
-$('make').addEventListener('click',()=>{$('out').textContent=build();$('chat').href='https://chatgpt.com/'});
+$('make').addEventListener('click',()=>{const result=build();$('out').textContent=result;if(!result.startsWith('اكتب عنوان'))$('chat').href='https://chatgpt.com/';});
+
+function launchAI(url){const prompt=$('out').textContent;if(!prompt||prompt.startsWith('أدخل بيانات')||prompt.startsWith('اكتب عنوان')){alert('اكتب عنوان الموضوع وجهّز الحزمة أولاً');return}const tab=window.open(url,'_blank');if(!tab){alert('اسمح بفتح النوافذ المنبثقة لهذا الموقع');return}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(prompt).then(()=>alert('تم نسخ الحزمة. الصقها في المحادثة الجديدة.')).catch(()=>alert('انسخ البرومبت يدوياً من المربع ثم الصقه في المنصة.'))}else{alert('انسخ البرومبت من المربع والصقه في المنصة التي فُتحت.')}}
+$('launchChatGPT').addEventListener('click',()=>launchAI('https://chatgpt.com/'));
+$('launchClaude').addEventListener('click',()=>launchAI('https://claude.ai/new'));
+$('launchGemini').addEventListener('click',()=>launchAI('https://gemini.google.com/app'));
 $('downloadPrompt').addEventListener('click',()=>{const text=$('out').textContent;if(!text||text.startsWith('أدخل بيانات')){alert('أنشئ البرومبت أولاً');return}const blob=new Blob([text],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='educational-content-prompt.txt';a.click();URL.revokeObjectURL(url)});
 $('printPrompt').addEventListener('click',()=>{const text=$('out').textContent;if(!text||text.startsWith('أدخل بيانات')){alert('أنشئ البرومبت أولاً');return}const w=window.open('','_blank');if(!w){alert('اسمح بالنوافذ المنبثقة للطباعة');return}w.document.write('<html lang="ar" dir="rtl"><meta charset="utf-8"><title>البرومبت التعليمي</title><style>body{font-family:Tahoma;padding:30px;line-height:2;white-space:pre-wrap}</style><body></body></html>');w.document.body.textContent=text;w.document.close();w.print()});
 $('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('out').textContent);$('copy').textContent='تم النسخ ✓';setTimeout(()=>$('copy').textContent='نسخ البرومبت',1800)}catch(e){$('out').focus();}});
-$('clear').addEventListener('click',()=>{['topic','grade','notes','duration','slides','pages','reference'].forEach(id=>$(id).value='');$('difficulty').selectedIndex=0;$('out').textContent='أدخل بيانات الدرس ثم اضغط «إنشاء البرومبت».'});
+$('clear').addEventListener('click',()=>{['topic'].forEach(id=>$(id).value='');$('out').textContent='اكتب عنوان الموضوع ثم اضغط «جهّز الحزمة التعليمية كاملة».';$('out').textContent='أدخل بيانات الدرس ثم اضغط «إنشاء البرومبت».'});
 
 const STORE_KEY='eduCreativeStudioProjects_v1';
 function getProjects(){try{return JSON.parse(localStorage.getItem(STORE_KEY)||'[]')}catch(e){return []}}
