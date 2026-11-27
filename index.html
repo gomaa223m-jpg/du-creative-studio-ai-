@@ -55,7 +55,50 @@ body{background:#f4f8fb}
 @media(max-width:760px){.hero{padding:0 16px}.hero-content{grid-template-columns:1fr;gap:18px;padding:42px 0 35px}.hero-copy{max-width:none}.hero h1{font-size:clamp(32px,8vw,45px)}.hero-lead{font-size:15px}.hero-visual{min-height:310px}.visual-window{width:min(94%,430px)}.hero-footer{align-items:flex-start;flex-direction:column}.hero-stats{gap:12px}.note-top{right:0}.note-bottom{left:0}}
 @media(max-width:420px){.hero-top{font-size:11px}.free-chip{font-size:10px;padding:4px 8px}.hero-proof{gap:8px;font-size:10px}.hero-actions>*{width:100%}.hero-visual{min-height:285px}.visual-tile{min-height:72px}.visual-title{font-size:18px}.floating-note{font-size:10px}}
 
-.book-pages{display:grid;gap:16px;margin:16px 0}.book-page-editor{background:#fff;border:1px solid #d8e4eb;border-radius:14px;padding:14px;color:#183044}.page-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.page-tools strong{margin-inline-end:auto;color:#0b7180}.page-tools button{padding:6px 10px}.page-title{width:100%;font-size:20px;font-weight:bold;margin:8px 0;padding:10px;border:1px solid #d5e1e9;border-radius:8px}.page-content{min-height:230px;border:1px dashed #aabecb;border-radius:8px;padding:16px;outline:none;background:#fff;line-height:2}.page-content:focus{border-color:#0b9b91;box-shadow:0 0 0 2px #0b9b9120}.page-content img{max-width:100%;height:auto}.page-content table{border-collapse:collapse;width:100%}.page-content td{border:1px solid #8da3b2;padding:8px;min-width:55px}.page-content:empty:before{content:'اكتب محتوى الصفحة هنا...';color:#9aaab5}@media print{.page-tools{display:none}}</style></head>
+.book-pages{display:grid;gap:16px;margin:16px 0}.book-page-editor{background:#fff;border:1px solid #d8e4eb;border-radius:14px;padding:14px;color:#183044}.page-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.page-tools strong{margin-inline-end:auto;color:#0b7180}.page-tools button{padding:6px 10px}.page-title{width:100%;font-size:20px;font-weight:bold;margin:8px 0;padding:10px;border:1px solid #d5e1e9;border-radius:8px}.page-content{min-height:230px;border:1px dashed #aabecb;border-radius:8px;padding:16px;outline:none;background:#fff;line-height:2}.page-content:focus{border-color:#0b9b91;box-shadow:0 0 0 2px #0b9b9120}.page-content img{max-width:100%;height:auto}.page-content table{border-collapse:collapse;width:100%}.page-content td{border:1px solid #8da3b2;padding:8px;min-width:55px}.page-content:empty:before{content:'اكتب محتوى الصفحة هنا...';color:#9aaab5}@media print{.page-tools{display:none}}
+/* Smart PowerPoint engine showcase */
+.pptx-showcase{margin-top:22px;padding:20px;border:1px solid #d9e7ed;border-radius:18px;background:linear-gradient(145deg,#f7fbfd,#eef6f7)}
+.showcase-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}
+.showcase-kicker{font-size:10px;letter-spacing:1.5px;font-weight:900;color:#159b91}
+.showcase-head h3{margin:3px 0;font-size:20px;color:#102d43}
+.showcase-head p{margin:0;color:#64798a;font-size:13px}
+.showcase-chip{white-space:nowrap;border:1px solid #cde4e4;border-radius:30px;padding:5px 10px;background:#fff;color:#176b72;font-size:11px;font-weight:bold}
+.showcase-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.showcase-card{min-width:0;background:#fff;border:1px solid #e0e9ed;border-radius:14px;padding:10px;box-shadow:0 6px 18px #0b29430a}
+.showcase-card>strong{display:block;margin:9px 3px 0;color:#18364b;font-size:13px}
+.showcase-card>small{display:block;margin:1px 3px 2px;color:#708293;font-size:11px}
+.mini-slide{position:relative;overflow:hidden;aspect-ratio:16/9;border-radius:9px;padding:6.5%;font-family:Tahoma,Arial,sans-serif}
+.mini-cover{background:linear-gradient(120deg,#091a2e,#124d61);color:white}
+.mini-mark{font-size:7px;letter-spacing:1px;color:#82e5d7;font-weight:bold}
+.mini-cover-title{position:relative;z-index:2;margin-top:9%;max-width:85%;font-size:clamp(14px,2.2vw,24px);font-weight:900;line-height:1.45}
+.mini-cover-sub{position:relative;z-index:2;margin-top:4%;font-size:clamp(7px,1vw,10px);color:#d4e4eb}
+.mini-cover-foot{position:absolute;bottom:9%;right:7%;font-size:clamp(6px,.8vw,9px);color:#7be3d3}
+.mini-cover-orbit{position:absolute;width:38%;aspect-ratio:1;border:1px solid #5ce0d355;border-radius:50%;left:-6%;bottom:-32%;box-shadow:0 0 0 14px #5ce0d31a,0 0 0 28px #5ce0d30c}
+.mini-flow,.mini-compare,.mini-formula{background:#f4f9fb;color:#17324a;border:1px solid #e0edf0}
+.mini-label{font-size:clamp(6px,.9vw,9px);font-weight:bold;color:#159a91}
+.mini-slide-title{font-size:clamp(11px,1.65vw,18px);font-weight:900;margin-top:3%;color:#14546a}
+.mini-flow-track{display:flex;align-items:center;justify-content:center;gap:2%;margin-top:12%;direction:rtl}
+.mini-flow-track span{display:grid;place-items:center;min-width:23%;min-height:34px;padding:2%;border:1px solid #cbe6e5;border-radius:7px;background:white;font-size:clamp(7px,1vw,11px);font-weight:bold;text-align:center}
+.mini-flow-track i{font-style:normal;color:#16a89a;font-weight:bold;font-size:clamp(10px,1.6vw,18px)}
+.mini-flow-foot{position:absolute;bottom:8%;right:6%;left:6%;border-top:1px solid #d7e8eb;padding-top:3%;font-size:clamp(6px,.85vw,9px);color:#5c7788}
+.mini-columns{display:grid;grid-template-columns:1fr 1fr;gap:5%;margin-top:7%}
+.mini-columns>div{display:flex;flex-direction:column;gap:5px;padding:5%;border:1px solid #dbe9ed;border-radius:8px;background:#fff;text-align:center}
+.mini-columns b{font-size:clamp(8px,1.1vw,12px);color:#138d83}
+.mini-columns span{font-size:clamp(8px,1.2vw,14px);font-weight:bold;color:#164b66;direction:ltr}
+.mini-columns small{font-size:clamp(6px,.8vw,9px);color:#728696}
+.mini-equation{margin:9% auto 2%;padding:4%;width:88%;border:1px solid #bfe1df;border-radius:10px;background:white;text-align:center;direction:ltr;font-size:clamp(16px,2.6vw,29px);font-weight:900;color:#135b70}
+.mini-equation b{color:#16a89a}
+.mini-formula-caption{display:flex;justify-content:space-around;color:#647b8a;font-size:clamp(7px,.9vw,10px)}
+.showcase-bottom{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.showcase-notes,.showcase-sources{display:flex;align-items:flex-start;gap:10px;background:white;border:1px solid #e0e9ed;border-radius:12px;padding:12px}
+.showcase-notes b,.showcase-sources b{font-size:12px;color:#18364b}
+.showcase-notes p,.showcase-sources p{font-size:11px;line-height:1.7;color:#6b7f8f;margin:3px 0 0}
+.notes-icon,.source-icon{display:grid;place-items:center;flex:0 0 29px;height:29px;border-radius:9px;background:#e4f6f2;color:#128c80;font-weight:bold}
+.source-icon{background:#edf2fa;color:#37618b}
+.showcase-disclaimer{font-size:10px;color:#718493;margin:10px 0 0}
+@media(max-width:540px){.pptx-showcase{padding:12px}.showcase-grid{gap:9px}.showcase-card{padding:7px}.showcase-head{display:block}.showcase-chip{display:inline-block;margin-top:8px}.showcase-bottom{grid-template-columns:1fr}.showcase-card>strong{font-size:11px}.showcase-card>small{font-size:10px}}
+
+</style></head>
 <body>
 <header class="hero">
   <div class="hero-orb orb-one"></div><div class="hero-orb orb-two"></div>
@@ -208,6 +251,20 @@ body{background:#f4f8fb}
 </div>
 <p class="muted">PowerPoint يُنشأ كملف PPTX قابل للتحرير عند توفر الاتصال بمكتبة التصدير المجانية. حزمة الفيديو تشمل السيناريو وتقسيم المشاهد وملف ترجمة SRT؛ لا تنتج MP4 بذاتها.</p>
 <p class="status" id="exportStatus" aria-live="polite"></p>
+<div class="pptx-showcase" id="pptxShowcase">
+ <div class="showcase-head"><div><span class="showcase-kicker">LIVE DESIGN PREVIEW</span><h3>هكذا سيبدو العرض الذكي داخل PowerPoint</h3><p>معاينة مرئية لأنواع الشرائح التي يختارها المحرك بحسب طبيعة المحتوى.</p></div><span class="showcase-chip">تصميم عربي · 16:9</span></div>
+ <div class="showcase-grid">
+  <article class="showcase-card"><div class="mini-slide mini-cover"><span class="mini-mark">EDU STUDIO</span><div class="mini-cover-title">تصنيف التفاعلات الكيميائية</div><div class="mini-cover-sub">عرض تعليمي تفاعلي · مستر محمد جمعة</div><div class="mini-cover-orbit"></div><span class="mini-cover-foot">معانا دائماً أنت الأفضل</span></div><strong>01 · غلاف احترافي</strong><small>عنوان واضح وهوية بصرية وألوان متناسقة.</small></article>
+  <article class="showcase-card"><div class="mini-slide mini-flow"><span class="mini-label">مخطط مفاهيمي</span><div class="mini-slide-title">كيف نصنّف التفاعل؟</div><div class="mini-flow-track"><span>المتفاعلات</span><i>←</i><span>نوع التفاعل</span><i>←</i><span>النواتج</span></div><div class="mini-flow-foot">خطوات مرئية قابلة للتحرير</div></div><strong>02 · مخطط تسلسلي</strong><small>مراحل وأسهم مرتبة من اليمين إلى اليسار.</small></article>
+  <article class="showcase-card"><div class="mini-slide mini-compare"><span class="mini-label">مقارنة بصرية</span><div class="mini-slide-title">أنواع التفاعلات</div><div class="mini-columns"><div><b>اتحاد</b><span>A + B → AB</span><small>تكوين ناتج واحد</small></div><div><b>تحلل</b><span>AB → A + B</span><small>تفكك مركب</small></div></div><div class="mini-flow-foot">قارن النمط قبل حفظ التعريف</div></div><strong>03 · مقارنة علمية</strong><small>بطاقات منظمة لإظهار أوجه الاختلاف.</small></article>
+  <article class="showcase-card"><div class="mini-slide mini-formula"><span class="mini-label">علاقة علمية</span><div class="mini-slide-title">مثّل التفاعل بالرموز</div><div class="mini-equation">A + B <b>→</b> AB</div><div class="mini-formula-caption">المتفاعلات <span>الناتج</span></div><div class="mini-flow-foot">المعادلة عنصر نصي قابل للتعديل</div></div><strong>04 · معادلة أو قانون</strong><small>إبراز بصري للرموز والعلاقات المهمة.</small></article>
+ </div>
+ <div class="showcase-bottom">
+  <div class="showcase-notes"><span class="notes-icon">✎</span><div><b>ملاحظات إلقاء المعلم</b><p>تمهيد للشرح، نقاط الحديث، سؤال للتحقق من الفهم، وانتقال مقترح للشريحة التالية.</p></div></div>
+  <div class="showcase-sources"><span class="source-icon">↗</span><div><b>المراجع العلمية</b><p>تظهر المصادر والروابط الموجودة في المحتوى الأصلي فقط؛ لا تُنشأ مراجع وهمية.</p></div></div>
+ </div>
+ <p class="showcase-disclaimer">هذه معاينة تصميمية توضح شكل القوالب. المحتوى الفعلي والرسوم يتحددان بحسب النص الذي تلصقه قبل التصدير.</p>
+</div>
 </section>
 
 <section class="card" id="arabLibrary">
