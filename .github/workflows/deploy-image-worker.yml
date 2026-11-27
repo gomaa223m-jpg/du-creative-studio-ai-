@@ -48,15 +48,246 @@ jobs:
             CLOUDFLARE_ACCOUNT_ID=""
           fi
           if [[ -z "$CLOUDFLARE_ACCOUNT_ID" && -n "$CLOUDFLARE_API_TOKEN" ]]; then
-            response="$(curl --silent --show-error --fail \
+            # Verify the token first; print Cloudflare's safe error messages, never the token.
+            verify="$(curl --silent --show-error \
               -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-              "https://api.cloudflare.com/client/v4/accounts?per_page=2")" || {
-                echo "::error::Could not discover Cloudflare account. Ensure the API token has permission to read account details."
+              "https://api.cloudflare.com/client/v4/user/tokens/verify")" || {
+                echo "::error::Cloudflare token verification request could not be completed."
                 exit 1
               }
+            if [[ "$(printf '%s' "$verify" | jq -r '.success // false')" != "true" ]]; then
+              echo "::error::Cloudflare rejected the API token:"
+              printf '%s' "$verify" | jq -r '.errors[]? | "Cloudflare error \(.code): \(.message)"' || true
+              exit 1
+            fi
+            account_response="$(curl --silent --show-error --write-out '\n%{http_code}' \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts?per_page=2")" || {
+                echo "::error::Cloudflare account lookup request could not be completed."
+                exit 1
+              }
+            http_code="${account_response##*
+          [[ "$CLOUDFLARE_ACCOUNT_ID" =~ ^[a-fA-F0-9]{32}$ ]] || {
+            echo "::error::Cloudflare did not provide a valid 32-character Account ID."
+            exit 1
+          }
+          echo "CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID" >> "$GITHUB_ENV"
+          [[ -n "$APP_ACCESS_TOKEN" ]] || missing+=("APP_ACCESS_TOKEN")
+          if (( ${#missing[@]} )); then
+            {
+              echo "## Deployment blocked: missing required secrets"
+              echo
+              echo "Add these in Settings → Secrets and variables → Actions → Repository secrets:"
+              for name in "${missing[@]}"; do printf '%s\n' "- $name"; done
+              echo
+              echo "Values are never printed by this workflow."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Deployment blocked. Configure the required GitHub Actions secrets listed in the job summary."
+            exit 1
+          fi
+
+      - name: Deploy Worker core
+        uses: cloudflare/wrangler-action@v4.1.3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.toml
+          secrets: |
+            APP_ACCESS_TOKEN
+        env:
+          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
+
+      - name: Enable optional cloud text generation
+        if: env.OPENAI_API_KEY != ''
+        uses: cloudflare/wrangler-action@v4.1.3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.toml
+          secrets: |
+            APP_ACCESS_TOKEN
+            OPENAI_API_KEY
+        env:
+          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
+          OPENAI_API_KEY: ${{ env.OPENAI_API_KEY }}
+
+      - name: Deploy optional video AI gateway
+        if: env.AI_API_KEY != ''
+        uses: cloudflare/wrangler-action@v4.1.3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.video.toml
+          secrets: |
+            APP_ACCESS_TOKEN
+            AI_API_KEY
+        env:
+          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
+          AI_API_KEY: ${{ env.AI_API_KEY }}
+
+      - name: Configure optional image engine secrets
+        if: env.IMAGE_ENGINE_URL != '' && env.IMAGE_CHECKPOINT != ''
+        uses: cloudflare/wrangler-action@v4.1.3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.toml
+          secrets: |
+            IMAGE_ENGINE_URL
+            IMAGE_CHECKPOINT
+        env:
+          IMAGE_ENGINE_URL: ${{ env.IMAGE_ENGINE_URL }}
+          IMAGE_CHECKPOINT: ${{ env.IMAGE_CHECKPOINT }}
+
+      - name: Configure optional image engine access token
+        if: env.IMAGE_ENGINE_TOKEN != ''
+        uses: cloudflare/wrangler-action@v4.1.3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.toml
+          secrets: |
+            IMAGE_ENGINE_TOKEN
+        env:
+          IMAGE_ENGINE_TOKEN: ${{ env.IMAGE_ENGINE_TOKEN }}
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          {
+            echo "## Worker deployment completed"
+            echo
+            echo "- Core Worker deployed."
+            echo "- Private application access token configured."
+            if [[ -n "$OPENAI_API_KEY" ]]; then
+              echo "- Cloud text generation configured."
+            else
+              echo "- Cloud text generation is disabled; local browser tools remain available."
+            fi
+            echo "- Core Worker: edu-creative-book-engine.<your-account-subdomain>.workers.dev"
+            if [[ -n "$AI_API_KEY" ]]; then
+              echo "- Video script gateway deployed: https://edu-creative-video-gateway.<your-account-subdomain>.workers.dev"
+              echo "- This gateway creates video scripts and scene plans; it does not render final MP4 files."
+            else
+              echo "- Optional video script gateway skipped: add AI_API_KEY to enable it."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+\n'}"
+            response="${account_response%
+          [[ "$CLOUDFLARE_ACCOUNT_ID" =~ ^[a-fA-F0-9]{32}$ ]] || {
+            echo "::error::Cloudflare did not provide a valid 32-character Account ID."
+            exit 1
+          }
+          echo "CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID" >> "$GITHUB_ENV"
+          [[ -n "$APP_ACCESS_TOKEN" ]] || missing+=("APP_ACCESS_TOKEN")
+          if (( ${#missing[@]} )); then
+            {
+              echo "## Deployment blocked: missing required secrets"
+              echo
+              echo "Add these in Settings → Secrets and variables → Actions → Repository secrets:"
+              for name in "${missing[@]}"; do printf '%s\n' "- $name"; done
+              echo
+              echo "Values are never printed by this workflow."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Deployment blocked. Configure the required GitHub Actions secrets listed in the job summary."
+            exit 1
+          fi
+
+      - name: Deploy Worker core
+        uses: cloudflare/wrangler-action@v4.1.3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.toml
+          secrets: |
+            APP_ACCESS_TOKEN
+        env:
+          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
+
+      - name: Enable optional cloud text generation
+        if: env.OPENAI_API_KEY != ''
+        uses: cloudflare/wrangler-action@v4.1.3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.toml
+          secrets: |
+            APP_ACCESS_TOKEN
+            OPENAI_API_KEY
+        env:
+          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
+          OPENAI_API_KEY: ${{ env.OPENAI_API_KEY }}
+
+      - name: Deploy optional video AI gateway
+        if: env.AI_API_KEY != ''
+        uses: cloudflare/wrangler-action@v4.1.3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.video.toml
+          secrets: |
+            APP_ACCESS_TOKEN
+            AI_API_KEY
+        env:
+          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
+          AI_API_KEY: ${{ env.AI_API_KEY }}
+
+      - name: Configure optional image engine secrets
+        if: env.IMAGE_ENGINE_URL != '' && env.IMAGE_CHECKPOINT != ''
+        uses: cloudflare/wrangler-action@v4.1.3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.toml
+          secrets: |
+            IMAGE_ENGINE_URL
+            IMAGE_CHECKPOINT
+        env:
+          IMAGE_ENGINE_URL: ${{ env.IMAGE_ENGINE_URL }}
+          IMAGE_CHECKPOINT: ${{ env.IMAGE_CHECKPOINT }}
+
+      - name: Configure optional image engine access token
+        if: env.IMAGE_ENGINE_TOKEN != ''
+        uses: cloudflare/wrangler-action@v4.1.3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.toml
+          secrets: |
+            IMAGE_ENGINE_TOKEN
+        env:
+          IMAGE_ENGINE_TOKEN: ${{ env.IMAGE_ENGINE_TOKEN }}
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          {
+            echo "## Worker deployment completed"
+            echo
+            echo "- Core Worker deployed."
+            echo "- Private application access token configured."
+            if [[ -n "$OPENAI_API_KEY" ]]; then
+              echo "- Cloud text generation configured."
+            else
+              echo "- Cloud text generation is disabled; local browser tools remain available."
+            fi
+            echo "- Core Worker: edu-creative-book-engine.<your-account-subdomain>.workers.dev"
+            if [[ -n "$AI_API_KEY" ]]; then
+              echo "- Video script gateway deployed: https://edu-creative-video-gateway.<your-account-subdomain>.workers.dev"
+              echo "- This gateway creates video scripts and scene plans; it does not render final MP4 files."
+            else
+              echo "- Optional video script gateway skipped: add AI_API_KEY to enable it."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+\n'*}"
+            if [[ ! "$http_code" =~ ^2[0-9][0-9]$ ]] || [[ "$(printf '%s' "$response" | jq -r '.success // false')" != "true" ]]; then
+              echo "::error::Cloudflare token is valid, but account lookup failed. Grant the token Account: Read permission or set the correct CLOUDFLARE_ACCOUNT_ID secret."
+              printf '%s' "$response" | jq -r '.errors[]? | "Cloudflare error \(.code): \(.message)"' || true
+              exit 1
+            fi
             count="$(printf '%s' "$response" | jq -r '.result | length')"
             if [[ "$count" != "1" ]]; then
-              echo "::error::Automatic account discovery requires exactly one accessible Cloudflare account. Set a valid CLOUDFLARE_ACCOUNT_ID secret if multiple accounts are accessible."
+              echo "::error::Automatic account discovery requires exactly one accessible Cloudflare account. Set the correct CLOUDFLARE_ACCOUNT_ID secret if multiple accounts are accessible."
               exit 1
             fi
             CLOUDFLARE_ACCOUNT_ID="$(printf '%s' "$response" | jq -r '.result[0].id')"
