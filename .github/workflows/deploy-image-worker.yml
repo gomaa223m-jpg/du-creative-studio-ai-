@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   deploy:
-    name: Validate and deploy secure Worker
+    name: Deploy secure Worker when credentials are configured
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -29,6 +29,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate deployment credentials
+        id: credentials
         shell: bash
         run: |
           set -euo pipefail
@@ -37,9 +38,16 @@ jobs:
           [[ -n "$CLOUDFLARE_ACCOUNT_ID" ]] || missing+=("CLOUDFLARE_ACCOUNT_ID")
           [[ -n "$APP_ACCESS_TOKEN" ]] || missing+=("APP_ACCESS_TOKEN")
           if (( ${#missing[@]} )); then
-            printf '::error::Worker deployment blocked. Add these GitHub Actions secrets:\n'
-            printf ' - %s\n' "${missing[@]}"
-            exit 1
+            {
+              echo "## Worker deployment not run"
+              echo
+              echo "The website can still be published on GitHub Pages, but the server-side AI/video worker was not deployed."
+              echo "Configure the following GitHub Actions secrets, then rerun this workflow:"
+              for name in "${missing[@]}"; do echo "- `$name`"; done
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::Worker deployment skipped because required secrets are not configured."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           if [[ -n "$IMAGE_ENGINE_URL" && "$IMAGE_ENGINE_URL" != https://* ]]; then
             echo "::error::IMAGE_ENGINE_URL must use HTTPS."
@@ -48,8 +56,10 @@ jobs:
           if [[ -n "$IMAGE_ENGINE_URL" && -z "$IMAGE_CHECKPOINT" ]]; then
             echo "::warning::IMAGE_ENGINE_URL is set but IMAGE_CHECKPOINT is missing; image generation will remain unavailable."
           fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Deploy Worker core
+        if: steps.credentials.outputs.ready == 'true'
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
@@ -61,7 +71,7 @@ jobs:
           APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
 
       - name: Configure optional cloud text AI
-        if: ${{ env.OPENAI_API_KEY != '' }}
+        if: steps.credentials.outputs.ready == 'true' && env.OPENAI_API_KEY != ''
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
@@ -75,7 +85,7 @@ jobs:
           OPENAI_API_KEY: ${{ env.OPENAI_API_KEY }}
 
       - name: Configure optional ComfyUI image engine
-        if: ${{ env.IMAGE_ENGINE_URL != '' && env.IMAGE_CHECKPOINT != '' }}
+        if: steps.credentials.outputs.ready == 'true' && env.IMAGE_ENGINE_URL != '' && env.IMAGE_CHECKPOINT != ''
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
@@ -92,7 +102,7 @@ jobs:
           IMAGE_CHECKPOINT: ${{ env.IMAGE_CHECKPOINT }}
 
       - name: Configure optional ComfyUI bearer token
-        if: ${{ env.IMAGE_ENGINE_TOKEN != '' && env.IMAGE_ENGINE_URL != '' && env.IMAGE_CHECKPOINT != '' }}
+        if: steps.credentials.outputs.ready == 'true' && env.IMAGE_ENGINE_TOKEN != '' && env.IMAGE_ENGINE_URL != '' && env.IMAGE_CHECKPOINT != ''
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
