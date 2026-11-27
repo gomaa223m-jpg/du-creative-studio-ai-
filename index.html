@@ -1518,11 +1518,27 @@ $('pptxExport').addEventListener('click',async()=>{
   if(busy)return;busy=true;start.disabled=true;
   try{
    if(consent)consent.checked=true;
-   $('videoQuality').value='720';$('videoSeconds').value='5';$('videoAspect').value='landscape';$('videoStyle').value='infographic';$('videoMotion').value='normal';
+   $('videoQuality').value='720';$('videoSeconds').value='7';$('videoAspect').value='landscape';$('videoStyle').value='infographic';$('videoMotion').value='normal';
    const generated=$('generatedContent');if(generated)generated.value='';
    $('videoScript').value='';
-   step(1,'إنشاء سيناريو مبدئي من عنوان الدرس...');
-   autoBuildVideoScript();
+   step(1,'إعداد السيناريو الذكي من عنوان الدرس...');
+   let cloudScriptReady=false;
+   const aiEndpoint=sessionStorage.getItem('eduAiEndpoint')||'';
+   const aiToken=sessionStorage.getItem('eduAiToken')||'';
+   if(aiEndpoint&&aiToken){
+    try{
+     const aiResponse=await fetch(aiEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+aiToken},body:JSON.stringify({task:'video',topic,subject:'علوم',grade:'المرحلة الثانوية',context:'أنشئ سيناريو تعليمياً عربياً دقيقاً ومشوقاً، مع مشاهد متتابعة وتعليق صوتي ومفاهيم علمية صحيحة.'})});
+     const aiData=await aiResponse.json().catch(()=>({}));
+     const aiScenes=aiData.result&&aiData.result.scenes;
+     if(!aiResponse.ok||!aiData.ok||!Array.isArray(aiScenes)||!aiScenes.length)throw new Error(aiData.error||'لم يرجع الخادم مشاهد صالحة.');
+     $('videoScript').value=aiScenes.map((scene,i)=>['المشهد '+(i+1)+': '+(scene.title||''),scene.on_screen_text||'',scene.voiceover||scene.visual||''].filter(Boolean).join(' — ')).join('\\n');
+     cloudScriptReady=true;
+     progress.textContent='تم إنشاء السيناريو بواسطة محرك الذكاء الاصطناعي.';
+    }catch(aiError){
+     progress.textContent='تعذر الاتصال بمحرك الذكاء الاصطناعي؛ سيتم إنشاء سيناريو محلي احتياطي. '+(aiError.message||'');
+    }
+   }
+   if(!cloudScriptReady)autoBuildVideoScript();
    if(!$('videoScript').value.trim())throw new Error('لم يتم إنشاء سيناريو. راجع العنوان وحاول مرة أخرى.');
    step(2,'تقسيم الدرس إلى مشاهد وتجهيز الإخراج...');
    autoDirectVideo();
