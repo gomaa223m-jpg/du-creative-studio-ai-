@@ -3,23 +3,23 @@
 This folder contains an optional secure server-side gateway. It is not deployed by GitHub Pages and does not make paid AI services free.
 
 ## What it enables
-- One protected endpoint for lesson plans, worksheets, video scripts/storyboards, and book drafts.
-- Any provider exposing an OpenAI-compatible chat-completions API, configured on the server.
-- Keeps the provider API key on the Worker, never in the public HTML.
+- A protected `POST /api/generate` endpoint for Arabic video scripts and scene plans.
+- A protected `POST /api/book` endpoint for structured educational book drafts and an optional second-pass review.
+- Optional ComfyUI image generation endpoints when a separate GPU host and compatible checkpoint are configured.
+- Keeps provider credentials on the Worker, never in the public HTML.
+
+**Cost truth:** GitHub Pages and the local browser tools can be used without an AI API subscription. The cloud text endpoints require an OpenAI API key and API usage is billed separately; they are optional, not a free unlimited service. Image generation requires a separate ComfyUI host and suitable hardware or hosting, which may also cost money.
 
 Examples of compatible gateways/providers may include OpenAI, OpenRouter, Groq, Together, and DeepSeek. Compatibility, model availability, JSON mode, quotas, and prices depend on the provider and selected model. This is not native integration with every vendor, and it does not render video through a video-generation API.
 
 ## Deploy to Cloudflare Workers
-1. Create a Worker and paste ai-gateway.js as its entry point.
-2. Add these Worker secrets/variables in Cloudflare:
-   - Secret APP_ACCESS_TOKEN: generate a long random token.
-   - Secret AI_API_KEY: API key from the chosen provider.
-   - Variable AI_BASE_URL: provider base URL ending at the API root, e.g. https://api.openai.com/v1.
-   - Variable AI_MODEL: exact model identifier from that provider.
-   - Variable ALLOWED_ORIGINS: https://gomaa223m-jpg.github.io
-3. Deploy and test GET https://YOUR-WORKER.workers.dev/health.
-4. Configure the Studio to call POST https://YOUR-WORKER.workers.dev/api/generate and /api/book with Authorization: Bearer YOUR_APP_ACCESS_TOKEN.
-5. Never paste provider API keys into the website, GitHub repository, screenshots, or chat.
+1. This repository's Worker entry point is `worker/index.js` (configured by `wrangler.toml`); do not use the obsolete `ai-gateway.js` filename.
+2. Add GitHub Actions repository secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `APP_ACCESS_TOKEN`.
+3. Optional cloud text generation: add `OPENAI_API_KEY`. This enables `/api/generate` and `/api/book`, but API use is billed by the provider. The Worker can deploy without this key; cloud text generation will report that it is not configured.
+4. Run **Actions → Deploy EDU Creative Studio Worker → Run workflow**.
+5. Test `GET https://YOUR-WORKER.workers.dev/health`.
+6. Configure the Studio's video endpoint as `https://YOUR-WORKER.workers.dev/api/generate`; the book editor endpoint is `https://YOUR-WORKER.workers.dev/api/book`. Both require the same `APP_ACCESS_TOKEN`.
+7. Never paste provider API keys or access tokens into the website source, screenshots, or chat.
 
 ## Generate endpoint
 Example request:
@@ -117,15 +117,19 @@ Reference images are uploaded to the selected ComfyUI instance for image-to-imag
 
 ### GitHub Actions deployment settings (current workflow)
 
-The automated Worker workflow now requires the following repository settings before it deploys. Configure them under **Settings → Secrets and variables → Actions**:
+The automated Worker workflow requires only these settings to deploy the core gateway. Configure them under **Settings → Secrets and variables → Actions**:
 
-**Repository secrets**
-- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with permission to deploy Workers and manage Worker settings/secrets.
+**Required repository secrets**
+- `CLOUDFLARE_API_TOKEN`: token with permission to deploy Workers and manage Worker secrets.
 - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account ID.
-- `APP_ACCESS_TOKEN`: a long random private token used by the Studio-to-Worker authorization check.
-- `IMAGE_ENGINE_URL`: the protected HTTPS base URL of the reachable ComfyUI host (without `/prompt`).
+- `APP_ACCESS_TOKEN`: long random private token used by the Studio-to-Worker authorization check.
 
-**Repository variable**
-- `IMAGE_CHECKPOINT`: exact filename of a compatible checkpoint installed on that ComfyUI host.
+**Optional repository secrets**
+- `OPENAI_API_KEY`: enables cloud text generation for video scripts and books. API usage is paid separately; omit it to keep the cloud AI features disabled.
+- `IMAGE_ENGINE_URL`: protected HTTPS base URL of a reachable ComfyUI host (without `/prompt`).
+- `IMAGE_ENGINE_TOKEN`: optional bearer token for the protected ComfyUI proxy.
 
-The workflow validates all five values and fails with the missing setting names instead of reporting a misleading green success when deployment was skipped. When configured, it deploys the Worker and applies the two Worker secrets and checkpoint variable. The GPU host must already be running and reachable over HTTPS; Cloudflare Workers and GitHub Pages do not provide the GPU or model files.
+**Optional repository variable**
+- `IMAGE_CHECKPOINT`: exact compatible checkpoint filename installed on the ComfyUI host.
+
+The workflow deploys the Worker core without requiring a GPU server or paid AI key. Image generation is available only when both image settings are configured and the GPU host is online. GitHub Pages and Cloudflare Workers do not provide GPU hardware or model files.
