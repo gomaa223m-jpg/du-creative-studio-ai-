@@ -91,6 +91,143 @@ const auditSchema = {
   }
 };
 
+
+function imageEngineUrl(env) {
+  const raw = cleanText(env.IMAGE_ENGINE_URL, 500).replace(/\/+$/, "");
+  if (!raw) throw new Error("لم يتم إعداد IMAGE_ENGINE_URL على الخادم.");
+  const parsed = new URL(raw);
+  if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") throw new Error("يجب أن يستخدم عنوان محرك الصور HTTPS.");
+  return raw;
+}
+function imageHeaders(env) {
+  const headers = { Accept: "application/json" };
+  if (env.IMAGE_ENGINE_TOKEN) headers.Authorization = "Bearer " + env.IMAGE_ENGINE_TOKEN;
+  return headers;
+}
+function imageWorkflow({ prompt, negative, width, height, steps, cfg, seed, checkpoint, uploadedName, denoise }) {
+  const graph = {
+    "1": { class_type: "CheckpointLoaderSimple", inputs: { ckpt_name: checkpoint } },
+    "2": { class_type: "CLIPTextEncode", inputs: { text: prompt, clip: ["1", 1] } },
+    "3": { class_type: "CLIPTextEncode", inputs: { text: negative, clip: ["1", 1] } }
+  };
+  let latentNode, samplerId;
+  if (uploadedName) {
+    graph["4"] = { class_type: "LoadImage", inputs: { image: uploadedName } };
+    graph["5"] = { class_type: "VAEEncode", inputs: { pixels: ["4", 0], vae: ["1", 2] } };
+    latentNode = ["5", 0]; samplerId = "6";
+  } else {
+    graph["4"] = { class_type: "EmptyLatentImage", inputs: { width, height, batch_size: 1 } };
+    latentNode = ["4", 0]; samplerId = "5";
+  }
+  graph[samplerId] = { class_type: "KSampler", inputs: {
+    seed, steps, cfg, sampler_name: "dpmpp_2m", scheduler: "karras",
+    denoise: uploadedName ? denoise : 1,
+    model: ["1", 0], positive: ["2", 0], negative: ["3", 0], latent_image: latentNode
+  }};
+  const decodeId = uploadedName ? "7" : "6";
+  const saveId = uploadedName ? "8" : "7";
+  graph[decodeId] = { class_type: "VAEDecode", inputs: { samples: [samplerId, 0], vae: ["1", 2] } };
+  graph[saveId] = { class_type: "SaveImage", inputs: { filename_prefix: "EDU_Creative_Studio", images: [decodeId, 0] } };
+  return graph;
+}
+async function handleImageEngine(request, env, origin, url) {
+  const auth = request.headers.get("Authorization") || "";
+  if (!env.APP_ACCESS_TOKEN || auth !== "Bearer " + env.APP_ACCESS_TOKEN) return json({ ok: false, error: "رمز الوصول غير صحيح أو لم يُضبط على الخادم." }, 401, origin);
+  let base;
+  try { base = imageEngineUrl(env); } catch (error) { return json({ ok: false, error: error.message }, 503, origin); }
+  const headers = imageHeaders(env);
+  if (request.method === "GET" && url.pathname === "/api/v1/images/health") {
+    if (!env.IMAGE_CHECKPOINT) return json({ ok: false, configured: false, error: "أضف IMAGE_CHECKPOINT باسم ملف النموذج الموجود في مجلد checkpoints." }, 503, origin);
+    try {
+      const upstream = await fetch(base + "/system_stats", { headers, signal: AbortSignal.timeout(10000) });
+      if (!upstream.ok) throw new Error("محرك الصور أعاد الحالة " + upstream.status);
+      const stats = await upstream.json();
+      return json({ ok: true, configured: true, engine: "ComfyUI", checkpoint: env.IMAGE_CHECKPOINT, device: stats.devices?.[0]?.name || "متصل" }, 200, origin);
+    } catch (error) {
+      return json({ ok: false, configured: true, error: "تعذر الوصول إلى محرك الصور: " + String(error.message || error).slice(0, 180) }, 502, origin);
+    }
+  }
+  if (request.method === "POST" && url.pathname === "/api/v1/images/generate") {
+    let input;
+    try { input = await request.json(); } catch { return json({ ok: false, error: "تعذر قراءة بيانات الطلب." }, 400, origin); }
+    const prompt = cleanText(input.prompt, 5000);
+    const negative = cleanText(input.negative, 1600) || "blurry, low quality, distorted anatomy, malformed hands, unreadable text, watermark, logo";
+    if (prompt.length < 8) return json({ ok: false, error: "اكتب وصفاً بصرياً أطول قبل التوليد." }, 400, origin);
+    const width = Math.max(512, Math.min(1280, Math.round(Number(input.width) / 64) * 64 || 1024));
+    const height = Math.max(512, Math.min(1280, Math.round(Number(input.height) / 64) * 64 || 1024));
+    const steps = Math.max(12, Math.min(36, Math.round(Number(input.steps) || 26)));
+    const cfg = Math.max(2, Math.min(9, Number(input.cfg) || 6));
+    const denoise = Math.max(0.25, Math.min(0.8, Number(input.denoise) || 0.48));
+    const seed = Number.isSafeInteger(Number(input.seed)) && Number(input.seed) >= 0 ? Number(input.seed) : crypto.getRandomValues(new Uint32Array(1))[0];
+    let uploadedName = "";
+    const imageData = typeof input.image === "string" ? input.image : "";
+    if (imageData) {
+      if (imageData.length > 7_000_000) return json({ ok: false, error: "الصورة كبيرة جداً؛ اختر صورة أصغر من 5 ميجابايت." }, 413, origin);
+      const match = imageData.match(/^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/);
+      if (!match) return json({ ok: false, error: "صيغة الصورة غير مدعومة. استخدم PNG أو JPG أو WEBP." }, 400, origin);
+      try {
+        const binary = atob(match[2]), bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const extension = match[1] === "jpeg" ? "jpg" : match[1];
+        const form = new FormData();
+        form.append("image", new Blob([bytes], { type: "image/" + match[1] }), "edu-reference-" + crypto.randomUUID() + "." + extension);
+        form.append("overwrite", "true");
+        const upload = await fetch(base + "/upload/image", { method: "POST", headers, body: form, signal: AbortSignal.timeout(30000) });
+        const uploaded = await upload.json().catch(() => ({}));
+        if (!upload.ok || !uploaded.name) throw new Error(uploaded.error || "فشل رفع الصورة المرجعية إلى محرك الصور.");
+        uploadedName = uploaded.name;
+      } catch (error) {
+        return json({ ok: false, error: "تعذر تجهيز الصورة المرجعية: " + String(error.message || error).slice(0, 180) }, 502, origin);
+      }
+    }
+    const graph = imageWorkflow({ prompt, negative, width, height, steps, cfg, seed, checkpoint: cleanText(env.IMAGE_CHECKPOINT, 240), uploadedName, denoise });
+    try {
+      const queued = await fetch(base + "/prompt", {
+        method: "POST", headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: graph, client_id: "edu-creative-studio" }),
+        signal: AbortSignal.timeout(30000)
+      });
+      const result = await queued.json().catch(() => ({}));
+      if (!queued.ok || !result.prompt_id) {
+        const detail = result.error?.message || result.error || result.node_errors || "رفض محرك ComfyUI سير العمل.";
+        return json({ ok: false, error: String(detail).slice(0, 500) }, 502, origin);
+      }
+      return json({ ok: true, prompt_id: result.prompt_id, seed, status: "queued", message: "أُرسل الطلب إلى محرك الصور. تابع حالة التوليد." }, 202, origin);
+    } catch (error) {
+      return json({ ok: false, error: "تعذر إرسال مهمة التوليد: " + String(error.message || error).slice(0, 180) }, 502, origin);
+    }
+  }
+  if (request.method === "GET" && url.pathname === "/api/v1/images/status") {
+    const promptId = cleanText(url.searchParams.get("prompt_id"), 100);
+    if (!/^[a-f0-9-]{8,100}$/i.test(promptId)) return json({ ok: false, error: "معرّف مهمة غير صالح." }, 400, origin);
+    try {
+      const historyResponse = await fetch(base + "/history/" + encodeURIComponent(promptId), { headers, signal: AbortSignal.timeout(15000) });
+      if (!historyResponse.ok) throw new Error("تعذر قراءة حالة المهمة: " + historyResponse.status);
+      const history = await historyResponse.json(), item = history[promptId];
+      if (!item) return json({ ok: true, status: "running", message: "المحرك ما زال ينفذ المهمة." }, 200, origin);
+      const image = Object.values(item.outputs || {}).flatMap(group => group.images || [])[0];
+      if (!image) {
+        const failed = item.status?.status_str === "error";
+        return json({ ok: !failed, status: failed ? "error" : "running", error: failed ? "انتهى التنفيذ دون صورة. تحقق من النموذج والذاكرة وسجل ComfyUI." : "جارٍ تجهيز الصورة النهائية." }, failed ? 502 : 200, origin);
+      }
+      const view = new URL(base + "/view");
+      view.searchParams.set("filename", image.filename);
+      view.searchParams.set("subfolder", image.subfolder || "");
+      view.searchParams.set("type", image.type || "output");
+      const imageResponse = await fetch(view.toString(), { headers, signal: AbortSignal.timeout(30000) });
+      if (!imageResponse.ok) throw new Error("تعذر تنزيل الصورة الناتجة من المحرك.");
+      const outHeaders = new Headers(corsHeaders(origin));
+      outHeaders.set("Content-Type", imageResponse.headers.get("Content-Type") || "image/png");
+      outHeaders.set("Cache-Control", "no-store");
+      outHeaders.set("X-Image-Seed", String(item.prompt?.[1]?.seed || ""));
+      return new Response(imageResponse.body, { status: 200, headers: outHeaders });
+    } catch (error) {
+      return json({ ok: false, error: String(error.message || error).slice(0, 220) }, 502, origin);
+    }
+  }
+  return json({ ok: false, error: "مسار صور غير معروف." }, 404, origin);
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
@@ -107,6 +244,8 @@ export default {
     if (request.method === "GET" && ["/health", "/api/v1/health"].includes(url.pathname)) {
       return json({ ok: true, service: "edu-creative-studio-api", apiVersion: "v1", mcp: "/mcp", tools: ["health", "generate_book"] }, 200, headersOrigin);
     }
+
+    if (url.pathname.startsWith("/api/v1/images/")) return handleImageEngine(request, env, headersOrigin, url);
 
     if (request.method === "GET" && url.pathname === "/openapi.json") {
       return json({
