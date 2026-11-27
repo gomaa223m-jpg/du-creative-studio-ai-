@@ -55,7 +55,7 @@ body{background:#f4f8fb}
 @media(max-width:760px){.hero{padding:0 16px}.hero-content{grid-template-columns:1fr;gap:18px;padding:42px 0 35px}.hero-copy{max-width:none}.hero h1{font-size:clamp(32px,8vw,45px)}.hero-lead{font-size:15px}.hero-visual{min-height:310px}.visual-window{width:min(94%,430px)}.hero-footer{align-items:flex-start;flex-direction:column}.hero-stats{gap:12px}.note-top{right:0}.note-bottom{left:0}}
 @media(max-width:420px){.hero-top{font-size:11px}.free-chip{font-size:10px;padding:4px 8px}.hero-proof{gap:8px;font-size:10px}.hero-actions>*{width:100%}.hero-visual{min-height:285px}.visual-tile{min-height:72px}.visual-title{font-size:18px}.floating-note{font-size:10px}}
 
-</style></head>
+.book-pages{display:grid;gap:16px;margin:16px 0}.book-page-editor{background:#fff;border:1px solid #d8e4eb;border-radius:14px;padding:14px;color:#183044}.page-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.page-tools strong{margin-inline-end:auto;color:#0b7180}.page-tools button{padding:6px 10px}.page-title{width:100%;font-size:20px;font-weight:bold;margin:8px 0;padding:10px;border:1px solid #d5e1e9;border-radius:8px}.page-content{min-height:230px;border:1px dashed #aabecb;border-radius:8px;padding:16px;outline:none;background:#fff;line-height:2}.page-content:focus{border-color:#0b9b91;box-shadow:0 0 0 2px #0b9b9120}.page-content img{max-width:100%;height:auto}.page-content table{border-collapse:collapse;width:100%}.page-content td{border:1px solid #8da3b2;padding:8px;min-width:55px}.page-content:empty:before{content:'اكتب محتوى الصفحة هنا...';color:#9aaab5}@media print{.page-tools{display:none}}</style></head>
 <body>
 <header class="hero">
   <div class="hero-orb orb-one"></div><div class="hero-orb orb-two"></div>
@@ -135,7 +135,33 @@ body{background:#f4f8fb}
 </div>
 <label for="bookExtra">ملاحظات أو منهج / مرجع تريد الالتزام به (اختياري)</label><textarea id="bookExtra" placeholder="أضف الصف أو الفصل الدراسي أو رابط مرجع أو شروطاً خاصة..."></textarea>
 <div class="grid"><button class="bigstart" id="createBookPrompt">✦ أنشئ كتابي بالذكاء الاصطناعي</button><button class="secondary" id="bookOutline">إنشاء هيكل الكتاب محلياً</button><button class="light" id="bookToExport">اذهب إلى مركز إخراج الكتاب</button></div>
-<p class="muted">زر الذكاء الاصطناعي يجهز طلب تأليف متكاملاً ويفتح ChatGPT لتوليد المخطوط؛ لا يوجد توليد سحابي تلقائي داخل الموقع. بعد استلام المخطوط الصقه في مركز التصدير ثم أنشئ نسخة HTML تفاعلية أو Word أو PDF.</p><p class="status" id="bookStatus" aria-live="polite"></p>
+<p class="muted">أصبح لديك محرر كتب داخلي لتأليف الصفحات وتنسيقها وإضافة الصور والجداول والمعادلات وترتيب الفصول وحفظ العمل وتصديره. التوليد الذكي المستقل داخل الموقع يحتاج خادماً آمناً ومفتاح خدمة محفوظاً خارج المتصفح؛ لا نضع مفاتيح API في صفحة عامة.</p><p class="status" id="bookStatus" aria-live="polite"></p>
+<div class="stepnote" id="bookEditor">
+<h3>✍️ محرر الكتاب صفحةً بصفحة</h3>
+<p>اكتب أو الصق المحتوى، ثم نسّق النص وأدرج الصور والجداول والمعادلات. يمكنك تحريك الصفحات وإعادة ترتيبها.</p>
+<div class="grid">
+<div><label for="editorPageTitle">عنوان الصفحة الجديدة</label><input id="editorPageTitle" placeholder="مثال: مقدمة الفصل الأول"></div>
+<button id="addBookPage">+ إضافة صفحة</button>
+<button class="secondary" id="importBookText">استيراد النص من مركز التصدير</button>
+</div>
+<div class="grid">
+<button class="light" data-edit="bold">عريض B</button><button class="light" data-edit="italic">مائل I</button><button class="light" data-edit="insertUnorderedList">قائمة نقطية</button><button class="light" data-edit="insertOrderedList">قائمة مرقمة</button><button class="light" data-edit="formatBlock" data-value="h2">عنوان فرعي</button>
+</div>
+<div class="grid">
+<button class="secondary" id="insertBookTable">إدراج جدول 3×3</button>
+<button class="secondary" id="insertBookFormula">إدراج معادلة</button>
+<button class="secondary" id="insertBookImage">إضافة صورة</button>
+<input id="bookImageFile" type="file" accept="image/*" hidden>
+</div>
+<div id="bookPages" class="book-pages" aria-live="polite"></div>
+<div class="grid">
+<button id="saveBookDraft">حفظ الكتاب على هذا الجهاز</button>
+<button class="secondary" id="downloadBookHtml">تصدير HTML منسق</button>
+<button class="secondary" id="downloadBookWord">تصدير Word</button>
+<button class="light" id="printBookPdf">طباعة / حفظ PDF</button>
+</div>
+<p class="muted">الحفظ محلي في المتصفح على هذا الجهاز. احتفظ بنسخة HTML احتياطية؛ مسح بيانات المتصفح قد يحذف المسودة المحلية. PDF يتم عبر نافذة الطباعة واختيار «حفظ PDF».</p>
+</div>
 </section>
 <section class="card"><h2>🧠 البرومبت الجاهز</h2><pre id="out">أدخل بيانات الدرس ثم اضغط «إنشاء البرومبت».</pre><button id="copy">نسخ البرومبت</button><button class="secondary" id="downloadPrompt">تنزيل البرومبت TXT</button><button class="light" id="printPrompt">طباعة البرومبت</button><a class="link secondary" id="chat" href="https://chatgpt.com/" target="_blank" rel="noopener">فتح ChatGPT</a><a class="link secondary" href="https://claude.ai/" target="_blank" rel="noopener">Claude</a><a class="link secondary" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a><button class="light" id="launchChatGPT">إرسال إلى ChatGPT</button><button class="light" id="launchClaude">إرسال إلى Claude</button><button class="light" id="launchGemini">إرسال إلى Gemini</button><p class="muted">زر «ابدأ مع ChatGPT الآن» ينسخ الطلب ويفتح ChatGPT في تبويب جديد؛ الصق الطلب هناك واضغط إرسال. الأداة نفسها مجانية وتعمل دون مفتاح API. انسخ البرومبت إلى إحدى المنصات المجانية المتاحة، مع ملاحظة أن لكل منصة حدود استخدام قد تتغير. إنشاء ملفات العرض والفيديو فعلياً يتم عبر المنصة أو أدوات التصدير التي تختارها.</p></section>
 
@@ -428,6 +454,70 @@ $('bookOutline').addEventListener('click',()=>{
  $('generatedContent').value=draft;$('topic').value=title;$('bookStatus').textContent='تم إنشاء هيكل قابل للتحرير من '+n+' فصول. هذا قالب تأليف وليس محتوى علمياً مكتملاً.';$('exportCenter').scrollIntoView({behavior:'smooth'});
 });
 $('bookToExport').addEventListener('click',()=>$('exportCenter').scrollIntoView({behavior:'smooth'}));
+
+// محرر تأليف الكتب متعدد الصفحات
+let bookPages=[];
+function escBook(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderBookPages(){
+ const host=$('bookPages');host.innerHTML='';
+ if(!bookPages.length){host.innerHTML='<div class="empty">ابدأ بإضافة الصفحة الأولى إلى كتابك.</div>';return}
+ bookPages.forEach((p,i)=>{
+  const card=document.createElement('section');card.className='book-page-editor';card.dataset.index=i;
+  card.innerHTML='<div class="page-tools"><strong>صفحة '+(i+1)+'</strong><button type="button" data-act="up" '+(i===0?'disabled':'')+'>↑ أعلى</button><button type="button" data-act="down" '+(i===bookPages.length-1?'disabled':'')+'>↓ أسفل</button><button type="button" data-act="delete" class="light">حذف</button></div><input class="page-title" aria-label="عنوان الصفحة" value="'+escBook(p.title)+'"><div class="page-content" contenteditable="true" spellcheck="true">'+(p.html||'')+'</div>';
+  card.querySelector('.page-title').addEventListener('input',e=>bookPages[i].title=e.target.value);
+  card.querySelector('.page-content').addEventListener('input',e=>bookPages[i].html=e.currentTarget.innerHTML);
+  card.querySelectorAll('[data-act]').forEach(btn=>btn.addEventListener('click',()=>{
+   const a=btn.dataset.act;if(a==='delete'){bookPages.splice(i,1)}
+   if(a==='up'&&i>0){[bookPages[i-1],bookPages[i]]=[bookPages[i],bookPages[i-1]]}
+   if(a==='down'&&i<bookPages.length-1){[bookPages[i+1],bookPages[i]]=[bookPages[i],bookPages[i+1]]}
+   renderBookPages();
+  }));
+  host.appendChild(card);
+ });
+}
+function addBookPage(title,html){bookPages.push({title:title||'صفحة جديدة',html:html||'<p>ابدأ كتابة محتوى هذه الصفحة هنا...</p>'});renderBookPages()}
+$('addBookPage').addEventListener('click',()=>{addBookPage($('editorPageTitle').value.trim()||'صفحة جديدة');$('editorPageTitle').value=''});
+$('importBookText').addEventListener('click',()=>{
+ const t=$('generatedContent').value.trim();if(!t){$('bookStatus').textContent='لا يوجد نص في مركز التصدير لاستيراده.';return}
+ bookPages=[];const blocks=t.split(/\n\s*\n/).filter(x=>x.trim());
+ blocks.forEach((block,i)=>{const lines=block.split(/\r?\n/);const first=lines[0].replace(/^#{1,3}\s*/,'').trim();const title=(lines[0].startsWith('#')||/^(الفصل|الوحدة|الدرس|مقدمة|خاتمة|ورقة عمل)/.test(first))?first:'جزء '+(i+1);const body=(lines[0].startsWith('#')?lines.slice(1):lines).join('\n');addBookPage(title,'<p>'+escBook(body).replace(/\n/g,'<br>')+'</p>')});
+ $('bookStatus').textContent='تم تقسيم النص إلى '+bookPages.length+' صفحات قابلة للتحرير.';
+});
+document.querySelectorAll('[data-edit]').forEach(btn=>btn.addEventListener('click',()=>{
+ const cmd=btn.dataset.edit;document.execCommand(cmd,false,btn.dataset.value||null);
+ const active=document.activeElement;if(active&&active.classList.contains('page-content'))active.dispatchEvent(new Event('input',{bubbles:true}));
+}));
+$('insertBookTable').addEventListener('click',()=>{
+ const table='<table border="1" style="border-collapse:collapse;width:100%;margin:12px 0"><tbody>'+Array.from({length:3},()=>'<tr>'+Array.from({length:3},()=>'<td style="padding:10px">اكتب هنا</td>').join('')+'</tr>').join('')+'</tbody></table><p></p>';
+ document.execCommand('insertHTML',false,table);
+});
+$('insertBookFormula').addEventListener('click',()=>{
+ const f=prompt('اكتب المعادلة أو القانون بصيغته النصية (مثال: F = m × a):','');if(f)document.execCommand('insertHTML',false,'<p dir="ltr" style="text-align:center;font-size:1.25em;font-weight:bold;margin:18px">'+escBook(f)+'</p>');
+});
+$('insertBookImage').addEventListener('click',()=>$('bookImageFile').click());
+$('bookImageFile').addEventListener('change',e=>{
+ const file=e.target.files&&e.target.files[0];if(!file)return;
+ if(!file.type.startsWith('image/')){ $('bookStatus').textContent='اختر ملف صورة صالحاً.';return}
+ if(file.size>4*1024*1024){$('bookStatus').textContent='الصورة كبيرة؛ اختر صورة أقل من 4 ميجابايت حتى لا تتضخم النسخة.';return}
+ const reader=new FileReader();reader.onload=()=>document.execCommand('insertHTML',false,'<figure style="text-align:center"><img src="'+reader.result+'" alt="صورة تعليمية" style="max-width:100%;height:auto"><figcaption>وصف الصورة</figcaption></figure>');reader.readAsDataURL(file);e.target.value='';
+});
+function collectBookHtml(){
+ return bookPages.map((p,i)=>'<section class="printed-page"><div class="page-no">صفحة '+(i+1)+'</div><h2>'+escBook(p.title)+'</h2><div>'+p.html+'</div></section>').join('');
+}
+function bookDocument(){
+ const title=$('bookTitle').value.trim()||$('topic').value.trim()||'كتاب تعليمي';
+ const css='<style>@page{size:A4;margin:18mm}*{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;direction:rtl;line-height:1.9;color:#172b3b;margin:0}.book-cover{min-height:90vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(145deg,#0b2943,#126b86);color:#fff;padding:35px;page-break-after:always}.book-cover h1{font-size:34px}.book-cover p{font-size:18px}.printed-page{min-height:245mm;padding:4mm 0;page-break-after:always;break-after:page}.printed-page h2{color:#105a7a;border-bottom:2px solid #0ba69a;padding-bottom:8px}.printed-page img{max-width:100%;height:auto}.printed-page table{border-collapse:collapse;width:100%}.printed-page td,.printed-page th{border:1px solid #8ba2b2;padding:7px}.page-no{color:#698092;font-size:12px}@media screen{body{max-width:900px;margin:25px auto;padding:20px}.printed-page{background:#fff;padding:25px;margin:18px 0;box-shadow:0 2px 15px #0001}}@media print{.printed-page{box-shadow:none;margin:0}}</style>';
+ const cover='<header class="book-cover"><h1>'+escBook(title)+'</h1><p>إعداد وتأليف: '+escBook($('bookAuthor').value||'مستر محمد جمعة')+'</p><p>معانا دائماً أنت الأفضل</p></header>';
+ return makeDocument(title,cover+collectBookHtml(),css);
+}
+$('saveBookDraft').addEventListener('click',()=>{
+ try{localStorage.setItem('eduBookDraft_v1',JSON.stringify({pages:bookPages,title:$('bookTitle').value,author:$('bookAuthor').value,updated:new Date().toISOString()}));$('bookStatus').textContent='تم حفظ المسودة محلياً على هذا الجهاز.'}
+ catch(e){$('bookStatus').textContent='تعذر الحفظ؛ قد تكون الصور المضافة كبيرة. صدّر HTML للاحتفاظ بنسخة.'}
+});
+$('downloadBookHtml').addEventListener('click',()=>{if(!bookPages.length){$('bookStatus').textContent='أضف صفحات إلى الكتاب أولاً.';return}saveBlob(safeFileName($('bookTitle').value||$('topic').value)+'-كتاب.html',bookDocument(),'text/html;charset=utf-8');$('bookStatus').textContent='تم تصدير الكتاب بصيغة HTML.'});
+$('downloadBookWord').addEventListener('click',()=>{if(!bookPages.length){$('bookStatus').textContent='أضف صفحات إلى الكتاب أولاً.';return}saveBlob(safeFileName($('bookTitle').value||$('topic').value)+'-كتاب.doc',bookDocument(),'application/msword;charset=utf-8');$('bookStatus').textContent='تم تجهيز نسخة Word متوافقة؛ راجع تنسيق الصور والجداول في Word.'});
+$('printBookPdf').addEventListener('click',()=>{if(!bookPages.length){$('bookStatus').textContent='أضف صفحات إلى الكتاب أولاً.';return}const w=window.open('','_blank');if(!w){$('bookStatus').textContent='اسمح بالنوافذ المنبثقة لفتح الطباعة.';return}w.document.open();w.document.write(bookDocument());w.document.close();w.focus();setTimeout(()=>w.print(),500)});
+try{const saved=JSON.parse(localStorage.getItem('eduBookDraft_v1')||'null');if(saved&&Array.isArray(saved.pages)){bookPages=saved.pages;$('bookTitle').value=saved.title||$('bookTitle').value;$('bookAuthor').value=saved.author||$('bookAuthor').value;renderBookPages()}}catch(e){}
 const STORE_KEY='eduCreativeStudioProjects_v1';
 function getProjects(){try{return JSON.parse(localStorage.getItem(STORE_KEY)||'[]')}catch(e){return []}}
 function setProjects(items){localStorage.setItem(STORE_KEY,JSON.stringify(items))}
