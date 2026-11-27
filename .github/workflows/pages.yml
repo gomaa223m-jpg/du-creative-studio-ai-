@@ -25,6 +25,53 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Validate Worker and embedded browser JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module --check < worker/index.js
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import subprocess
+          import tempfile
+
+          class Scripts(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.items = []
+                  self.active = False
+                  self.kind = ""
+                  self.parts = []
+              def handle_starttag(self, tag, attrs):
+                  if tag.lower() == "script":
+                      self.active = True
+                      self.kind = dict(attrs).get("type", "").lower()
+                      self.parts = []
+              def handle_data(self, data):
+                  if self.active:
+                      self.parts.append(data)
+              def handle_endtag(self, tag):
+                  if tag.lower() == "script" and self.active:
+                      if self.kind in ("", "text/javascript", "application/javascript", "module"):
+                          self.items.append("".join(self.parts))
+                      self.active = False
+
+          parser = Scripts()
+          parser.feed(Path("index.html").read_text(encoding="utf-8"))
+          checked = 0
+          with tempfile.TemporaryDirectory() as directory:
+              for index, source in enumerate(parser.items):
+                  if not source.strip():
+                      continue
+                  target = Path(directory) / f"inline-{index}.js"
+                  target.write_text(source, encoding="utf-8")
+                  subprocess.run(["node", "--check", str(target)], check=True)
+                  checked += 1
+          if not checked:
+              raise SystemExit("No inline JavaScript blocks were found to validate.")
+          print(f"Validated {checked} inline JavaScript block(s).")
+          PY
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload site artifact
