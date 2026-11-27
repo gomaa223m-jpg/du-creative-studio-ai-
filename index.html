@@ -172,7 +172,10 @@ body{background:#f4f8fb}
 <p class="muted">التعليق الصوتي التجريبي يستخدم الأصوات العربية المثبتة في جهازك عبر المتصفح، وقد يختلف توفرها وجودتها. زر الاستماع لا يضيف الصوت إلى ملف الفيديو؛ لإدراج تعليق داخل الملف أرفق تسجيلاً صوتياً في خانة الصوت. المحرك لا يحتاج إلى خدمة ذكاء اصطناعي خارجية، لكنه لا يخترع حقائق الدرس: إذا لم يتوفر شرح في المحتوى، ينشئ هيكل سيناريو يحتاج إلى استكمال ومراجعة علمية.</p>
 <canvas id="videoCanvas" width="1920" height="1080" style="width:100%;height:auto;background:#10243a;border-radius:14px;margin-top:12px"></canvas>
 <p class="muted">يُسجَّل الفيديو داخل المتصفح ثم يحاول الاستوديو تحويله إلى MP4 باستخدام FFmpeg WebAssembly. اترك الصفحة مفتوحة حتى يكتمل التصدير؛ قد يستغرق ذلك وقتاً على الهاتف.</p>
-<button id="previewVideo">▶ معاينة المشاهد</button><button class="secondary" id="renderVideo">⬇ إنشاء وتنزيل الفيديو</button>
+<div class="stepnote" id="directorPlan"><strong>المخرج الذكي:</strong> لم يتم تحليل المشاهد بعد. اضغط «إخراج ذكي تلقائي» ليختار لكل فقرة نوع اللقطة وحركة الكاميرا والمؤثر والانتقال.</div>
+<div class="grid"><button id="autoDirectVideo">🎬 إخراج ذكي تلقائي</button><button class="secondary" id="previewVideo">▶ معاينة الإخراج</button></div>
+<button class="secondary" id="renderVideo">⬇ تجميع وتنزيل الحلقة</button>
+<div id="directorShotList" class="saved-list" aria-live="polite"></div>
 <p class="status" id="videoStatus" aria-live="polite"></p>
 </section>
 <section class="card" id="savedProjects"><h2>💾 مشاريعي المحفوظة</h2>
@@ -395,6 +398,33 @@ $('speakVideoScript').addEventListener('click',()=>{
  window.speechSynthesis.speak(u);
 });
 function makeVideoScenes(){const raw=$('videoScript').value.trim()||$('generatedContent').value.trim()||$('out').textContent;const lines=raw.split(/\\n+/).map(x=>x.replace(/^\\s*(?:[-*#]+|[0-9٠-٩]+[.)、-])\\s*/,'').trim()).filter(x=>x.length>12);const unique=lines.filter((x,i)=>i===0||x!==lines[i-1]);videoScenes=(unique.length?unique:[$('topic').value||'رحلة تعلم ممتعة']).slice(0,36).map((text,i)=>({title:i===0?($('topic').value||'درسنا اليوم'):('الفكرة '+(i+1)),text:text.slice(0,240)}));return videoScenes}
+function directScene(s,i){
+ const k=sceneKind(s),t=(s.title+' '+s.text).toLowerCase();
+ const plan={
+ flame:{shot:'لقطة قريبة درامية',camera:'Dolly-in بطيء',fx:'وهج حراري وجسيمات ضوء',transition:'وميض ضوئي ناعم'},
+ precipitate:{shot:'لقطة ماكرو للمحلول',camera:'Push-in ثم تثبيت',fx:'جسيمات راسب هابطة',transition:'مزج تدريجي'},
+ bubbles:{shot:'لقطة قريبة جانبية',camera:'Tilt-up يتبع الفقاعات',fx:'فقاعات متصاعدة',transition:'مسح رأسي'},
+ combine:{shot:'لقطة متوسطة للجزيئات',camera:'Orbit حول التفاعل',fx:'تقارب الجزيئات وتوهج الروابط',transition:'مطابقة شكلية'},
+ decompose:{shot:'لقطة تفصيلية',camera:'Pull-back يكشف النواتج',fx:'انفصال الجزيئات وجسيمات دقيقة',transition:'تفكك بصري'},
+ electric:{shot:'لقطة تتبع للدائرة',camera:'Tracking جانبي',fx:'نبضات كهربائية مضيئة',transition:'قطع على الإيقاع'},
+ wave:{shot:'لقطة واسعة',camera:'Pan أفقي',fx:'تموجات متتابعة',transition:'تمويه اتجاهي'},
+ motion:{shot:'لقطة واسعة للحركة',camera:'Tracking مع الجسم',fx:'مسار حركة وخطوط سرعة',transition:'قطع حركي'},
+ cell:{shot:'لقطة مجهرية',camera:'Zoom-in مجهري',fx:'توهج عضيات وجسيمات',transition:'تكبير ناعم'},
+ molecule:{shot:'لقطة ماكرو للجزيئات',camera:'Orbit ثلاثي الأبعاد',fx:'روابط وجسيمات متوهجة',transition:'مطابقة شكلية'},
+ concept:{shot:'لقطة تأسيسية واسعة',camera:'Dolly-in خفيف',fx:'جسيمات خلفية وعناوين',transition:'مزج سينمائي'}
+ }[k]||{shot:'لقطة تأسيسية واسعة',camera:'Dolly-in خفيف',fx:'جسيمات خلفية',transition:'مزج سينمائي'};
+ return {...s,kind:k,director:{...plan,number:i+1,duration:Number($('videoSeconds').value)||7}};
+}
+function autoDirectVideo(){
+ const scenes=makeVideoScenes().map(directScene);
+ videoScenes=scenes;
+ const names={flame:'احتراق',precipitate:'تكوّن راسب',bubbles:'تصاعد فقاعات',combine:'اتحاد',decompose:'تفكك',electric:'كهرباء',wave:'موجات',motion:'حركة',cell:'خلية',molecule:'جزيئات',concept:'شرح مفاهيمي'};
+ $('directorPlan').innerHTML='<strong>اكتمل تحليل المخرج الذكي:</strong> '+scenes.length+' مشهداً. لكل مشهد تم اختيار اللقطة وحركة الكاميرا والمؤثر والانتقال وفق موضوع الفقرة.';
+ $('directorShotList').innerHTML=scenes.map((s,i)=>'<div class="saved-item"><strong>المشهد '+(i+1)+' — '+(names[s.kind]||'شرح')+'</strong><div>'+s.director.shot+' · '+s.director.camera+'</div><small>'+s.director.fx+' · انتقال: '+s.director.transition+'</small></div>').join('');
+ videoFrame=0;drawVideoScene(0,0);
+ $('videoStatus').textContent='أخرج المخرج الذكي '+scenes.length+' مشهداً. راجع خطة اللقطات ثم عاين أو صدّر الحلقة.';
+}
+$('autoDirectVideo').addEventListener('click',autoDirectVideo);
 let videoAvatarImage=null;
 $('videoAvatar').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const u=URL.createObjectURL(f);const im=new Image();im.onload=()=>{videoAvatarImage=im;URL.revokeObjectURL(u);drawVideoScene(videoFrame,0);$('videoStatus').textContent='تم تحميل صورة المعلم للعرض داخل المشاهد.'};im.onerror=()=>{$('videoStatus').textContent='تعذر قراءة الصورة.'};im.src=u});
 function sceneKind(s){const t=(s.title+' '+s.text).toLowerCase();if(/احتراق|لهب|حرار|أكسجين|combust/.test(t))return 'flame';if(/راسب|إحلال مزدوج|precip/.test(t))return 'precipitate';if(/غاز|فقاع|إحلال أحادي|hydrogen/.test(t))return 'bubbles';if(/اتحاد|تكوين|يتحد|combine/.test(t))return 'combine';if(/تفكك|تحلل|decom/.test(t))return 'decompose';if(/كهرب|تيار|دائرة|إلكترون|electric/.test(t))return 'electric';if(/موجة|تردد|صوت|اهتزاز|wave/.test(t))return 'wave';if(/جاذبية|سقوط|تسارع|سرعة|حركة|قوة|gravity/.test(t))return 'motion';if(/خلية|عضية|انقسام|cell/.test(t))return 'cell';if(/ذرة|جزيء|رابطة|عنصر|مركب|كيمياء|تفاعل/.test(t))return 'molecule';return 'concept'}
@@ -402,7 +432,7 @@ function rr(x,y,w,h,r,fill,stroke){vctx.beginPath();vctx.roundRect(x,y,w,h,r);vc
 function drawMolecule(cx,cy,scale,phase,style){const atoms=[[-55,0,'#4fc3f7'],[0,-35,'#ffca58'],[55,0,'#4fc3f7'],[0,38,'#f36c7a']];vctx.lineWidth=12*scale;vctx.strokeStyle='rgba(220,244,255,.8)';vctx.beginPath();vctx.moveTo(cx-55*scale,cy);vctx.lineTo(cx,cy-35*scale);vctx.lineTo(cx+55*scale,cy);vctx.moveTo(cx,cy-35*scale);vctx.lineTo(cx,cy+38*scale);vctx.stroke();atoms.forEach((a,i)=>{const x=cx+(a[0]*scale)+Math.sin(phase+i)*7*scale,y=cy+a[1]*scale+Math.cos(phase+i)*5*scale;vctx.beginPath();vctx.arc(x,y,24*scale,0,Math.PI*2);vctx.fillStyle=a[2];vctx.shadowColor=a[2];vctx.shadowBlur=style==='anime'?22:12;vctx.fill();vctx.shadowBlur=0;vctx.strokeStyle='rgba(255,255,255,.8)';vctx.lineWidth=3;vctx.stroke()})}
 function drawFlask(x,y,w,h,phase){vctx.save();vctx.translate(x,y);vctx.strokeStyle='rgba(224,247,255,.9)';vctx.lineWidth=8;vctx.beginPath();vctx.moveTo(w*.38,0);vctx.lineTo(w*.38,h*.35);vctx.lineTo(w*.08,h*.88);vctx.quadraticCurveTo(w*.05,h,w*.25,h);vctx.lineTo(w*.75,h);vctx.quadraticCurveTo(w*.95,h,w*.92,h*.88);vctx.lineTo(w*.62,h*.35);vctx.lineTo(w*.62,0);vctx.stroke();vctx.fillStyle='rgba(45,190,220,.48)';vctx.beginPath();vctx.moveTo(w*.16,h*.78);vctx.quadraticCurveTo(w*.5,h*.7,w*.84,h*.78);vctx.lineTo(w*.9,h*.9);vctx.quadraticCurveTo(w*.9,h*.96,w*.78,h*.96);vctx.lineTo(w*.22,h*.96);vctx.quadraticCurveTo(w*.1,h*.96,w*.16,h*.78);vctx.fill();for(let i=0;i<8;i++){const bx=w*.25+(i*31% (w*.5)),by=h*.76-((phase*70+i*43)% (h*.55));vctx.beginPath();vctx.arc(bx,by,5+(i%3)*3,0,Math.PI*2);vctx.fillStyle='rgba(210,250,255,.85)';vctx.fill()}vctx.restore()}
 function drawAvatarCard(W,H){if(!videoAvatarImage)return;const x=95,y=250,w=300,h=410;rr(x-12,y-12,w+24,h+24,28,'rgba(5,20,38,.78)','rgba(111,222,255,.75)');vctx.save();vctx.beginPath();vctx.roundRect(x,y,w,h,20);vctx.clip();const im=videoAvatarImage,sc=Math.max(w/im.width,h/im.height),iw=im.width*sc,ih=im.height*sc;vctx.drawImage(im,x+(w-iw)/2,y+(h-ih)/2,iw,ih);vctx.restore();vctx.textAlign='center';vctx.direction='rtl';vctx.fillStyle='#fff';vctx.font='bold 25px Tahoma';vctx.fillText('مستر محمد جمعة',x+w/2,y+h+42)}
-function drawVideoScene(index,progress=0){const W=videoCanvas.width,H=videoCanvas.height;const s=videoScenes[index%Math.max(1,videoScenes.length)]||{title:'درسنا اليوم',text:'اكتب نص الدرس لبدء إنتاج الفيديو'};const style=$('videoStyle')?$('videoStyle').value:'cinematic',motion=$('videoMotion')?$('videoMotion').value:'normal';const phase=(index+progress)*(motion==='dynamic'?2.8:motion==='calm'?.8:1.7);const kind=sceneKind(s);const pal=style==='anime'?['#17153d','#3d4c91','#ff9eaa']:style==='cartoon'?['#102d46','#167b91','#ffc95c']:style==='science'?['#071e2b','#087f8c','#63e6be']:style==='infographic'?['#12213c','#205f9b','#42d6c5']:['#081b32','#155b83','#23b9ad'];const g=vctx.createLinearGradient(0,0,W,H);g.addColorStop(0,pal[0]);g.addColorStop(.62,pal[1]);g.addColorStop(1,'#071522');vctx.fillStyle=g;vctx.fillRect(0,0,W,H);
+function drawVideoScene(index,progress=0){const W=videoCanvas.width,H=videoCanvas.height;const s=videoScenes[index%Math.max(1,videoScenes.length)]||{title:'درسنا اليوم',text:'اكتب نص الدرس لبدء إنتاج الفيديو'};const style=$('videoStyle')?$('videoStyle').value:'cinematic',motion=$('videoMotion')?$('videoMotion').value:'normal';const director=s.director||{camera:'Dolly-in خفيف',fx:'جسيمات خلفية'};const cameraFactor=/Orbit|Tracking|Tilt|Pan/.test(director.camera)?1.9:/Zoom|Push|Dolly/.test(director.camera)?1.35:.9;const phase=(index+progress)*(motion==='dynamic'?2.8:motion==='calm'?.8:1.7)*cameraFactor;const kind=s.kind||sceneKind(s);const pal=style==='anime'?['#17153d','#3d4c91','#ff9eaa']:style==='cartoon'?['#102d46','#167b91','#ffc95c']:style==='science'?['#071e2b','#087f8c','#63e6be']:style==='infographic'?['#12213c','#205f9b','#42d6c5']:['#081b32','#155b83','#23b9ad'];const g=vctx.createLinearGradient(0,0,W,H);g.addColorStop(0,pal[0]);g.addColorStop(.62,pal[1]);g.addColorStop(1,'#071522');vctx.fillStyle=g;vctx.fillRect(0,0,W,H);
 for(let i=0;i<34;i++){const x=(i*197+Math.sin(phase+i)*45+W)%W,y=(i*113+Math.cos(phase*.7+i)*30+H)%H;vctx.globalAlpha=.12+(i%4)*.035;vctx.beginPath();vctx.arc(x,y,3+(i%5)*3,0,Math.PI*2);vctx.fillStyle=pal[2];vctx.fill()}vctx.globalAlpha=1;
 vctx.save();vctx.globalAlpha=.2;for(let i=0;i<5;i++){vctx.beginPath();vctx.arc(W*.68,H*.46,125+i*48+Math.sin(phase+i)*8,0,Math.PI*2);vctx.strokeStyle=pal[2];vctx.lineWidth=3;vctx.stroke()}vctx.restore();
 if(['flame','bubbles','precipitate'].includes(kind)){drawFlask(W*.58,H*.27,310,420,phase);drawFlask(W*.78,H*.4,220,300,phase+1)}
@@ -415,6 +445,7 @@ else if(kind==='motion'){const x=W*.62+Math.sin(phase)*230,y=H*.55+Math.cos(phas
 else if(kind==='cell'){vctx.beginPath();vctx.ellipse(W*.7,H*.5,240,170,Math.sin(phase)*.08,0,Math.PI*2);vctx.fillStyle='rgba(77,211,177,.18)';vctx.fill();vctx.strokeStyle='#73e8c4';vctx.lineWidth=8;vctx.stroke();for(let i=0;i<9;i++){vctx.beginPath();vctx.ellipse(W*.7+Math.sin(i*2+phase)*140,H*.5+Math.cos(i*3+phase)*85,18,10,i,0,Math.PI*2);vctx.fillStyle=i%2?'#ffc66b':'#8ddcff';vctx.fill()}}
 else{drawMolecule(W*.68,H*.48,style==='anime'?1.35:1.1,phase,style);drawMolecule(W*.84,H*.68,.58,phase+1,style)}
 drawAvatarCard(W,H);
+rr(95,285,315,112,18,'rgba(3,17,34,.68)','rgba(255,255,255,.22)');vctx.textAlign='right';vctx.direction='rtl';vctx.fillStyle='#fff';vctx.font='bold 22px Tahoma';vctx.fillText(director.shot||'لقطة تعليمية',390,327);vctx.fillStyle=pal[2];vctx.font='20px Tahoma';vctx.fillText(director.camera||'حركة كاميرا هادئة',390,365);
 const panelX=style==='infographic'?90:440,panelW=W-panelX-95;rr(panelX,95,panelW,165,28,'rgba(2,14,29,.56)','rgba(125,222,255,.4)');vctx.textAlign='right';vctx.direction='rtl';vctx.fillStyle=pal[2];vctx.font='bold 30px Tahoma';vctx.fillText('EDU CREATIVE STUDIO AI  •  مستر محمد جمعة',W-135,150);vctx.fillStyle='#fff';vctx.font='bold 58px Tahoma';wrapCanvasText(s.title,W-135,225,panelW-100,72);
 rr(panelX,H-330,panelW,235,25,'rgba(2,12,26,.82)','rgba(255,255,255,.2)');vctx.fillStyle='#f5f8fc';vctx.font='bold 37px Tahoma';wrapCanvasText(s.text,W-135,H-245,panelW-100,57);
 vctx.fillStyle='rgba(255,255,255,.25)';vctx.fillRect(95,H-55,W-190,8);vctx.fillStyle=pal[2];vctx.fillRect(95,H-55,(W-190)*Math.max(.03,progress),8);vctx.textAlign='left';vctx.direction='ltr';vctx.fillStyle='#fff';vctx.font='26px Tahoma';vctx.fillText((index+1)+' / '+videoScenes.length,100,H-75);vctx.textAlign='right';vctx.direction='rtl';vctx.fillText(style==='anime'?'ANIME EDU':style==='cartoon'?'3D CARTOON':style==='science'?'SCIENCE LAB':style==='infographic'?'MOTION INFOGRAPHIC':'CINEMATIC EDU',W-100,H-75)}
