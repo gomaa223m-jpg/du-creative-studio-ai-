@@ -293,6 +293,16 @@ body{background:#f4f8fb}
 <label for="videoTitle">عنوان الفيديو</label><input id="videoTitle" placeholder="مثال: تصنيف التفاعلات الكيميائية">
 <label for="videoScript">سيناريو الدرس (يمكن تعديله قبل التصدير)</label>
 <textarea id="videoScript" rows="9" placeholder="اكتب عنوان الدرس ثم اضغط ابنِ الفيديو تلقائياً، أو الصق شرحك هنا..."></textarea>
+<div class="stepnote" id="aiVideoGatewayPanel">
+<strong>✦ محرك كتابة السيناريو بالذكاء الاصطناعي</strong>
+<p>اتصل بخادمك الآمن لتوليد سيناريو ومشاهد وتعليق صوتي من عنوان الدرس. لا تضع مفتاح مزود الذكاء الاصطناعي هنا؛ أدخل رمز الوصول الخاص بخادمك فقط.</p>
+<div class="grid">
+<div><label for="aiVideoEndpoint">رابط خادم الذكاء الاصطناعي</label><input id="aiVideoEndpoint" inputmode="url" placeholder="https://your-worker.workers.dev/api/generate"></div>
+<div><label for="aiVideoToken">رمز وصول التطبيق</label><input id="aiVideoToken" type="password" autocomplete="off" placeholder="رمز الوصول الذي أنشأته في الخادم"></div>
+</div>
+<div class="grid"><button type="button" id="aiWriteVideoScript">✦ اكتب السيناريو والمشاهد بالذكاء الاصطناعي</button><button type="button" class="secondary" id="aiSaveVideoGateway">حفظ الرابط والرمز لهذه الجلسة</button></div>
+<p class="status" id="aiVideoGatewayStatus" aria-live="polite">يتطلب هذا الخيار نشر Worker وإعداد أسرار المزود أولاً. لا يعمل قبل إعداد الخادم.</p>
+</div>
 <div class="grid">
 <div><label for="videoStyle">الأسلوب البصري</label><select id="videoStyle"><option value="cinematic" selected>سينمائي واقعي</option><option value="cartoon">كرتون ثلاثي الأبعاد</option><option value="anime">أنيمي تعليمي</option><option value="science">مختبر وتجارب علمية</option><option value="infographic">إنفوجرافيك متحرك</option></select></div>
 <div><label for="videoMotion">كثافة الحركة</label><select id="videoMotion"><option value="calm">هادئة وأنيقة</option><option value="normal" selected>سينمائية متوازنة</option><option value="dynamic">ديناميكية ومشوقة</option></select></div>
@@ -1190,4 +1200,54 @@ $('pptxExport').addEventListener('click',async()=>{
  finally{btn.disabled=!pptxParagraphs.some(x=>x.edited!==x.value);btn.textContent='حفظ نسخة PPTX المعدلة'}
 });
 
+
+/* Secure AI gateway: provider credentials stay on the server. */
+(()=>{
+ const endpointEl=document.getElementById('aiVideoEndpoint');
+ const tokenEl=document.getElementById('aiVideoToken');
+ const statusEl=document.getElementById('aiVideoGatewayStatus');
+ const savedEndpoint=sessionStorage.getItem('eduAiEndpoint')||'';
+ const savedToken=sessionStorage.getItem('eduAiToken')||'';
+ if(endpointEl)endpointEl.value=savedEndpoint;
+ if(tokenEl)tokenEl.value=savedToken;
+ const save=()=>{
+  const endpoint=endpointEl.value.trim(),token=tokenEl.value.trim();
+  try{const u=new URL(endpoint);if(u.protocol!=='https:')throw new Error();}
+  catch(e){statusEl.textContent='أدخل رابط HTTPS صحيحاً لخادمك.';return false}
+  if(!token){statusEl.textContent='أدخل رمز وصول التطبيق الذي أنشأته على الخادم.';return false}
+  sessionStorage.setItem('eduAiEndpoint',endpoint.replace(/\\/$/,''));
+  sessionStorage.setItem('eduAiToken',token);
+  statusEl.textContent='تم حفظ إعداد الاتصال في جلسة المتصفح الحالية فقط.';
+  return true;
+ };
+ document.getElementById('aiSaveVideoGateway')?.addEventListener('click',save);
+ document.getElementById('aiWriteVideoScript')?.addEventListener('click',async()=>{
+  if(!save())return;
+  const title=document.getElementById('videoTitle').value.trim();
+  if(!title){statusEl.textContent='اكتب عنوان الفيديو أولاً.';return}
+  const button=document.getElementById('aiWriteVideoScript');
+  button.disabled=true;statusEl.textContent='يكتب المحرك السيناريو ويخطط المشاهد...';
+  try{
+   const response=await fetch(sessionStorage.getItem('eduAiEndpoint'),{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+sessionStorage.getItem('eduAiToken')},
+    body:JSON.stringify({task:'video',topic:title,subject:'علوم',grade:'المرحلة الثانوية',context:'أنشئ سيناريو دقيقاً ومشوقاً باللغة العربية. اجعل المعادلات موزونة والمصطلحات صحيحة.'})
+   });
+   const data=await response.json().catch(()=>({}));
+   if(!response.ok||!data.ok)throw new Error(data.error||('فشل الاتصال: '+response.status));
+   const result=data.result||{};
+   if(!Array.isArray(result.scenes)||!result.scenes.length)throw new Error('لم يُرجع المحرك قائمة مشاهد صالحة.');
+   document.getElementById('videoTitle').value=result.title||title;
+   document.getElementById('videoScript').value=result.scenes.map((scene,i)=>[
+    'المشهد '+(i+1)+': '+(scene.title||''),
+    scene.on_screen_text||'',
+    scene.voiceover||scene.visual||''
+   ].filter(Boolean).join(' — ')).join('\\n');
+   statusEl.textContent='اكتمل السيناريو: '+result.scenes.length+' مشهداً. راجعه ثم اضغط «ابنِ الفيديو تلقائياً» لمعاينة التكوين المحلي.';
+   if(result.voiceover)statusEl.textContent+=' نص التعليق الصوتي الكامل متاح من رد المحرك، ويمكن نسخه من سجل الخادم عند الحاجة.';
+   if(typeof autoDirectVideo==='function')autoDirectVideo();
+  }catch(error){statusEl.textContent='تعذر التوليد: '+(error.message||error)+' — تحقق من نشر الخادم وإعداداته والرصيد المتاح.'}
+  finally{button.disabled=false}
+ });
+})();
 </script></body></html>
