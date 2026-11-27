@@ -1439,4 +1439,74 @@ $('pptxExport').addEventListener('click',async()=>{
  }
 })();
 
+
+/* Unified title-first launchers for the main creation tools. */
+(()=>{
+ const $=id=>document.getElementById(id);
+ const topic=$('topic');
+ if(!topic)return;
+ const specs=[
+  {id:'quickBuilder',title:'الحزمة التعليمية',desc:'اكتب عنوان الدرس فقط، وسنجهز طلباً موحداً للتحضير والشرح والأنشطة والتقويم وأوراق العمل.',kind:'pack',button:'ابدأ إنشاء الحزمة'},
+  {id:'bookStudio',title:'الكتاب التعليمي',desc:'عنوان الكتاب يكفي لطلب كتاب منظم بفصول وأهداف وأنشطة وتقويم ومراجع قابلة للمراجعة.',kind:'book',button:'ابدأ تأليف الكتاب'},
+  {id:'exportCenter',title:'العروض وأوراق العمل والإنفوجرافيك',desc:'اختر المخرج من الأزرار أدناه؛ اكتب العنوان فقط، وسنجهز طلباً متخصصاً ثم تضع الناتج في مركز التصدير.',kind:'multi',button:'جهّز طلب الإنتاج'},
+  {id:'pptxEditor',title:'محرر PowerPoint',desc:'لإنشاء عرض جديد اكتب عنوانه؛ أما تعديل ملف موجود فارفع ملف PPTX من أدوات المحرر.',kind:'slides',button:'ابدأ إعداد العرض'}
+ ];
+ const prompts={
+  pack:t=>'أنشئ حزمة تعليمية عربية متكاملة عن: '+t+'. اقترح المرحلة المناسبة وصرّح بالافتراضات. أخرج تحضيراً وشرحاً علمياً متدرجاً وأهداف تعلم وأنشطة صفية وتقويماً بنائياً وختامياً وورقة عمل وإجابات نموذجية ومفردات أساسية ومراجعة جودة. اجعل المحتوى منظماً بعناوين واضحة وجاهزاً للنسخ إلى محرر الاستوديو. لا تخترع مراجع أو حقائق، ونبّه إلى ما يحتاج تحققاً.',
+  book:t=>'ألّف مخطط كتاب تعليمي عربي بعنوان: '+t+'. ابدأ ببيانات الكتاب والفئة المستهدفة والأهداف والفهرس، ثم مقدمة وفصولاً متدرجة، أمثلة وتطبيقات وأنشطة وأسئلة تقويم وإجابات ومراجعة جودة ومراجع موثوقة قابلة للتحقق. اجعل كل فصل مستقلاً بعناوين واضحة. لا تدّعِ توثيق مصدر غير متحقق.',
+  slides:t=>'صمم عرض PowerPoint تعليمي عربي RTL بعنوان: '+t+'. اكتب مخططاً من 10 إلى 14 شريحة، ولكل شريحة عنوان ونقاط موجزة وملاحظات مقدم واقتراح رسم/إنفوجرافيك وحركة مناسبة. أضف افتتاحية مشوقة وخلاصة وأسئلة تفاعلية. تحقق من صحة المعلومات وميّز ما يحتاج مراجعة.',
+  worksheet:t=>'أنشئ ورقة عمل عربية قابلة للطباعة عن: '+t+'. تتضمن أهدافاً وتعليمات وأسئلة متنوعة متدرجة (اختيار من متعدد، تفسير، تطبيق، تفكير عليا) ومساحة للإجابة، ثم مفتاح إجابة منفصلاً مع تفسير موجز. لا تضع إجابات غير متحققة.',
+  infographic:t=>'أنشئ محتوى إنفوجرافيك تعليمي عربي RTL عن: '+t+'. قسمه إلى 6-8 لوحات قصيرة، لكل لوحة عنوان ورسالة مختصرة ورسم توضيحي مقترح وألوان متناسقة، مع مراجعة علمية للمصطلحات.',
+  avatar:t=>'جهز سيناريو تقديم تعليمي للأفاتار عن: '+t+'. اكتب نصاً عربياً طبيعياً مقسماً إلى مشاهد، مع توقيت تقريبي، جمل قصيرة مناسبة للإلقاء، مواضع الوقفات والإشارات البصرية. لا تدّعِ توليد صوت أو تحريك وجه ما لم تتوفر أداة مستقلة لذلك.'
+ };
+ function launch(prompt,status){
+  $('out').textContent=prompt;
+  const tab=window.open('https://chatgpt.com/','_blank');
+  const done=()=>{if(status)status.textContent='تم تجهيز الطلب ونسخه. الصقه في أداة الذكاء الاصطناعي المفتوحة ثم أرسل؛ بعد استلام المحتوى أعده إلى مركز التصدير.'};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(prompt).then(done).catch(()=>{if(status)status.textContent='الطلب جاهز في قسم «البرومبت الجاهز». انسخه والصقه في ChatGPT.'});
+  else if(status)status.textContent='الطلب جاهز في قسم «البرومبت الجاهز». انسخه والصقه في ChatGPT.';
+  if(!tab&&status)status.textContent='منع المتصفح فتح ChatGPT. افتحه يدوياً وانسخ الطلب من قسم «البرومبت الجاهز».';
+  $('out').scrollIntoView({behavior:'smooth',block:'start'});
+ }
+ function panel(spec){
+  const host=$(spec.id);if(!host||host.querySelector('.title-first-panel'))return;
+  const box=document.createElement('div');box.className='stepnote title-first-panel';box.innerHTML='<strong>✦ تشغيل مبسط — '+spec.title+'</strong><p>'+spec.desc+'</p><label>عنوان العمل</label><input type="text" class="title-first-input" placeholder="اكتب العنوان فقط"><div class="title-first-actions"></div><p class="status title-first-status" aria-live="polite">بانتظار العنوان.</p>';
+  const input=box.querySelector('input'),actions=box.querySelector('.title-first-actions'),status=box.querySelector('.title-first-status');
+  input.value=topic.value||'';
+  input.addEventListener('input',()=>{topic.value=input.value;});
+  const add=(label,kind)=>{const b=document.createElement('button');b.type='button';b.className='bigstart';b.textContent=label;b.addEventListener('click',()=>{
+   const t=input.value.trim();if(t.length<3){status.textContent='اكتب عنواناً واضحاً من ثلاث حروف على الأقل.';input.focus();return}
+   topic.value=t;
+   if(kind==='multi'){
+    const choices=[['أوراق عمل','worksheet'],['إنفوجرافيك','infographic'],['عرض تقديمي','slides'],['أفاتار المعلم','avatar']];
+    const selected=box.querySelector('select')?.value||'slides';
+    launch(prompts[selected](t),status);return;
+   }
+   launch(prompts[kind](t),status);
+  });actions.appendChild(b)};
+  if(spec.kind==='multi'){
+   const select=document.createElement('select');select.setAttribute('aria-label','نوع المخرج');[['slides','عرض تقديمي'],['worksheet','أوراق عمل'],['infographic','إنفوجرافيك'],['avatar','سيناريو الأفاتار']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;select.appendChild(o)});actions.appendChild(select);add(spec.button,'multi');
+  }else add(spec.button,spec.kind);
+  host.insertBefore(box,host.children[1]||null);
+ }
+ specs.forEach(panel);
+ const avatarHost=$('avatarEngine');
+ if(avatarHost&&!avatarHost.querySelector('.avatar-title-first')){
+  const box=document.createElement('div');box.className='stepnote avatar-title-first';box.innerHTML='<strong>تشغيل المعلم الافتراضي ببساطة</strong><p>عنوان الدرس وصورة الأفاتار هما المدخلان الأساسيان. رفع الصورة وموافقة الاستخدام مطلوبان قبل التصدير؛ الصوت المسجل اختياري.</p><label>عنوان الدرس</label><input id="avatarQuickTitle" type="text" placeholder="اكتب عنوان الدرس فقط"><button type="button" class="bigstart" id="avatarQuickStart">ابدأ تجهيز سيناريو الأفاتار</button><p class="status" id="avatarQuickStatus" aria-live="polite">ارفع صورة الأفاتار ثم ابدأ.</p>';
+  avatarHost.insertBefore(box,avatarHost.children[1]||null);
+  $('avatarQuickTitle').value=topic.value||'';
+  $('avatarQuickTitle').addEventListener('input',e=>{topic.value=e.target.value;$('videoTitle').value=e.target.value});
+  $('avatarQuickStart').addEventListener('click',()=>{
+   const t=$('avatarQuickTitle').value.trim(),file=$('videoAvatar')?.files?.[0];
+   if(t.length<3){$('avatarQuickStatus').textContent='اكتب عنوان الدرس أولاً.';return}
+   if(!file){$('avatarQuickStatus').textContent='ارفع صورة الأفاتار أولاً من خانة صورة المعلم أعلاه.';$('videoAvatar')?.focus();return}
+   $('topic').value=t;$('videoTitle').value=t;$('autoVideoBuild').click();
+   $('avatarQuickStatus').textContent='تم تجهيز السيناريو والمشاهد. راجع الأفاتار ثم ابدأ التصدير من زر إخراج وتحميل MP4.';
+   $('videoStudio').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+ }
+ const style=document.createElement('style');style.textContent='.title-first-panel{border:1px solid #8bd9d0;border-radius:16px;padding:16px;margin:14px 0;background:#f0fbf9}.title-first-panel>strong,.avatar-title-first>strong{display:block;font-size:1.08rem}.title-first-panel label,.avatar-title-first label{display:block;margin:12px 0 6px;font-weight:700}.title-first-panel input,.avatar-title-first input,.title-first-panel select{width:100%;box-sizing:border-box;padding:12px;border:1px solid #c7d9df;border-radius:10px;background:#fff;font:inherit}.title-first-actions{display:grid;gap:9px;margin-top:12px}.title-first-actions button,.avatar-title-first button{width:100%}.title-first-actions select{margin-top:4px}';
+ document.head.appendChild(style);
+})();
+
 </script></body></html>
