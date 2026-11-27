@@ -1410,7 +1410,7 @@ $('pptxExport').addEventListener('click',async()=>{
   try{const u=new URL(endpoint);if(u.protocol!=='https:')throw new Error();}
   catch(e){statusEl.textContent='أدخل رابط HTTPS صحيحاً لخادمك.';return false}
   if(!token){statusEl.textContent='أدخل رمز وصول التطبيق الذي أنشأته على الخادم.';return false}
-  sessionStorage.setItem('eduAiEndpoint',endpoint.replace(/\\/$/,''));
+  sessionStorage.setItem('eduAiEndpoint',endpoint.replace(/\/$/,''));
   sessionStorage.setItem('eduAiToken',token);
   statusEl.textContent='تم حفظ إعداد الاتصال في جلسة المتصفح الحالية فقط.';
   return true;
