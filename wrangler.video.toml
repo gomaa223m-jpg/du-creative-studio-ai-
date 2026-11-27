@@ -1,0 +1,6 @@
+name = "edu-creative-video-gateway"
+main = "worker/ai-gateway.js"
+compatibility_date = "2026-11-27"
+
+[vars]
+ALLOWED_ORIGINS = "https://gomaa223m-jpg.github.io"
