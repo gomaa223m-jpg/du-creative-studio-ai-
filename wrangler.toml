@@ -4,7 +4,7 @@ compatibility_date = "2026-11-27"
 
 [vars]
 ALLOWED_ORIGIN = "https://gomaa223m-jpg.github.io"
-AI_MODEL = "gpt-6.1-sol"
+AI_MODEL = "gpt-6.2-astra"
 
 [observability]
 enabled = true
