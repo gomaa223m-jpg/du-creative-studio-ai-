@@ -291,7 +291,6 @@ body{background:#f4f8fb}
 <p><b>اكتب عنوان الفيديو فقط، ثم اضغط «ابنِ الفيديو تلقائياً».</b> سيُعدّ الاستوديو مساراً وسيناريو أولياً، ويقسمه إلى مشاهد ويختار الإخراج والترجمة تلقائياً، ثم يجهز الملف للتحميل والمشاركة.</p>
 <div class="stepnote"><strong>جودة وإخراج:</strong> تصدير محلي بدقة تصل إلى 1440p وبمعدل إطارات 30fps ومعدل بيانات مرتفع حسب قدرة جهازك، مع مقاسات أفقية ويوتيوب ورأسية لريلز/تيك توك/شورتس ومربعة. هذا المحرك ينتج موشن جرافيك ورسوم مشاهد من Canvas؛ لا ينشئ وحده لقطات فوتوغرافية أو فيديو مولداً واقعياً بالذكاء الاصطناعي. للحصول على تلك اللقطات، استخدم حزمة الإنتاج الجاهزة مع أداة فيديو خارجية ثم أضف ملفاتها هنا.</div>
 <label for="videoTitle">عنوان الفيديو</label><input id="videoTitle" placeholder="مثال: تصنيف التفاعلات الكيميائية">
-<div class="grid">
 <label for="videoScript">سيناريو الدرس (يمكن تعديله قبل التصدير)</label>
 <textarea id="videoScript" rows="9" placeholder="اكتب عنوان الدرس ثم اضغط ابنِ الفيديو تلقائياً، أو الصق شرحك هنا..."></textarea>
 <div class="grid">
@@ -889,7 +888,7 @@ async function convertVideoBlobToMp4(blob,status){
   await ff.load();
   const input='lesson-input.webm',output='lesson-output.mp4';
   ff.FS('writeFile',input,new Uint8Array(await blob.arrayBuffer()));
-  await ff.run('-i',input,'-c:v','libx264','-preset','ultrafast','-crf','23','-pix_fmt','yuv420p','-movflags','+faststart','-c:a','aac','-b:a','128k',output);
+  await ff.run('-i',input,'-c:v','libx264','-preset','medium','-crf','19','-profile:v','high','-pix_fmt','yuv420p','-movflags','+faststart','-c:a','aac','-b:a','192k',output);
   const data=ff.FS('readFile',output);
   return new Blob([data.buffer],{type:'video/mp4'});
 }
