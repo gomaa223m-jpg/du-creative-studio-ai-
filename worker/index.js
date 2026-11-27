@@ -165,7 +165,7 @@ export default {
             headers: { "Content-Type": "application/json", "Authorization": auth },
             body: JSON.stringify(args)
           });
-          const bookResponse = await this.fetch(internalRequest, env);
+          const bookResponse = await handleBook(internalRequest, env, headersOrigin);
           const resultText = await bookResponse.text();
           return json({ jsonrpc: "2.0", id: rpc.id, result: { content: [{ type: "text", text: resultText }], isError: !bookResponse.ok } }, 200, headersOrigin);
         }
@@ -177,6 +177,11 @@ export default {
     if (request.method !== "POST" || !["/api/book", "/api/v1/books/generate"].includes(url.pathname)) {
       return json({ error: "المسار غير متاح." }, 404, headersOrigin);
     }
+    return handleBook(request, env, headersOrigin);
+  }
+};
+
+async function handleBook(request, env, headersOrigin) {
     if (!env.OPENAI_API_KEY || !env.APP_ACCESS_TOKEN) {
       return json({ error: "الخادم غير مكتمل الإعداد: أضف أسرار OPENAI_API_KEY و APP_ACCESS_TOKEN." }, 503, headersOrigin);
     }
@@ -325,5 +330,5 @@ export default {
     } catch (error) {
       return json({ error: "حدث خطأ أثناء التوليد: " + String(error?.message || error).slice(0, 240) }, 500, headersOrigin);
     }
-  }
-};
+
+}
