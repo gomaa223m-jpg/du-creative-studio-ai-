@@ -287,16 +287,19 @@ body{background:#f4f8fb}
 <p class="muted">تنبيه حقوقي: المكتبة دليل وصول وليست مستودعاً لنسخ الكتب أو المحتوى المحمي. استخدم المواد وفق تراخيصها وشروط أصحابها، وتحقق من توافقها مع منهج بلدك قبل اعتمادها.</p>
 </section>
 <section class="card" id="videoStudio">
-<h2>🎬 استوديو إنتاج الفيديو الذكي — يعمل داخل جهازك</h2>
-<p><b>اكتب عنوان الدرس ثم اضغط «ابنِ الفيديو تلقائياً».</b> ينشئ الاستوديو مساراً تعليمياً ومشاهد متتابعة، ويحوّلها إلى فيديو متحرك قابل للتنزيل دون الحاجة إلى مساعد خارجي أو مفتاح API.</p>
-<div class="stepnote"><strong>محرك إنتاج مستقل:</strong> تجهيز السيناريو والمشاهد، معاينة فورية، تعليق صوتي تجريبي عبر أصوات المتصفح المتاحة، إضافة ملف صوتي اختياري، ثم تسجيل الفيديو وتصديره. يعمل محلياً؛ ولا يدّعي توليد لقطات سينمائية واقعية أو استنساخ صوت بشري.</div>
+<h2>🎬 استوديو إنتاج الفيديو — من العنوان إلى ملف جاهز للنشر</h2>
+<p><b>اكتب عنوان الفيديو فقط، ثم اضغط «ابنِ الفيديو تلقائياً».</b> سيُعدّ الاستوديو مساراً وسيناريو أولياً، ويقسمه إلى مشاهد ويختار الإخراج والترجمة تلقائياً، ثم يجهز الملف للتحميل والمشاركة.</p>
+<div class="stepnote"><strong>جودة وإخراج:</strong> تصدير محلي بدقة تصل إلى 1440p وبمعدل إطارات 30fps ومعدل بيانات مرتفع حسب قدرة جهازك، مع مقاسات أفقية ويوتيوب ورأسية لريلز/تيك توك/شورتس ومربعة. هذا المحرك ينتج موشن جرافيك ورسوم مشاهد من Canvas؛ لا ينشئ وحده لقطات فوتوغرافية أو فيديو مولداً واقعياً بالذكاء الاصطناعي. للحصول على تلك اللقطات، استخدم حزمة الإنتاج الجاهزة مع أداة فيديو خارجية ثم أضف ملفاتها هنا.</div>
+<label for="videoTitle">عنوان الفيديو</label><input id="videoTitle" placeholder="مثال: تصنيف التفاعلات الكيميائية">
+<div class="grid">
 <label for="videoScript">سيناريو الدرس (يمكن تعديله قبل التصدير)</label>
 <textarea id="videoScript" rows="9" placeholder="اكتب عنوان الدرس ثم اضغط ابنِ الفيديو تلقائياً، أو الصق شرحك هنا..."></textarea>
 <div class="grid">
 <div><label for="videoStyle">الأسلوب البصري</label><select id="videoStyle"><option value="cinematic" selected>سينمائي واقعي</option><option value="cartoon">كرتون ثلاثي الأبعاد</option><option value="anime">أنيمي تعليمي</option><option value="science">مختبر وتجارب علمية</option><option value="infographic">إنفوجرافيك متحرك</option></select></div>
 <div><label for="videoMotion">كثافة الحركة</label><select id="videoMotion"><option value="calm">هادئة وأنيقة</option><option value="normal" selected>سينمائية متوازنة</option><option value="dynamic">ديناميكية ومشوقة</option></select></div>
 <div><label for="videoSeconds">مدة كل مشهد</label><select id="videoSeconds"><option value="5">5 ثوانٍ</option><option value="7" selected>7 ثوانٍ</option><option value="10">10 ثوانٍ</option><option value="14">14 ثانية</option></select></div>
-<div><label for="videoQuality">جودة الفيديو</label><select id="videoQuality"><option value="1080" selected>Full HD — 1080p</option><option value="720">HD — 720p</option></select></div>
+<div><label for="videoQuality">جودة الفيديو</label><select id="videoQuality"><option value="1080" selected>Full HD — 1080p عالي الجودة</option><option value="1440">QHD — 1440p فائق الوضوح</option><option value="720">HD — 720p للأجهزة الضعيفة</option></select></div>
+<div><label for="videoAspect">مقاس النشر</label><select id="videoAspect"><option value="landscape" selected>أفقي 16:9 — يوتيوب والعروض</option><option value="portrait">رأسي 9:16 — ريلز وتيك توك وشورتس</option><option value="square">مربع 1:1 — المنشورات</option></select></div>
 </div>
 <section class="stepnote" id="avatarEngine">
 <strong>🎭 محرك الأفاتار التعليمي</strong>
@@ -328,9 +331,10 @@ body{background:#f4f8fb}
 <label for="avatarVtt">ملف توقيت الكلمات WebVTT (اختياري لمزامنة أدق)</label><input id="avatarVtt" type="file" accept=".vtt,text/vtt"><p class="muted">أنشئ ملف VTT بتوقيت كل كلمة أو عبارة قصيرة من التسجيل نفسه. يستخدمه المحرك لمطابقة ظهور الكلمات وحركة الفم زمنياً؛ لا يستنتج الفونيمات تلقائياً.</p>
 <p class="muted">محرك تتبع الوجه يحدد معالم العينين والشفاه والوجه ويعرض شبكة تشخيصية؛ لا يغيّر هندسة الوجه ولا ينشئ حركة عضلية جديدة. ملف الأداء JSON يتيح مزامنة viseme وإيماءات وتعبيرات ذات توقيت سابق التجهيز. هذه مزامنة قائمة على بيانات محاذاة، وليست استنتاجاً تلقائياً للفونيمات من الصوت.</p>
 <div class="grid">
-<button id="autoVideoBuild">✨ ابنِ الفيديو تلقائياً من عنوان الدرس</button>
-<button class="secondary" id="speakVideoScript">🔊 استمع إلى السيناريو</button>
+<button id="autoVideoBuild">✨ ابنِ الفيديو تلقائياً من العنوان</button>
+<button class="secondary" id="videoAiPrompt">🤖 جهّز برومبت احترافياً لأي أداة ذكاء اصطناعي</button>
 </div>
+<div class="grid"><button class="secondary" id="speakVideoScript">🔊 استمع إلى السيناريو</button><button class="light" id="downloadVideoScript">⬇ تنزيل السيناريو وملف المشاهد</button></div>
 <p class="muted">التعليق الصوتي التجريبي يستخدم الأصوات العربية المثبتة في جهازك عبر المتصفح، وقد يختلف توفرها وجودتها. زر الاستماع لا يضيف الصوت إلى ملف الفيديو؛ لإدراج تعليق داخل الملف أرفق تسجيلاً صوتياً في خانة الصوت. المحرك لا يحتاج إلى خدمة ذكاء اصطناعي خارجية، لكنه لا يخترع حقائق الدرس: إذا لم يتوفر شرح في المحتوى، ينشئ هيكل سيناريو يحتاج إلى استكمال ومراجعة علمية.</p>
 <canvas id="videoCanvas" width="1920" height="1080" style="width:100%;height:auto;background:#10243a;border-radius:14px;margin-top:12px"></canvas>
 <p class="muted">يُسجَّل الفيديو داخل المتصفح ثم يحاول الاستوديو تحويله إلى MP4 باستخدام FFmpeg WebAssembly. اترك الصفحة مفتوحة حتى يكتمل التصدير؛ قد يستغرق ذلك وقتاً على الهاتف.</p>
@@ -342,7 +346,8 @@ body{background:#f4f8fb}
 </div>
 <div class="grid"><button class="secondary" id="makeVariants">🎞️ أنشئ 3 نسخ للمقارنة</button><button class="secondary" id="previewSelected">▶ معاينة النسخة المختارة</button></div>
 <div id="variantGallery" class="grid" aria-live="polite"></div>
-<button class="secondary" id="renderVideo">⬇ تجميع وتنزيل النسخة المختارة</button>
+<div class="grid"><button class="bigstart" id="renderVideo">⬇ إخراج وتحميل MP4</button><button class="secondary" id="shareVideo" disabled>مشاركة الفيديو إلى التطبيقات</button></div>
+<p class="muted">بعد التصدير، استخدم «مشاركة الفيديو» لفتح قائمة المشاركة في هاتفك واختيار التطبيق المتاح. إن لم يدعم المتصفح مشاركة ملفات الفيديو، حمّل الملف ثم ارفعه يدوياً إلى المنصة. لا ينشر الموقع تلقائياً داخل حساباتك ولا يطلب كلمات مرورها.</p>
 <div id="directorShotList" class="saved-list" aria-live="polite"></div>
 <p class="status" id="videoStatus" aria-live="polite"></p>
 </section>
@@ -859,7 +864,21 @@ function renderLibrary(){
 renderLibrary();
 
 const videoCanvas=$('videoCanvas'),vctx=videoCanvas.getContext('2d');
-let videoScenes=[],videoFrame=0,videoPreviewTimer=null;
+let videoScenes=[],videoFrame=0,videoPreviewTimer=null,lastRenderedVideoBlob=null,lastRenderedVideoFile=null;
+function currentVideoTitle(){return ($('videoTitle')&&$('videoTitle').value.trim())||$('topic').value.trim()||'فيديو تعليمي'}
+$('videoTitle').value=$('topic').value.trim();
+$('videoTitle').addEventListener('input',()=>{$('topic').value=$('videoTitle').value});
+$('topic').addEventListener('input',()=>{if(!$('videoTitle').value.trim())$('videoTitle').value=$('topic').value});
+$('videoAiPrompt').addEventListener('click',()=>{
+ const title=currentVideoTitle();if(title.length<3){$('videoStatus').textContent='اكتب عنوان الفيديو أولاً.';return}
+ const prompt='أنت فريق إنتاج سينمائي وتعليمي عالمي. أنشئ من العنوان التالي حزمة فيديو جاهزة للإنتاج: «'+title+'». اكتب بالعربية الفصحى وباتجاه RTL، وحدد الجمهور والهدف والرسالة، ثم سيناريو كاملاً مدته 60–90 ثانية، وقسّمه إلى 8–10 مشاهد. لكل مشهد أعطني: الزمن، التعليق الصوتي الدقيق، النص القصير الظاهر على الشاشة، وصف الصورة/الفيديو المطلوب، حركة الكاميرا، المؤثرات والانتقال، وموجه توليد صورة/فيديو مستقل بالإنجليزية. أضف موسيقى مناسبة دون حقوق، مؤثرات صوتية مقترحة، ترجمة عربية SRT، وصفاً للنشر، عنواناً جذاباً، ووسوماً. تحقق من صحة المعلومات، ولا تخترع حقائق أو مراجع؛ اذكر ما يحتاج تحققاً. صمم نسخاً 16:9 و9:16 و1:1. اجعل كل مشهد قابلاً للإنتاج بأدوات فيديو مختلفة، واستخدم صيغة منظمة يسهل نسخها.';
+ $('out').textContent=prompt;
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(prompt).then(()=>$('videoStatus').textContent='نُسخت حزمة إنتاج الفيديو. افتح أي أداة ذكاء اصطناعي والصقها هناك.').catch(()=>$('videoStatus').textContent='حزمة الإنتاج جاهزة في صندوق البرومبت للنسخ.')}else $('videoStatus').textContent='حزمة الإنتاج جاهزة في صندوق البرومبت للنسخ.';
+});
+$('downloadVideoScript').addEventListener('click',()=>{
+ const payload={title:currentVideoTitle(),script:$('videoScript').value,scenes:videoScenes,format:$('videoAspect').value,quality:$('videoQuality').value,createdAt:new Date().toISOString()};
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=safeFileName(currentVideoTitle())+'-production.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
+});
 async function convertVideoBlobToMp4(blob,status){
   status.textContent='جارٍ تحميل محوّل MP4 المجاني لأول مرة؛ قد يستغرق ذلك بعض الوقت...';
   if(!window.FFmpeg||!window.FFmpeg.createFFmpeg){
@@ -875,7 +894,7 @@ async function convertVideoBlobToMp4(blob,status){
   return new Blob([data.buffer],{type:'video/mp4'});
 }
 function autoBuildVideoScript(){
- const topic=$('topic').value.trim()||'موضوع الدرس';
+ const topic=currentVideoTitle();
  const supplied=($('generatedContent')&&$('generatedContent').value.trim())||'';
  let body='';
  if(supplied){
@@ -883,15 +902,15 @@ function autoBuildVideoScript(){
  }
  if(!body){
   body=[
-   'مقدمة مشوقة: ما السؤال أو الظاهرة التي يفسرها درس '+topic+'؟ ابدأ بسؤال يثير الفضول.',
-   'أهداف التعلم: في نهاية الدرس سيكون الطالب قادراً على تعريف المفهوم وشرح فكرته وتطبيقها.',
-   'الفكرة الأساسية: اشرح مفهوم '+topic+' بلغة واضحة، ثم اذكر المصطلحات الأساسية.',
-   'خطوات الفهم: قسّم الفكرة إلى خطوات مرتبة، واربط كل خطوة بما قبلها.',
-   'مثال تطبيقي: اعرض مثالاً مناسباً للموضوع مع تفسير خطوات الحل أو الملاحظة.',
-   'تطبيق ومشاركة: اطرح سؤالاً قصيراً وامنح المتعلم وقتاً للتفكير قبل إظهار التفسير.',
-   'أخطاء شائعة: نبّه إلى مواضع الالتباس، وبيّن طريقة التحقق من الإجابة.',
-   'ملخص الدرس: اجمع أهم الأفكار في نقاط موجزة مترابطة.',
-   'تقويم ختامي: اطرح سؤالاً يقيس الفهم والتطبيق، ثم اختم برسالة تشجيعية.'
+   'افتتاحية جذابة: ابدأ بسؤال أو مفاجأة بصرية مرتبطة بعنوان '+topic+'.',
+   'لماذا يهمنا الموضوع؟ اربطه بموقف حياتي أو ظاهرة يلاحظها الجمهور.',
+   'الفكرة المحورية: قدم تعريفاً دقيقاً ومبسطاً للموضوع، وحدد المصطلحات الرئيسية.',
+   'كيف يحدث أو كيف يعمل؟ اشرح الفكرة في ثلاث خطوات متتابعة مع تشبيه بصري مناسب.',
+   'المشهد التوضيحي: اقترح رسماً أو محاكاة مرئية تشرح الفكرة دون تفاصيل مضللة.',
+   'مثال واقعي أو تطبيقي: قدم مثالاً صحيحاً بعد التحقق من مصدر موثوق، أو ضع علامة [يحتاج تحققاً] عند غياب المصدر.',
+   'اختبر فهمك: اطرح سؤالاً قصيراً ثم اعرض الإجابة وتفسيرها في المشهد التالي.',
+   'خلاصة بصرية: لخص ثلاث رسائل أساسية في بطاقة واضحة.',
+   'دعوة للتفاعل: اختم بسؤال للجمهور وعبارة ختامية قصيرة.'
   ].join('\\n\\n');
  }
  $('videoScript').value=body;
@@ -911,7 +930,7 @@ $('speakVideoScript').addEventListener('click',()=>{
  u.onerror=()=>{$('videoStatus').textContent='تعذر تشغيل الصوت في هذا الجهاز.'};
  window.speechSynthesis.speak(u);
 });
-function makeVideoScenes(){const raw=$('videoScript').value.trim()||$('generatedContent').value.trim()||$('out').textContent;const lines=raw.split(/\\n+/).map(x=>x.replace(/^\\s*(?:[-*#]+|[0-9٠-٩]+[.)、-])\\s*/,'').trim()).filter(x=>x.length>12);const unique=lines.filter((x,i)=>i===0||x!==lines[i-1]);videoScenes=(unique.length?unique:[$('topic').value||'رحلة تعلم ممتعة']).slice(0,36).map((text,i)=>({title:i===0?($('topic').value||'درسنا اليوم'):('الفكرة '+(i+1)),text:text.slice(0,240)}));return videoScenes}
+function makeVideoScenes(){const raw=$('videoScript').value.trim()||$('generatedContent').value.trim()||$('out').textContent;const lines=raw.split(/\\n+/).map(x=>x.replace(/^\\s*(?:[-*#]+|[0-9٠-٩]+[.)、-])\\s*/,'').trim()).filter(x=>x.length>12);const unique=lines.filter((x,i)=>i===0||x!==lines[i-1]);videoScenes=(unique.length?unique:[$('topic').value||'رحلة تعلم ممتعة']).slice(0,36).map((text,i)=>({title:i===0?currentVideoTitle():('الفكرة '+(i+1)),text:text.slice(0,240)}));return videoScenes}
 function directScene(s,i){
  const k=sceneKind(s),t=(s.title+' '+s.text).toLowerCase();
  const plan={
@@ -1047,8 +1066,21 @@ if($('subtitleMode')&&$('subtitleMode').value==='on'){const sub=avatarActiveCue?
 vctx.fillStyle='rgba(255,255,255,.25)';vctx.fillRect(95,H-55,W-190,8);vctx.fillStyle=pal[2];vctx.fillRect(95,H-55,(W-190)*Math.max(.03,progress),8);vctx.textAlign='left';vctx.direction='ltr';vctx.fillStyle='#fff';vctx.font='26px Tahoma';vctx.fillText((index+1)+' / '+videoScenes.length,100,H-75);vctx.textAlign='right';vctx.direction='rtl';vctx.fillText(style==='anime'?'ANIME EDU':style==='cartoon'?'3D CARTOON':style==='science'?'SCIENCE LAB':style==='infographic'?'MOTION INFOGRAPHIC':'CINEMATIC EDU',W-100,H-75)}
 function wrapCanvasText(text,x,y,maxWidth,lineHeight){const words=String(text).split(/\\s+/);let line='',yy=y;for(const word of words){const test=line?line+' '+word:word;if(vctx.measureText(test).width>maxWidth&&line){vctx.fillText(line,x,yy);line=word;yy+=lineHeight}else line=test}if(line)vctx.fillText(line,x,yy)}
 $('previewVideo').addEventListener('click',()=>{if(!videoScenes.length||!videoScenes[0].director)autoDirectVideo();videoFrame=0;let started=performance.now(),idx=0;if(videoPreviewTimer)clearInterval(videoPreviewTimer);const tick=()=>{const s=videoScenes[idx],dur=(s.director&&s.director.duration||Number($('videoSeconds').value)||7)*1000,elapsed=performance.now()-started;if(elapsed>=dur){idx=(idx+1)%videoScenes.length;started=performance.now()}videoFrame=idx;drawVideoScene(idx,Math.min(1,(performance.now()-started)/dur));};tick();videoPreviewTimer=setInterval(tick,80);$('videoStatus').textContent='المعاينة تعمل بتوقيت كل مشهد، مع الترجمة الظاهرة وفق الإعداد.'});
-$('renderVideo').addEventListener('click',async()=>{if((presenterVideo&&presenterVideo.readyState>=2||videoAvatarImage)&&!$('presenterConsent').checked){$('videoStatus').textContent='قبل التصدير، أكد امتلاك حق الاستخدام وموافقة صاحب الصورة أو التسجيل.';return}const scenes=(videoScenes.length&&videoScenes[0].director)?videoScenes:makeVideoScenes().map(directScene);videoScenes=scenes;if(!scenes.length)return;const status=$('videoStatus'),btn=$('renderVideo');if(!window.MediaRecorder||!videoCanvas.captureStream){status.textContent='هذا المتصفح لا يدعم تسجيل الفيديو. جرّب أحدث إصدار من Chrome أو Edge.';return}btn.disabled=true;status.textContent='جارٍ إنشاء الفيديو... اترك الصفحة مفتوحة حتى يكتمل التسجيل.';if(videoPreviewTimer){clearInterval(videoPreviewTimer);videoPreviewTimer=null}const height=Number($('videoQuality').value);videoCanvas.width=height===720?1280:1920;videoCanvas.height=height===720?720:1080;const stream=videoCanvas.captureStream(30);let audioUrl=null,audioEl=null,audioStream=null;const usePresenter=!!(presenterVideo&&presenterVideo.readyState>=2);const audioFile=$('videoAudio').files[0];const originalPresenterMuted=usePresenter?presenterVideo.muted:false;if(usePresenter){try{presenterVideo.pause();presenterVideo.currentTime=0;presenterVideo.loop=!!$('loopPresenter').checked;presenterVideo.muted=!!audioFile;await presenterVideo.play();const ps=presenterVideo.captureStream?presenterVideo.captureStream():null;if(ps&&!audioFile)ps.getAudioTracks().forEach(t=>stream.addTrack(t))}catch(e){status.textContent='تعذر تشغيل تسجيل المعلم؛ تحقق من صيغة الفيديو.'}}if(audioFile){audioUrl=URL.createObjectURL(audioFile);audioEl=new Audio(audioUrl);avatarAudioElement=audioEl;audioEl.loop=false;try{await audioEl.play();if(window.AudioContext||window.webkitAudioContext){avatarAudioContext=new (window.AudioContext||window.webkitAudioContext)();const source=avatarAudioContext.createMediaElementSource(audioEl);avatarAnalyser=avatarAudioContext.createAnalyser();avatarAnalyser.fftSize=512;const destination=avatarAudioContext.createMediaStreamDestination();source.connect(avatarAnalyser);avatarAnalyser.connect(destination);avatarAnalyser.connect(avatarAudioContext.destination);destination.stream.getAudioTracks().forEach(t=>stream.addTrack(t))}else if(audioEl.captureStream){audioStream=audioEl.captureStream();audioStream.getAudioTracks().forEach(t=>stream.addTrack(t))}}catch(e){status.textContent='تعذر تشغيل ملف الصوت؛ سيُنشأ الفيديو دون صوت.'}}
-let mime='video/webm;codecs=vp9';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm;codecs=vp8';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';let recorder;try{recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:height===720?5000000:10000000})}catch(e){stream.getTracks().forEach(t=>t.stop());btn.disabled=false;status.textContent='تعذر بدء التسجيل على هذا المتصفح.';return}const chunks=[];recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};recorder.onerror=()=>{status.textContent='حدث خطأ أثناء تسجيل الفيديو.';btn.disabled=false};recorder.onstop=async()=>{const webmBlob=new Blob(chunks,{type:mime});try{const mp4Blob=await convertVideoBlobToMp4(webmBlob,status);const url=URL.createObjectURL(mp4Blob);const a=document.createElement('a');a.href=url;a.download=safeFileName($('topic').value||'درس-تعليمي')+'-'+height+'p.mp4';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='اكتمل التحويل وتم تنزيل فيديو MP4 بدقة '+height+'p.'}catch(err){const url=URL.createObjectURL(webmBlob);const a=document.createElement('a');a.href=url;a.download=safeFileName($('topic').value||'درس-تعليمي')+'-'+height+'p.webm';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='تعذر تحويل MP4 على هذا الجهاز؛ تم تنزيل نسخة WebM بديلة. جرّب متصفح Chrome حديثاً أو جهازاً بذاكرة أكبر.'}finally{stream.getTracks().forEach(t=>t.stop());if(usePresenter){presenterVideo.pause();presenterVideo.muted=originalPresenterMuted;presenterVideo.loop=false}if(audioUrl)URL.revokeObjectURL(audioUrl);if(avatarAudioContext){avatarAudioContext.close().catch(()=>{});avatarAudioContext=null;avatarAnalyser=null}avatarAudioElement=null;avatarActiveCue=null;btn.disabled=false}};recorder.start(250);if(usePresenter){presenterVideo.currentTime=0;await presenterVideo.play().catch(()=>{});if(!audioEl)avatarAudioElement=presenterVideo}for(let i=0;i<scenes.length;i++){const sceneMs=(scenes[i].director&&scenes[i].director.duration||Number($('videoSeconds').value)||7)*1000;const start=performance.now();while(performance.now()-start<sceneMs){const p=Math.min(1,(performance.now()-start)/sceneMs);avatarAudioTick();drawVideoScene(i,p);await new Promise(resolve=>setTimeout(resolve,33))}}if(audioEl){const remaining=Math.max(0,audioEl.duration*1000-scenes.length*sceneMs);if(remaining)await new Promise(resolve=>setTimeout(resolve,Math.min(remaining,120000)))}else if(usePresenter&&!$('loopPresenter').checked){const remaining=Math.max(0,presenterVideo.duration*1000-scenes.length*sceneMs);if(remaining)await new Promise(resolve=>setTimeout(resolve,Math.min(remaining,120000)))}recorder.stop()});
+$('shareVideo').addEventListener('click',async()=>{
+ if(!lastRenderedVideoFile){$('videoStatus').textContent='أنشئ الفيديو أولاً.';return}
+ try{
+  if(navigator.canShare&&navigator.canShare({files:[lastRenderedVideoFile]})){
+   await navigator.share({files:[lastRenderedVideoFile],title:currentVideoTitle(),text:'فيديو تعليمي: '+currentVideoTitle()});
+   $('videoStatus').textContent='تم فتح قائمة مشاركة الفيديو. اختر التطبيق الذي تريد استخدامه.';
+  }else{$('videoStatus').textContent='المتصفح لا يدعم مشاركة ملف الفيديو مباشرة. حمّل الملف ثم أرفقه يدوياً في التطبيق المطلوب.'}
+ }catch(e){if(e.name!=='AbortError')$('videoStatus').textContent='تعذرت المشاركة المباشرة؛ استخدم الملف الذي تم تنزيله وارفعه يدوياً.'}
+});
+$('renderVideo').addEventListener('click',async()=>{if((presenterVideo&&presenterVideo.readyState>=2||videoAvatarImage)&&!$('presenterConsent').checked){$('videoStatus').textContent='قبل التصدير، أكد امتلاك حق الاستخدام وموافقة صاحب الصورة أو التسجيل.';return}const scenes=(videoScenes.length&&videoScenes[0].director)?videoScenes:makeVideoScenes().map(directScene);videoScenes=scenes;if(!scenes.length)return;const status=$('videoStatus'),btn=$('renderVideo');if(!window.MediaRecorder||!videoCanvas.captureStream){status.textContent='هذا المتصفح لا يدعم تسجيل الفيديو. جرّب أحدث إصدار من Chrome أو Edge.';return}btn.disabled=true;status.textContent='جارٍ إنشاء الفيديو... اترك الصفحة مفتوحة حتى يكتمل التسجيل.';if(videoPreviewTimer){clearInterval(videoPreviewTimer);videoPreviewTimer=null}const height=Number($('videoQuality').value);const aspect=$('videoAspect').value;
+const base=height===720?720:height===1440?1440:1080;
+if(aspect==='portrait'){videoCanvas.width=base;videoCanvas.height=Math.round(base*16/9)}
+else if(aspect==='square'){videoCanvas.width=base;videoCanvas.height=base}
+else{videoCanvas.width=Math.round(base*16/9);videoCanvas.height=base}const stream=videoCanvas.captureStream(30);let audioUrl=null,audioEl=null,audioStream=null;const usePresenter=!!(presenterVideo&&presenterVideo.readyState>=2);const audioFile=$('videoAudio').files[0];const originalPresenterMuted=usePresenter?presenterVideo.muted:false;if(usePresenter){try{presenterVideo.pause();presenterVideo.currentTime=0;presenterVideo.loop=!!$('loopPresenter').checked;presenterVideo.muted=!!audioFile;await presenterVideo.play();const ps=presenterVideo.captureStream?presenterVideo.captureStream():null;if(ps&&!audioFile)ps.getAudioTracks().forEach(t=>stream.addTrack(t))}catch(e){status.textContent='تعذر تشغيل تسجيل المعلم؛ تحقق من صيغة الفيديو.'}}if(audioFile){audioUrl=URL.createObjectURL(audioFile);audioEl=new Audio(audioUrl);avatarAudioElement=audioEl;audioEl.loop=false;try{await audioEl.play();if(window.AudioContext||window.webkitAudioContext){avatarAudioContext=new (window.AudioContext||window.webkitAudioContext)();const source=avatarAudioContext.createMediaElementSource(audioEl);avatarAnalyser=avatarAudioContext.createAnalyser();avatarAnalyser.fftSize=512;const destination=avatarAudioContext.createMediaStreamDestination();source.connect(avatarAnalyser);avatarAnalyser.connect(destination);avatarAnalyser.connect(avatarAudioContext.destination);destination.stream.getAudioTracks().forEach(t=>stream.addTrack(t))}else if(audioEl.captureStream){audioStream=audioEl.captureStream();audioStream.getAudioTracks().forEach(t=>stream.addTrack(t))}}catch(e){status.textContent='تعذر تشغيل ملف الصوت؛ سيُنشأ الفيديو دون صوت.'}}
+let mime='video/webm;codecs=vp9';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm;codecs=vp8';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';let recorder;try{recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:height===720?6500000:height===1440?26000000:18000000})}catch(e){stream.getTracks().forEach(t=>t.stop());btn.disabled=false;status.textContent='تعذر بدء التسجيل على هذا المتصفح.';return}const chunks=[];recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};recorder.onerror=()=>{status.textContent='حدث خطأ أثناء تسجيل الفيديو.';btn.disabled=false};recorder.onstop=async()=>{const webmBlob=new Blob(chunks,{type:mime});try{const mp4Blob=await convertVideoBlobToMp4(webmBlob,status);lastRenderedVideoBlob=mp4Blob;lastRenderedVideoFile=new File([mp4Blob],safeFileName(currentVideoTitle())+'-'+height+'p.mp4',{type:'video/mp4'});$('shareVideo').disabled=false;const url=URL.createObjectURL(mp4Blob);const a=document.createElement('a');a.href=url;a.download=safeFileName(currentVideoTitle())+'-'+height+'p.mp4';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='اكتمل التحويل وتم تنزيل فيديو MP4 بدقة '+height+'p.'}catch(err){lastRenderedVideoBlob=webmBlob;lastRenderedVideoFile=new File([webmBlob],safeFileName(currentVideoTitle())+'-'+height+'p.webm',{type:'video/webm'});$('shareVideo').disabled=false;const url=URL.createObjectURL(webmBlob);const a=document.createElement('a');a.href=url;a.download=safeFileName(currentVideoTitle())+'-'+height+'p.webm';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='تعذر تحويل MP4 على هذا الجهاز؛ تم تنزيل نسخة WebM بديلة. جرّب متصفح Chrome حديثاً أو جهازاً بذاكرة أكبر.'}finally{stream.getTracks().forEach(t=>t.stop());if(usePresenter){presenterVideo.pause();presenterVideo.muted=originalPresenterMuted;presenterVideo.loop=false}if(audioUrl)URL.revokeObjectURL(audioUrl);if(avatarAudioContext){avatarAudioContext.close().catch(()=>{});avatarAudioContext=null;avatarAnalyser=null}avatarAudioElement=null;avatarActiveCue=null;btn.disabled=false}};recorder.start(250);if(usePresenter){presenterVideo.currentTime=0;await presenterVideo.play().catch(()=>{});if(!audioEl)avatarAudioElement=presenterVideo}for(let i=0;i<scenes.length;i++){const sceneMs=(scenes[i].director&&scenes[i].director.duration||Number($('videoSeconds').value)||7)*1000;const start=performance.now();while(performance.now()-start<sceneMs){const p=Math.min(1,(performance.now()-start)/sceneMs);avatarAudioTick();drawVideoScene(i,p);await new Promise(resolve=>setTimeout(resolve,33))}}if(audioEl){const remaining=Math.max(0,audioEl.duration*1000-scenes.length*sceneMs);if(remaining)await new Promise(resolve=>setTimeout(resolve,Math.min(remaining,120000)))}else if(usePresenter&&!$('loopPresenter').checked){const remaining=Math.max(0,presenterVideo.duration*1000-scenes.length*sceneMs);if(remaining)await new Promise(resolve=>setTimeout(resolve,Math.min(remaining,120000)))}recorder.stop()});
 
 
 // محرر PPTX محافظ: يعدّل نصوص فقرات الشرائح داخل حزمة OOXML مع إبقاء بقية ملفات العرض كما هي.
