@@ -7,6 +7,7 @@ on:
     paths:
       - "worker/**"
       - "wrangler.toml"
+      - "wrangler.video.toml"
       - ".github/workflows/deploy-image-worker.yml"
 
 permissions:
@@ -46,7 +47,7 @@ jobs:
               echo
               echo "The website can still be published on GitHub Pages, but the server-side AI/video worker was not deployed."
               echo "Configure the following GitHub Actions secrets, then rerun this workflow:"
-              for name in "${missing[@]}"; do echo "- `$name`"; done
+              for name in "${missing[@]}"; do echo "- ${name}"; done
             } >> "$GITHUB_STEP_SUMMARY"
             echo "::warning::Worker deployment skipped because required secrets are not configured."
             echo "ready=false" >> "$GITHUB_OUTPUT"
