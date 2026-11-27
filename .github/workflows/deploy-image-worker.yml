@@ -40,15 +40,32 @@ jobs:
         run: |
           set -euo pipefail
           missing=()
-          # Remove accidental whitespace/newlines from the repository secret without printing its value.
+          # Prefer a valid configured ID; otherwise resolve it securely from the API token.
           CLOUDFLARE_ACCOUNT_ID="$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '[:space:]')"
-          echo "CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID" >> "$GITHUB_ENV"
           [[ -n "$CLOUDFLARE_API_TOKEN" ]] || missing+=("CLOUDFLARE_API_TOKEN")
-          [[ -n "$CLOUDFLARE_ACCOUNT_ID" ]] || missing+=("CLOUDFLARE_ACCOUNT_ID")
           if [[ -n "$CLOUDFLARE_ACCOUNT_ID" && ! "$CLOUDFLARE_ACCOUNT_ID" =~ ^[a-fA-F0-9]{32}$ ]]; then
-            echo "::error::CLOUDFLARE_ACCOUNT_ID must be the 32-character hexadecimal Account ID from the target Cloudflare account."
-            exit 1
+            echo "::warning::Configured CLOUDFLARE_ACCOUNT_ID is invalid; attempting secure account discovery."
+            CLOUDFLARE_ACCOUNT_ID=""
           fi
+          if [[ -z "$CLOUDFLARE_ACCOUNT_ID" && -n "$CLOUDFLARE_API_TOKEN" ]]; then
+            response="$(curl --silent --show-error --fail \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts?per_page=2")" || {
+                echo "::error::Could not discover Cloudflare account. Ensure the API token has permission to read account details."
+                exit 1
+              }
+            count="$(printf '%s' "$response" | jq -r '.result | length')"
+            if [[ "$count" != "1" ]]; then
+              echo "::error::Automatic account discovery requires exactly one accessible Cloudflare account. Set a valid CLOUDFLARE_ACCOUNT_ID secret if multiple accounts are accessible."
+              exit 1
+            fi
+            CLOUDFLARE_ACCOUNT_ID="$(printf '%s' "$response" | jq -r '.result[0].id')"
+          fi
+          [[ "$CLOUDFLARE_ACCOUNT_ID" =~ ^[a-fA-F0-9]{32}$ ]] || {
+            echo "::error::Cloudflare did not provide a valid 32-character Account ID."
+            exit 1
+          }
+          echo "CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID" >> "$GITHUB_ENV"
           [[ -n "$APP_ACCESS_TOKEN" ]] || missing+=("APP_ACCESS_TOKEN")
           if (( ${#missing[@]} )); then
             {
