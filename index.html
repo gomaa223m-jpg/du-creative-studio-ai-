@@ -458,6 +458,7 @@ table{display:block;max-width:100%;overflow-x:auto}
   <div class="grid">
    <div><label for="imageAiStyle">أسلوب الإخراج</label><select id="imageAiStyle"><option value="cinematic">مشهد سينمائي واقعي</option><option value="avatar">أفاتار / صورة شخصية احترافية</option><option value="educational">رسم علمي ثلاثي الأبعاد</option><option value="editorial">ملصق تحريري فاخر</option><option value="fantasy">عالم خيالي فني</option><option value="product">تصوير منتج احترافي</option></select></div>
    <div><label for="imageAiQuality">الجودة</label><select id="imageAiQuality"><option value="draft">مسودة سريعة</option><option value="standard" selected>احترافي</option><option value="high">تفاصيل عالية</option></select></div>
+   <div><label for="imageAiStrength">قوة التحويل عند رفع صورة</label><select id="imageAiStrength"><option value="0.30">قريب من الصورة الأصلية</option><option value="0.48" selected>توازن بين الأصل والتغيير</option><option value="0.68">تغيير فني أوضح</option></select></div>
   </div>
   <label for="imageAiReference">صورة مرجعية اختيارية (PNG / JPG / WEBP)</label>
   <input id="imageAiReference" type="file" accept="image/png,image/jpeg,image/webp">
@@ -1789,7 +1790,7 @@ $('pptxExport').addEventListener('click',async()=>{
    latent=['4',0];sampler='5';decode='6';save='7';
   }
   const quality=$('imageAiQuality').value,steps=quality==='draft'?16:quality==='high'?34:26;
-  graph[sampler]={class_type:'KSampler',inputs:{seed:Math.floor(Math.random()*2147483647),steps,cfg:6,sampler_name:'dpmpp_2m',scheduler:'karras',denoise:uploadedName?.48:1,model:['1',0],positive:['2',0],negative:['3',0],latent_image:latent}};
+  graph[sampler]={class_type:'KSampler',inputs:{seed:Math.floor(Math.random()*2147483647),steps,cfg:6,sampler_name:'dpmpp_2m',scheduler:'karras',denoise:uploadedName?Number($('imageAiStrength').value):1,model:['1',0],positive:['2',0],negative:['3',0],latent_image:latent}};
   graph[decode]={class_type:'VAEDecode',inputs:{samples:[sampler,0],vae:['1',2]}};
   graph[save]={class_type:'SaveImage',inputs:{filename_prefix:'EDU_Creative_Studio',images:[decode,0]}};
   const promptRequest=await fetch(base+'/prompt',{method:'POST',headers,body:JSON.stringify({prompt:graph,client_id:'edu-creative-studio-local'})});
@@ -1813,7 +1814,7 @@ $('pptxExport').addEventListener('click',async()=>{
   const base=apiBase(),token=tokenInput.value.trim();
   if(!base||!token)throw new Error('أدخل عنوان الخادم الآمن ورمز الوصول أولاً.');
   const [width,height]=dims();
-  const queuedResponse=await fetch(base+'/images/generate',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({prompt,image:imageData||undefined,width,height,steps:$('imageAiQuality').value==='draft'?16:$('imageAiQuality').value==='high'?34:26,cfg:6,denoise:.48})});
+  const queuedResponse=await fetch(base+'/images/generate',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({prompt,image:imageData||undefined,width,height,steps:$('imageAiQuality').value==='draft'?16:$('imageAiQuality').value==='high'?34:26,cfg:6,denoise:Number($('imageAiStrength').value)})});
   const queued=await queuedResponse.json();if(!queuedResponse.ok||!queued.prompt_id)throw new Error(queued.error||'تعذر بدء توليد الصورة.');
   for(let attempt=0;attempt<100;attempt++){
    await new Promise(resolve=>setTimeout(resolve,2500));
