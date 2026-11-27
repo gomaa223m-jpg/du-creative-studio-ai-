@@ -1403,7 +1403,7 @@ $('pptxExport').addEventListener('click',async()=>{
  studio.appendChild(style);
  const progress=document.getElementById('quickVideoProgress');
  const start=document.getElementById('startQuickVideo');
- const fileReady=()=>!!(avatar&&avatar.files&&avatar.files[0]&&window.videoAvatarImage);
+ const fileReady=()=>!!(avatar&&avatar.files&&avatar.files[0]&&typeof videoAvatarImage!=='undefined'&&videoAvatarImage);
  start.addEventListener('click',()=>{
   const topic=title.value.trim();
   if(topic.length<3){progress.textContent='الخطوة 1 من 2: اكتب عنواناً واضحاً للفيديو.';title.focus();return}
