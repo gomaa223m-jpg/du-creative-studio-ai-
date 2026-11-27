@@ -1413,6 +1413,7 @@ $('pptxExport').addEventListener('click',async()=>{
   start.disabled=true;
   try{
    progress.textContent='1/4 — إنشاء سيناريو مبدئي من عنوان الفيديو...';
+   const generated=document.getElementById('generatedContent');if(generated)generated.value='';
    autoBuildVideoScript();
    progress.textContent='2/4 — تقسيم المحتوى إلى مشاهد واختيار اللقطات والحركة...';
    autoDirectVideo();
