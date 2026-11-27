@@ -100,6 +100,26 @@ body{background:#f4f8fb}
 
 
 .tool-link{display:flex;align-items:center;justify-content:center;min-height:54px;padding:12px 14px;border:1px solid rgba(17,202,160,.35);border-radius:12px;background:rgba(0,80,136,.06);color:inherit;text-decoration:none;font-weight:700;line-height:1.6;transition:transform .18s ease,background .18s ease}.tool-link:hover{transform:translateY(-2px);background:rgba(17,202,160,.12)}#aiToolsHub h3{margin-top:22px}
+
+/* Simple icon-first command dashboard */
+#start{border:1px solid #cfe5e8;background:linear-gradient(145deg,#fff,#f5fbfc);padding:clamp(18px,3vw,30px)}
+#start h2{font-size:clamp(21px,3vw,28px);margin:0 0 12px;color:#102f46}
+#start .stepnote{margin:12px 0 18px}
+#topic{font-size:18px;padding:16px;border:2px solid #b8d9dd;border-radius:14px;background:#fff}
+#topic:focus{outline:3px solid #16b8a522;border-color:#16a89a}
+#easyStart{width:100%;font-size:19px;padding:17px;margin:14px 0 4px;border-radius:14px}
+#start #make{background:#e8f4f5;color:#126b69}
+.launcher-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:26px 0 12px;color:#14384e;font-weight:900}
+.launcher-head>span{font-size:18px}.launcher-head small{font-weight:normal;color:#6b8090}
+.launcher-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.launch-tile{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-decoration:none;color:#18364b;background:#fff;border:1px solid #dce8ed;border-radius:15px;padding:14px;box-shadow:0 5px 16px #10243a08;transition:.18s}
+.launch-tile:hover{transform:translateY(-3px);border-color:#80cfc4;box-shadow:0 9px 22px #10243a12}
+.launch-icon{width:39px;height:39px;display:grid;place-items:center;border-radius:12px;background:#e8f7f4;color:#087f78;font-size:23px;font-weight:bold}
+.launch-tile b{font-size:14px}.launch-tile small{font-size:11px;line-height:1.6;color:#708293}
+.launch-tile.tile-all{background:linear-gradient(145deg,#0c354c,#087f78);color:#fff;border-color:transparent}
+.tile-all .launch-icon{background:#ffffff20;color:#9df2e4}.tile-all small{color:#d2e8e8}
+.launcher-foot{font-size:11px;color:#728392;line-height:1.8;margin:13px 0 0}
+@media(max-width:650px){.launcher-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.launch-tile{padding:12px}.launcher-head{align-items:flex-start;flex-direction:column}.launch-tile b{font-size:13px}.launch-tile small{font-size:10px}}
 </style></head>
 <body>
 <header class="hero">
@@ -148,8 +168,21 @@ body{background:#f4f8fb}
 <input id="pages" value="عدد مناسب يغطّي المحتوى كاملاً">
 <textarea id="reference"></textarea>
 </div>
-<button id="make">جهّز الحزمة التعليمية</button><button class="bigstart" id="easyStart">ابدأ مع ChatGPT الآن ←</button>
+<button id="make">تجهيز المحتوى</button><button class="bigstart" id="easyStart">✦ ابدأ الإنتاج الآن</button>
 <button class="secondary" id="clear">مسح العنوان</button>
+
+<div class="launcher-head"><span>✦ لوحة التحكم</span><small>اختر ما تريد إنتاجه — العنوان نفسه يكفي للبدء</small></div>
+<div class="launcher-grid" aria-label="اختصارات الإنتاج">
+<a class="launch-tile tile-all" href="#quickBuilder"><span class="launch-icon">✦</span><b>الحزمة الكاملة</b><small>تحضير وشرح وأنشطة وتقويم</small></a>
+<a class="launch-tile" href="#videoStudio"><span class="launch-icon">▶</span><b>فيديو تعليمي</b><small>سيناريو ومشاهد وتعليق صوتي</small></a>
+<a class="launch-tile" href="#pptxEditor"><span class="launch-icon">▤</span><b>عرض تقديمي</b><small>شرائح قابلة للتعديل</small></a>
+<a class="launch-tile" href="#exportCenter"><span class="launch-icon">✎</span><b>أوراق عمل</b><small>تدريبات وأسئلة وإجابات</small></a>
+<a class="launch-tile" href="#bookStudio"><span class="launch-icon">▣</span><b>كتاب تفاعلي</b><small>فصول وصفحات وأنشطة</small></a>
+<a class="launch-tile" href="#arabLibrary"><span class="launch-icon">◎</span><b>إنفوجرافيك ومكتبة</b><small>مصادر وأفكار تعليمية</small></a>
+<a class="launch-tile" href="#avatarEngine"><span class="launch-icon">◉</span><b>المعلم الافتراضي</b><small>أفاتار وتعليق صوتي</small></a>
+<a class="launch-tile" href="#exportCenter"><span class="launch-icon">⇩</span><b>تصدير وتنزيل</b><small>ملفات للطباعة والمشاركة</small></a>
+</div>
+<p class="launcher-foot">ملاحظة: يجهّز الاستوديو طلب الإنتاج ويفتح أداة الذكاء الاصطناعي المختارة؛ قد تحتاج إلى لصق الطلب والضغط على إرسال داخل الأداة. أدوات التحرير والتصدير المحلية متاحة من داخل الاستوديو.</p>
 </section>
 <section class="card" id="quickBuilder">
 <h2>🧩 منشئ المسودة التعليمية الفوري — يعمل مجاناً دون اتصال بخدمات AI</h2>
