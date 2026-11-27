@@ -1397,7 +1397,7 @@ $('pptxExport').addEventListener('click',async()=>{
   const topic=title.value.trim();
   if(topic.length<3){progress.textContent='اكتب عنوان الفيديو أولاً.';title.focus();return}
   if(!avatar.files||!avatar.files[0]){progress.textContent='ارفع صورة الأفاتار للمتابعة.';avatar.click();return}
-  if(!window.videoAvatarImage){progress.textContent='جارٍ تجهيز الصورة؛ انتظر لحظة ثم اضغط البدء مجدداً.';return}
+  if(typeof videoAvatarImage==='undefined'||!videoAvatarImage){progress.textContent='جارٍ تجهيز الصورة؛ انتظر لحظة ثم اضغط البدء مجدداً.';return}
   if(!window.confirm('هل لديك حق استخدام صورة الأفاتار وموافقة الشخص الظاهر فيها؟')){progress.textContent='لم يبدأ التصدير. يلزم تأكيد حق استخدام الصورة.';return}
   if(busy)return;busy=true;start.disabled=true;
   try{
@@ -1418,7 +1418,7 @@ $('pptxExport').addEventListener('click',async()=>{
    render.click();
   }catch(err){progress.textContent='تعذر بدء الإنتاج: '+(err.message||err);busy=false;start.disabled=false}
  });
- avatar.addEventListener('change',()=>{progress.textContent='جارٍ تحميل صورة الأفاتار...';const wait=()=>{if(window.videoAvatarImage){progress.textContent='تم تحميل صورة الأفاتار. أدخل العنوان واضغط ابدأ.';drawVideoScene(0,0)}};setTimeout(wait,500)});
+ avatar.addEventListener('change',()=>{progress.textContent='جارٍ تحميل صورة الأفاتار...';const wait=()=>{if(typeof videoAvatarImage!=='undefined'&&videoAvatarImage){progress.textContent='تم تحميل صورة الأفاتار. أدخل العنوان واضغط ابدأ.';drawVideoScene(0,0)}};setTimeout(wait,500)});
  if(status){const observer=new MutationObserver(()=>{const t=status.textContent||'';if(/اكتمل إنشاء ملف MP4|تم تنزيل|تعذر تحويل WebM|تعذر بدء التسجيل|حدث خطأ|تعذر/.test(t)){progress.textContent=t;busy=false;start.disabled=false}});observer.observe(status,{childList:true,subtree:true,characterData:true})}
  render.addEventListener('click',()=>{if(busy)progress.textContent='التصدير جارٍ — '+(status.textContent||'يرجى الانتظار حتى اكتمال الملف')});
 })();
