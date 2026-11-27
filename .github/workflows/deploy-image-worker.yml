@@ -60,13 +60,25 @@ jobs:
               printf '%s' "$verify" | jq -r '.errors[]? | "Cloudflare error \(.code): \(.message)"' || true
               exit 1
             fi
-            account_response="$(curl --silent --show-error --write-out '\n%{http_code}' \
+            http_code="$(curl --silent --show-error --output /tmp/cloudflare-accounts.json --write-out '%{http_code}' \
               -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
               "https://api.cloudflare.com/client/v4/accounts?per_page=2")" || {
                 echo "::error::Cloudflare account lookup request could not be completed."
                 exit 1
               }
-            http_code="${account_response##*
+            response="$(cat /tmp/cloudflare-accounts.json)"
+            if [[ ! "$http_code" =~ ^2[0-9][0-9]$ ]] || [[ "$(printf '%s' "$response" | jq -r '.success // false')" != "true" ]]; then
+              echo "::error::Cloudflare token is valid, but account lookup failed. Grant Account: Read permission or set the correct CLOUDFLARE_ACCOUNT_ID secret."
+              printf '%s' "$response" | jq -r '.errors[]? | "Cloudflare error \\(.code): \\(.message)"' || true
+              exit 1
+            fi
+            count="$(printf '%s' "$response" | jq -r '.result | length')"
+            if [[ "$count" != "1" ]]; then
+              echo "::error::Automatic account discovery requires exactly one accessible Cloudflare account. Set the correct CLOUDFLARE_ACCOUNT_ID secret if multiple accounts are accessible."
+              exit 1
+            fi
+            CLOUDFLARE_ACCOUNT_ID="$(printf '%s' "$response" | jq -r '.result[0].id')"
+          fi
           [[ "$CLOUDFLARE_ACCOUNT_ID" =~ ^[a-fA-F0-9]{32}$ ]] || {
             echo "::error::Cloudflare did not provide a valid 32-character Account ID."
             exit 1
