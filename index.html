@@ -658,7 +658,7 @@ $('exportLesson').addEventListener('click',()=>{const t=extractByTerms(['الت�
 $('exportVideoPlan').addEventListener('click',()=>{const t=extractByTerms(['الفيديوهات التعليمية','سيناريو الفيديو','الفيديو التعليمي']);const source=t||needContent();if(!source)return;const lines=source.split(/\\r?\\n/).filter(Boolean);const srt=lines.filter(x=>/تعليق صوتي|المشهد|مشهد|لقطة|الثانية|00:|مدة الفيديو/.test(x)).map((x,i)=>{const start=i*8;const fmt=n=>[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':')+',000';return (i+1)+'\\n'+fmt(start)+' --> '+fmt(start+7)+'\\n'+x}).join('\\n\\n');saveBlob(safeFileName($('topic').value)+'-خطة-الفيديو.txt',source,'text/plain;charset=utf-8');if(srt)saveBlob(safeFileName($('topic').value)+'-ترجمة-مبدئية.srt',srt,'text/plain;charset=utf-8');$('exportStatus').textContent='تم تصدير خطة الفيديو'+(srt?' وملف ترجمة مبدئي SRT.':'؛ لم تُستخرج أسطر مناسبة للترجمة.')});
 $('exportPptx').addEventListener('click',async()=>{
  const raw=needContent();if(!raw)return;
- const btn=$('exportPptx');btn.disabled=true;btn.textContent='جارٍ بناء الشرائح الاحترافية...';
+ const btn=$('exportPptx');btn.disabled=true;btn.textContent='جارٍ تحليل المحتوى وتصميم الشرائح...';
  try{
   if(!window.PptxGenJS){await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';sc.onload=resolve;sc.onerror=()=>reject(new Error('تعذر تحميل مكتبة PowerPoint؛ تحقق من الاتصال.'));document.head.appendChild(sc)})}
   const pptx=new window.PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='مستر محمد جمعة';pptx.subject=$('topic').value;pptx.title='عرض '+$('topic').value;pptx.lang='ar-SA';pptx.theme={headFontFace:'Arial',bodyFontFace:'Arial',lang:'ar-SA'};
@@ -669,72 +669,76 @@ $('exportPptx').addEventListener('click',async()=>{
    warm:{bg:'FBF6F3',ink:'3D294D',primary:'7041A6',accent:'E58B42',soft:'F2E6FA',dark:'38234C',white:'FFFFFF'},
    minimal:{bg:'F7F7F5',ink:'242424',primary:'333333',accent:'777777',soft:'EAEAE7',dark:'202020',white:'FFFFFF'}
   };
-  const C=themes[$('pptxTheme')?.value]||themes.ocean;
-  const density=$('pptxDensity')?.value||'balanced';
-  const W=13.333,H=7.5,margin=.62;
-  const clean=x=>String(x||'').replace(/^\s*(?:[-*•]\s+|\d+[.)]\s+|[٠-٩]+[.)]\s+)/,'').trim();
+  const C=themes[$('pptxTheme')?.value]||themes.ocean,density=$('pptxDensity')?.value||'balanced';
+  const W=13.333,H=7.5,M=.62;
+  const clean=x=>String(x||'').replace(/^\s*(?:[-*•]\s+|\d+[.)]\s+|[٠-٩]+[.)]\s+)/,'').replace(/^#{1,3}\s*/,'').trim();
   const lines=raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   const isHeading=x=>/^#{1,3}\s+/.test(x)||/^(?:الوحدة|الفصل|القسم|الدرس|الشريحة|المحور)\s*[0-9٠-٩:：-]*/.test(x);
   const sections=[];let current={title:$('topic').value||'الموضوع التعليمي',items:[]};
-  lines.forEach(line=>{
-   if(isHeading(line)){if(current.items.length)sections.push(current);current={title:line.replace(/^#+\s*/,'').trim(),items:[]};}
-   else current.items.push(line);
-  });
+  lines.forEach(line=>{if(isHeading(line)){if(current.items.length)sections.push(current);current={title:clean(line),items:[]};}else current.items.push(line);});
   if(current.items.length)sections.push(current);
   if(!sections.length)sections.push({title:$('topic').value||'الموضوع التعليمي',items:lines});
-  const maxChars=density==='concise'?330:density==='detailed'?850:560;
-  const maxBullets=density==='concise'?4:density==='detailed'?8:6;
+  const maxChars=density==='concise'?300:density==='detailed'?620:460,maxItems=density==='concise'?4:density==='detailed'?6:5;
   const pages=[];
   sections.forEach(sec=>{
-   const groups=[];let group=[],chars=0;
-   sec.items.forEach(line=>{
-    const bullet=/^(?:[-*•]\s+|\d+[.)]\s+|[٠-٩]+[.)]\s+)/.test(line);
-    const item={text:clean(line),bullet};
-    if(group.length&&(chars+line.length>maxChars||group.length>=maxBullets)){groups.push(group);group=[];chars=0;}
-    group.push(item);chars+=line.length;
-   });
-   if(group.length)groups.push(group);
-   if(!groups.length)groups.push([{text:sec.title,bullet:false}]);
-   groups.forEach((items,i)=>pages.push({title:sec.title,items,part:i+1,total:groups.length}));
+   let group=[],chars=0;
+   const push=()=>{if(group.length){pages.push({title:sec.title,items:group.slice()});group=[];chars=0;}};
+   sec.items.forEach(line=>{if(group.length&&(chars+line.length>maxChars||group.length>=maxItems))push();group.push({text:clean(line),bullet:/^(?:[-*•]\s+|\d+[.)]\s+|[٠-٩]+[.)]\s+)/.test(line)});chars+=line.length;});
+   push();if(!sec.items.length)pages.push({title:sec.title,items:[]});
   });
-  const addFooter=(sl,n)=>{sl.addShape(pptx.ShapeType.line,{x:margin,y:7.08,w:12.05,h:0,line:{color:C.accent,transparency:25,width:1}});sl.addText('مستر محمد جمعة  ·  معانا دائماً أنت الأفضل',{x:margin,y:7.12,w:9,h:.18,fontFace:'Arial',fontSize:8,color:C.primary,rtlMode:true,align:'right',margin:0});sl.addText(String(n).padStart(2,'0'),{x:11.95,y:7.1,w:.7,h:.2,fontFace:'Arial',fontSize:9,bold:true,color:C.accent,align:'center',margin:0});};
-  const addTitle=(sl,title,kicker='محتوى تعليمي')=>{
-   sl.addText(kicker,{x:margin,y:.32,w:11.9,h:.25,fontFace:'Arial',fontSize:9,bold:true,color:C.accent,align:'right',rtlMode:true,margin:0});
-   sl.addText(title,{x:margin,y:.72,w:12.05,h:.72,fontFace:'Arial',fontSize:25,bold:true,color:C.primary,align:'right',rtlMode:true,breakLine:false,fit:'shrink',margin:0.04});
-   sl.addShape(pptx.ShapeType.line,{x:margin,y:1.55,w:12.05,h:0,line:{color:C.accent,width:2}});
+  const addNotes=(sl,title,items,type)=>{
+   const body=items.map((x,i)=>(i+1)+'- '+x.text).join('\n');
+   const prompts={process:'اشرح تسلسل الخطوات، واربط كل مرحلة بما قبلها وما بعدها. توقف بعد كل مرحلة للتحقق من فهم الطلاب.',compare:'وجّه الطلاب إلى أوجه التشابه والاختلاف، ثم اطلب منهم ذكر معيار واحد للمقارنة.',formula:'اقرأ العلاقة أو القانون، وعرّف الرموز والوحدات، ثم حل مثالاً تدريجياً مع توضيح سبب كل خطوة.',question:'امنح الطلاب وقتاً للتفكير، واطلب تبرير الإجابة قبل عرض الحل أو المناقشة.',definition:'ابدأ بسؤال تمهيدي، ثم اشرح المفهوم بلغتك، واربطه بمثال محسوس أو موقف من الحياة.',standard:'قدّم الفكرة الرئيسة، واشرح النقاط بالترتيب، ثم اختم بسؤال تحقق سريع.'};
+   const note='ملاحظات إلقاء المعلم\nعنوان الشريحة: '+title+'\n\nنوع التصميم: '+type+'\n\nمسار الشرح المقترح: '+(prompts[type]||prompts.standard)+'\n\nالنقاط الموجودة في الشريحة:\n'+(body||'قدّم تمهيداً قصيراً للعنوان، ثم اربطه بأهداف الدرس.')+'\n\nتحقق من الفهم: اطلب من طالب تلخيص الفكرة بجملة واحدة، ثم عالج أي لبس قبل الانتقال.';
+   if(typeof sl.addNotes==='function'){try{sl.addNotes(note)}catch(e){}}
   };
-  // Cover: strong title hierarchy and geometric accent.
-  let cover=pptx.addSlide();cover.background={color:C.dark};
-  cover.addShape(pptx.ShapeType.ellipse,{x:9.7,y:-1.1,w:4.6,h:4.6,line:{color:C.accent,transparency:100},fill:{color:C.accent,transparency:78}});
-  cover.addShape(pptx.ShapeType.rect,{x:0,y:0,w:.16,h:H,line:{color:C.accent,transparency:100},fill:{color:C.accent}});
-  cover.addText('عرض تعليمي احترافي',{x:1.0,y:1.15,w:10.9,h:.35,fontFace:'Arial',fontSize:14,bold:true,color:C.accent,align:'right',rtlMode:true,margin:0});
-  cover.addText($('topic').value||sections[0].title,{x:1.0,y:1.85,w:10.9,h:1.65,fontFace:'Arial',fontSize:34,bold:true,color:C.white,align:'right',valign:'mid',rtlMode:true,fit:'shrink',margin:.06});
-  cover.addText('إعداد مستر محمد جمعة',{x:1.0,y:4.25,w:10.9,h:.45,fontFace:'Arial',fontSize:19,color:C.white,align:'right',rtlMode:true,margin:0});
-  cover.addText('معانا دائماً أنت الأفضل',{x:1.0,y:5.0,w:10.9,h:.35,fontFace:'Arial',fontSize:13,color:C.accent,align:'right',rtlMode:true,margin:0});
-  // Agenda slide gives the deck a clear learning path.
-  if(sections.length>1){let ag=pptx.addSlide();ag.background={color:C.bg};addTitle(ag,'مسار العرض','خارطة التعلم');sections.slice(0,8).forEach((sec,i)=>{const y=1.9+i*.58;ag.addShape(pptx.ShapeType.roundRect,{x:1.0,y,w:11.25,h:.43,rectRadius:.08,line:{color:C.soft,transparency:100},fill:{color:C.soft}});ag.addText(String(i+1).padStart(2,'0'),{x:11.55,y:y+.06,w:.42,h:.22,fontFace:'Arial',fontSize:11,bold:true,color:C.primary,align:'center',margin:0});ag.addText(sec.title,{x:1.25,y:y+.04,w:10.0,h:.28,fontFace:'Arial',fontSize:15,bold:true,color:C.ink,align:'right',rtlMode:true,fit:'shrink',margin:0});});addFooter(ag,2);}
+  const addFooter=(sl,n)=>{sl.addShape(pptx.ShapeType.line,{x:M,y:7.08,w:12.05,h:0,line:{color:C.accent,transparency:25,width:1}});sl.addText('مستر محمد جمعة  ·  معانا دائماً أنت الأفضل',{x:M,y:7.12,w:9,h:.18,fontFace:'Arial',fontSize:8,color:C.primary,rtlMode:true,align:'right',margin:0});sl.addText(String(n).padStart(2,'0'),{x:11.95,y:7.1,w:.7,h:.2,fontFace:'Arial',fontSize:9,bold:true,color:C.accent,align:'center',margin:0});};
+  const addTitle=(sl,title,kicker='محتوى تعليمي')=>{sl.addText(kicker,{x:M,y:.32,w:11.9,h:.25,fontFace:'Arial',fontSize:9,bold:true,color:C.accent,align:'right',rtlMode:true,margin:0});sl.addText(title,{x:M,y:.72,w:12.05,h:.72,fontFace:'Arial',fontSize:25,bold:true,color:C.primary,align:'right',rtlMode:true,fit:'shrink',margin:.04});sl.addShape(pptx.ShapeType.line,{x:M,y:1.55,w:12.05,h:0,line:{color:C.accent,width:2}});};
+  const addText=(sl,text,x,y,w,h,opt={})=>sl.addText(text,{x,y,w,h,fontFace:'Arial',fontSize:opt.size||15,bold:!!opt.bold,color:opt.color||C.ink,align:opt.align||'right',valign:'mid',rtlMode:true,fit:'shrink',breakLine:false,margin:opt.margin??.06,bullet:opt.bullet});
+  const addPill=(sl,text,x,y,w,color=C.soft)=>{sl.addShape(pptx.ShapeType.roundRect,{x,y,w,h:.42,rectRadius:.08,line:{color,transparency:100},fill:{color}});addText(sl,text,x+.08,y+.04,w-.16,.3,{size:11,bold:true,color:C.primary,align:'center'});};
+  const inferType=items=>{
+   const t=items.map(x=>x.text).join(' ');
+   if(/(?:قارن|مقارنة|الفرق بين|أوجه الشبه|مقابل|بينما)/.test(t))return 'compare';
+   if(/(?:خطوات|مراحل|أولاً|ثانياً|ثم|بعد ذلك|ينتج عن|يتحول إلى|تسلسل)/.test(t)||items.length>=3&&items.every(x=>x.bullet))return 'process';
+   if(/(?:=|→|⇌|Δ|√|²|³|قانون|معادلة|صيغة|يرمز إلى)/.test(t))return 'formula';
+   if(/(?:؟|\?|\bاختر\b|علل|فسر|استنتج|ما السبب|ماذا يحدث)/.test(t))return 'question';
+   if(/(?:تعريف|يقصد به|هو عملية|هي عملية|مفهوم)/.test(t))return 'definition';
+   return 'standard';
+  };
+  let cover=pptx.addSlide();cover.background={color:C.dark};cover.addShape(pptx.ShapeType.ellipse,{x:9.7,y:-1.1,w:4.6,h:4.6,line:{color:C.accent,transparency:100},fill:{color:C.accent,transparency:78}});cover.addShape(pptx.ShapeType.rect,{x:0,y:0,w:.16,h:H,line:{color:C.accent,transparency:100},fill:{color:C.accent}});addText(cover,'عرض تعليمي احترافي',1,1.15,10.9,.4,{size:14,bold:true,color:C.accent});addText(cover,$('topic').value||sections[0].title,1,1.85,10.9,1.65,{size:34,bold:true,color:C.white});addText(cover,'إعداد مستر محمد جمعة',1,4.25,10.9,.45,{size:19,color:C.white});addText(cover,'معانا دائماً أنت الأفضل',1,5,10.9,.35,{size:13,color:C.accent});addNotes(cover,'غلاف العرض',[], 'standard');
+  if(sections.length>1){let ag=pptx.addSlide();ag.background={color:C.bg};addTitle(ag,'مسار العرض','خارطة التعلم');sections.slice(0,8).forEach((sec,i)=>{const y=1.85+i*.59;addPill(ag,String(i+1).padStart(2,'0'),11.65,y,.5);addText(ag,sec.title,1,y,10.35,.42,{size:15,bold:true});});addNotes(ag,'مسار العرض',sections.map(x=>({text:x.title})), 'standard');addFooter(ag,2);}
   pages.forEach((page,idx)=>{
-   const sl=pptx.addSlide();sl.background={color:C.bg};addTitle(sl,page.title,page.total>1?'الفكرة الرئيسية · الجزء '+page.part:'شرح وتطبيق');
-   const items=page.items.filter(x=>x.text);
-   const bullets=items.filter(x=>x.bullet),plain=items.filter(x=>!x.bullet);
-   if(bullets.length>=2&&bullets.length<=4){
-    const cols=bullets.length===2?2:2,rows=Math.ceil(bullets.length/cols);
-    bullets.forEach((it,i)=>{const col=i%2,row=Math.floor(i/2),x=margin+col*6.05,y=1.95+row*2.05;sl.addShape(pptx.ShapeType.roundRect,{x,y,w:5.65,h:1.62,rectRadius:.12,line:{color:C.soft,width:1},fill:{color:C.white}});sl.addShape(pptx.ShapeType.ellipse,{x:x+4.95,y:y+.22,w:.38,h:.38,line:{color:C.accent,transparency:100},fill:{color:C.accent}});sl.addText(String(i+1),{x:x+4.95,y:y+.29,w:.38,h:.16,fontFace:'Arial',fontSize:9,bold:true,color:C.white,align:'center',margin:0});sl.addText(it.text,{x:x+.22,y:y+.22,w:4.55,h:1.18,fontFace:'Arial',fontSize:16,bold:true,color:C.ink,align:'right',valign:'mid',rtlMode:true,fit:'shrink',margin:.05});});
-   }else if(bullets.length>=5){
-    const rows=bullets.slice(0,7);rows.forEach((it,i)=>{const y=1.82+i*.69;sl.addShape(pptx.ShapeType.ellipse,{x:11.65,y:y+.12,w:.26,h:.26,line:{color:C.accent,transparency:100},fill:{color:C.accent}});sl.addText(it.text,{x:margin,y,w:10.7,h:.53,fontFace:'Arial',fontSize:15,color:C.ink,align:'right',valign:'mid',rtlMode:true,fit:'shrink',margin:.04});});
+   const sl=pptx.addSlide();sl.background={color:C.bg};const items=page.items.filter(x=>x.text);const type=inferType(items);addTitle(sl,page.title,({process:'مخطط تسلسلي قابل للتحرير',compare:'مقارنة بصرية',formula:'علاقة أو قانون علمي',question:'فكر وأجب',definition:'مفهوم أساسي',standard:'شرح وتطبيق'})[type]);
+   if(type==='process'&&items.length>=2){
+    const arr=items.slice(0,5),n=arr.length,gap=.18,cardW=(11.9-gap*(n-1))/n;
+    arr.forEach((it,i)=>{const x=M+i*(cardW+gap);sl.addShape(pptx.ShapeType.roundRect,{x,y:2.55,w:cardW,h:1.65,rectRadius:.12,line:{color:C.accent,width:1.2},fill:{color:C.white}});addPill(sl,'المرحلة '+(i+1),x+.12,2.72,cardW-.24);addText(sl,it.text,x+.13,3.25,cardW-.26,.72,{size:13,bold:true,align:'center'});if(i<n-1){sl.addShape(pptx.ShapeType.chevron,{x:x+cardW-.02,y:3.12,w:gap+.08,h:.45,line:{color:C.accent,transparency:100},fill:{color:C.accent}});}});
+    addText(sl,'اقرأ المخطط من اليمين إلى اليسار بحسب ترتيب المراحل.',M,5.05,12,.4,{size:12,color:C.primary,bold:true});
+   }else if(type==='compare'&&items.length>=2){
+    const halves=[items.filter((_,i)=>i%2===0),items.filter((_,i)=>i%2===1)];
+    ['الجانب الأول','الجانب الثاني'].forEach((label,c)=>{const x=c===0?M:6.78;sl.addShape(pptx.ShapeType.roundRect,{x,y:2.05,w:5.85,h:3.75,rectRadius:.12,line:{color:C.soft,width:1},fill:{color:C.white}});addPill(sl,label,x+.25,2.25,5.35);halves[c].slice(0,4).forEach((it,i)=>{const y=2.95+i*.62;sl.addShape(pptx.ShapeType.ellipse,{x:x+5.05,y:y+.13,w:.2,h:.2,line:{color:C.accent,transparency:100},fill:{color:C.accent}});addText(sl,it.text,x+.25,y,4.65,.48,{size:13});});});
+    addText(sl,'ناقش معيار المقارنة قبل استخلاص النتيجة.',M,6.05,12,.35,{size:12,bold:true,color:C.primary});
+   }else if(type==='formula'){
+    const formula=items.find(x=>/[=→⇌Δ√²³]/.test(x.text))||items[0];sl.addShape(pptx.ShapeType.roundRect,{x:1.0,y:2.15,w:11.3,h:1.45,rectRadius:.14,line:{color:C.accent,width:1.5},fill:{color:C.white}});addText(sl,formula.text,1.25,2.42,10.8,.85,{size:25,bold:true,color:C.primary,align:'center'});
+    const rest=items.filter(x=>x!==formula);rest.slice(0,4).forEach((it,i)=>{const x=M+(i%2)*6.05,y=4.05+Math.floor(i/2)*.78;addPill(sl,it.text,x,y,5.7,C.soft);});
+   }else if(type==='question'){
+    sl.addShape(pptx.ShapeType.roundRect,{x:1.0,y:2.05,w:11.3,h:1.5,rectRadius:.15,line:{color:C.accent,width:1.5},fill:{color:C.dark}});addText(sl,items[0]?.text||page.title,1.35,2.35,10.6,.85,{size:22,bold:true,color:C.white,align:'center'});
+    items.slice(1,5).forEach((it,i)=>{const x=M+(i%2)*6.05,y=4.05+Math.floor(i/2)*.82;addText(sl,'• '+it.text,x,y,5.75,.58,{size:14});});
+   }else if(type==='definition'){
+    const first=items[0]?.text||page.title;sl.addShape(pptx.ShapeType.roundRect,{x:1.0,y:2.0,w:11.3,h:1.55,rectRadius:.15,line:{color:C.accent,width:1.3},fill:{color:C.soft}});addText(sl,first,1.35,2.25,10.6,1.0,{size:21,bold:true,color:C.primary,align:'center'});
+    items.slice(1,6).forEach((it,i)=>{const y=3.95+i*.48;addText(sl,'• '+it.text,M,y,11.9,.4,{size:14});});
    }else{
-    const textItems=items.slice(0,7);
-    textItems.forEach((it,i)=>{const y=1.86+i*.68;const txt=it.text;sl.addShape(pptx.ShapeType.roundRect,{x:margin,y:y+.08,w:.12,h:.36,rectRadius:.04,line:{color:C.accent,transparency:100},fill:{color:C.accent}});sl.addText(txt,{x:margin+.28,y,w:11.35,h:.56,fontFace:'Arial',fontSize:txt.length>130?13:16,bold:/^(?:تعريف|ملاحظة|تنبيه|الخلاصة|القانون|مثال)/.test(txt),color:C.ink,align:'right',valign:'mid',rtlMode:true,fit:'shrink',margin:.04});});
+    items.slice(0,6).forEach((it,i)=>{const col=i%2,row=Math.floor(i/2),x=M+col*6.05,y=1.9+row*1.38;sl.addShape(pptx.ShapeType.roundRect,{x,y,w:5.72,h:1.12,rectRadius:.1,line:{color:C.soft,width:1},fill:{color:C.white}});addPill(sl,String(i+1).padStart(2,'0'),x+5.0,y+.12,.48);addText(sl,it.text,x+.18,y+.2,4.65,.75,{size:14,bold:/^(?:تعريف|ملاحظة|تنبيه|الخلاصة|القانون|مثال)/.test(it.text)});});
    }
-   // Section insight ribbon.
    const key=items.find(x=>/^(?:الخلاصة|الفكرة الرئيسة|تذكر|مهم|استنتج|النتيجة)/.test(x.text));
-   if(key){sl.addShape(pptx.ShapeType.roundRect,{x:margin,y:6.25,w:12.05,h:.55,rectRadius:.08,line:{color:C.soft,transparency:100},fill:{color:C.soft}});sl.addText(key.text,{x:margin+.16,y:6.34,w:11.7,h:.32,fontFace:'Arial',fontSize:11,bold:true,color:C.primary,align:'right',rtlMode:true,fit:'shrink',margin:0});}
-   addFooter(sl,idx+(sections.length>1?3:2));
+   if(key&&type!=='formula'&&type!=='question'){sl.addShape(pptx.ShapeType.roundRect,{x:M,y:6.25,w:12.05,h:.48,rectRadius:.08,line:{color:C.soft,transparency:100},fill:{color:C.soft}});addText(sl,key.text,M+.12,6.31,11.8,.28,{size:11,bold:true,color:C.primary});}
+   addNotes(sl,page.title,items,type);addFooter(sl,idx+(sections.length>1?3:2));
   });
-  // Closing slide.
-  let end=pptx.addSlide();end.background={color:C.dark};end.addShape(pptx.ShapeType.ellipse,{x:-1.1,y:5.0,w:3.8,h:3.8,line:{color:C.accent,transparency:100},fill:{color:C.accent,transparency:78}});end.addText('أحسنت المتابعة',{x:1,y:2.0,w:11.2,h:.8,fontFace:'Arial',fontSize:32,bold:true,color:C.white,align:'center',rtlMode:true,margin:0});end.addText('ما الفكرة الأهم التي ستطبقها؟',{x:1,y:3.15,w:11.2,h:.5,fontFace:'Arial',fontSize:19,color:C.accent,align:'center',rtlMode:true,margin:0});end.addText('معانا دائماً أنت الأفضل',{x:1,y:4.2,w:11.2,h:.35,fontFace:'Arial',fontSize:14,color:C.white,align:'center',rtlMode:true,margin:0});
-  await pptx.writeFile({fileName:safeFileName($('topic').value)+'-عرض-احترافي.pptx'});
-  $('exportStatus').textContent='تم إنشاء عرض PowerPoint احترافي من '+pptx._slides.length+' شريحة. راجع المحتوى العربي وتوزيع النصوص قبل العرض.';
+  const sourceLines=lines.filter(x=>/(https?:\/\/|doi\.org\/|المراجع|المصادر|References|Sources)/i.test(x));
+  if(sourceLines.length){const refs=pptx.addSlide();refs.background={color:C.bg};addTitle(refs,'المراجع والمصادر','مصادر مذكورة في المحتوى الأصلي');sourceLines.slice(0,8).forEach((x,i)=>addText(refs,(i+1)+'. '+x,M,1.85+i*.58,12,.48,{size:11}));addNotes(refs,'المراجع والمصادر',sourceLines.map(x=>({text:x})), 'standard');addFooter(refs,pptx._slides.length);}
+  let end=pptx.addSlide();end.background={color:C.dark};end.addShape(pptx.ShapeType.ellipse,{x:-1.1,y:5,w:3.8,h:3.8,line:{color:C.accent,transparency:100},fill:{color:C.accent,transparency:78}});addText(end,'أحسنت المتابعة',1,2,11.2,.8,{size:32,bold:true,color:C.white,align:'center'});addText(end,'ما الفكرة الأهم التي ستطبقها؟',1,3.15,11.2,.5,{size:19,color:C.accent,align:'center'});addText(end,'معانا دائماً أنت الأفضل',1,4.2,11.2,.35,{size:14,color:C.white,align:'center'});addNotes(end,'ختام الدرس',[], 'question');
+  await pptx.writeFile({fileName:safeFileName($('topic').value)+'-عرض-ذكي-احترافي.pptx'});
+  const notesSupported=pptx._slides.some(x=>typeof x.addNotes==='function');
+  $('exportStatus').textContent='تم إنشاء عرض من '+pptx._slides.length+' شريحة. القوالب البصرية والمخططات المرسومة قابلة للتحرير. '+(sourceLines.length?'أُدرجت المصادر المذكورة في النص. ':'لم يُعثر على مراجع صريحة في النص، لذلك لم تُنشأ مراجع من تلقاء نفسها. ')+(notesSupported?'أُضيفت ملاحظات الإلقاء حيث تدعمها المكتبة.':'تم تضمين إرشادات الإلقاء ضمن منطق الإنشاء؛ تحقق من ظهورها في إصدار PowerPoint المستخدم.');
  }catch(e){$('exportStatus').textContent='تعذر إنشاء PowerPoint: '+(e.message||e)+' — تحقق من الاتصال بمكتبة التصدير.'}
  finally{btn.disabled=false;btn.textContent='إنشاء PowerPoint احترافي'}
 });
