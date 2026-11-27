@@ -136,6 +136,20 @@ body{background:#f4f8fb}
 <label for="bookExtra">ملاحظات أو منهج / مرجع تريد الالتزام به (اختياري)</label><textarea id="bookExtra" placeholder="أضف الصف أو الفصل الدراسي أو رابط مرجع أو شروطاً خاصة..."></textarea>
 <div class="grid"><button class="bigstart" id="createBookPrompt">✦ أنشئ كتابي بالذكاء الاصطناعي</button><button class="secondary" id="bookOutline">إنشاء هيكل الكتاب محلياً</button><button class="light" id="bookToExport">اذهب إلى مركز إخراج الكتاب</button></div>
 <p class="muted">أصبح لديك محرر كتب داخلي لتأليف الصفحات وتنسيقها وإضافة الصور والجداول والمعادلات وترتيب الفصول وحفظ العمل وتصديره. التوليد الذكي المستقل داخل الموقع يحتاج خادماً آمناً ومفتاح خدمة محفوظاً خارج المتصفح؛ لا نضع مفاتيح API في صفحة عامة.</p><p class="status" id="bookStatus" aria-live="polite"></p>
+<div class="stepnote" id="bookEnginePanel">
+<h3>🧠 محرك التأليف الذكي المتصل</h3>
+<p>اكتب عنوان الكتاب ثم اضغط «تأليف الكتاب كاملاً». سيُنشئ الخادم مخطوطاً منظماً ويملأ محرر الصفحات تلقائياً، مع نتائج بحث ومراجعة علمية أولية.</p>
+<div class="grid">
+<div><label for="bookEngineEndpoint">رابط خادم التأليف (Worker URL + /api/book)</label><input id="bookEngineEndpoint" inputmode="url" placeholder="https://اسم-الخادم.workers.dev/api/book"></div>
+<div><label for="bookEngineToken">رمز الوصول الخاص بالمحرك</label><input id="bookEngineToken" type="password" autocomplete="off" placeholder="أدخله من إعداد الخادم السري"></div>
+</div>
+<div class="grid">
+<button class="secondary" id="saveBookEngineSettings">حفظ إعدادات الربط على هذا الجهاز</button>
+<button class="bigstart" id="runBookEngine">✦ ألّف الكتاب واملأ الصفحات تلقائياً</button>
+</div>
+<p class="status" id="bookEngineStatus" aria-live="polite"></p>
+<p class="muted">مفتاح مزود الذكاء الاصطناعي يبقى داخل الخادم ولا يُكتب هنا. رمز الوصول يُحفظ محلياً في متصفحك فقط. التوليد يستخدم API قد تكون له تكلفة وحدود مستقلة؛ اطلب من ولي الأمر/مسؤول الحساب إدارة الفوترة والمفاتيح. المراجعة آلية أولية وليست اعتماداً علمياً بشرياً.</p>
+</div>
 <div class="stepnote" id="bookEditor">
 <h3>✍️ محرر الكتاب صفحةً بصفحة</h3>
 <p>اكتب أو الصق المحتوى، ثم نسّق النص وأدرج الصور والجداول والمعادلات. يمكنك تحريك الصفحات وإعادة ترتيبها.</p>
@@ -454,6 +468,84 @@ $('bookOutline').addEventListener('click',()=>{
  $('generatedContent').value=draft;$('topic').value=title;$('bookStatus').textContent='تم إنشاء هيكل قابل للتحرير من '+n+' فصول. هذا قالب تأليف وليس محتوى علمياً مكتملاً.';$('exportCenter').scrollIntoView({behavior:'smooth'});
 });
 $('bookToExport').addEventListener('click',()=>$('exportCenter').scrollIntoView({behavior:'smooth'}));
+
+// محرك التأليف الذكي المتصل بالخادم الآمن
+const BOOK_ENGINE_SETTINGS_KEY='eduBookEngineSettings_v1';
+function readBookEngineSettings(){
+ try{return JSON.parse(localStorage.getItem(BOOK_ENGINE_SETTINGS_KEY)||'{}')}catch(e){return {}}
+}
+function saveBookEngineSettings(){
+ const endpoint=$('bookEngineEndpoint').value.trim();
+ const token=$('bookEngineToken').value.trim();
+ if(!endpoint||!token){$('bookEngineStatus').textContent='أدخل رابط الخادم ورمز الوصول أولاً.';return}
+ try{
+  const u=new URL(endpoint);
+  if(u.protocol!=='https:')throw new Error('يجب أن يبدأ رابط الخادم بـ HTTPS.');
+  const finalUrl=u.pathname.endsWith('/api/book')?u.toString():u.toString().replace(/\/$/,'')+'/api/book';
+  localStorage.setItem(BOOK_ENGINE_SETTINGS_KEY,JSON.stringify({endpoint:finalUrl,token}));
+  $('bookEngineEndpoint').value=finalUrl;
+  $('bookEngineStatus').textContent='حُفظت إعدادات الاتصال محلياً. يمكنك الآن إنشاء كتاب تجريبي.';
+ }catch(e){$('bookEngineStatus').textContent=e.message||'رابط الخادم غير صالح.'}
+}
+const savedBookEngineSettings=readBookEngineSettings();
+if(savedBookEngineSettings.endpoint)$('bookEngineEndpoint').value=savedBookEngineSettings.endpoint;
+if(savedBookEngineSettings.token)$('bookEngineToken').value=savedBookEngineSettings.token;
+$('saveBookEngineSettings').addEventListener('click',saveBookEngineSettings);
+
+function bookMarkdownToHtml(markdown){
+ const safe=escBook(markdown).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`([^`]+)`/g,'<code>$1</code>');
+ return safe.split(/\n\s*\n/).map(block=>{
+  const lines=block.split('\n').map(x=>x.trim()).filter(Boolean);if(!lines.length)return '';
+  if(lines.every(x=>/^[-•]\s+/.test(x)))return '<ul>'+lines.map(x=>'<li>'+x.replace(/^[-•]\s+/,'')+'</li>').join('')+'</ul>';
+  if(lines.every(x=>/^\d+[.)]\s+/.test(x)))return '<ol>'+lines.map(x=>'<li>'+x.replace(/^\d+[.)]\s+/,'')+'</li>').join('')+'</ol>';
+  if(/^###\s+/.test(lines[0]))return '<h4>'+lines[0].replace(/^###\s+/,'')+'</h4>'+(lines.length>1?'<p>'+lines.slice(1).join('<br>')+'</p>':'');
+  if(/^##\s+/.test(lines[0]))return '<h3>'+lines[0].replace(/^##\s+/,'')+'</h3>'+(lines.length>1?'<p>'+lines.slice(1).join('<br>')+'</p>':'');
+  if(/^#\s+/.test(lines[0]))return '<h3>'+lines[0].replace(/^#\s+/,'')+'</h3>'+(lines.length>1?'<p>'+lines.slice(1).join('<br>')+'</p>':'');
+  return '<p>'+lines.join('<br>')+'</p>';
+ }).join('');
+}
+function appendReviewAndSources(review,sources){
+ let reviewHtml='<h3>نتائج المراجعة العلمية الآلية</h3><p>هذه مراجعة مساعدة أولية؛ يلزم اعتماد المعلم أو المختص قبل الطباعة والتدريس.</p><table border="1" style="border-collapse:collapse;width:100%"><tbody><tr><th>محور المراجعة</th><th>الحالة</th><th>ملاحظة</th></tr>';
+ (review||[]).forEach(r=>{reviewHtml+='<tr><td>'+escBook(r.item)+'</td><td>'+escBook(r.status)+'</td><td>'+escBook(r.note)+'</td></tr>'});
+ reviewHtml+='</tbody></table>';bookPages.push({title:'مراجعة الجودة العلمية',html:reviewHtml});
+ let refs='<h3>مصادر موثقة من نتائج البحث</h3>';
+ if(sources&&sources.length){
+  refs+='<ol>'+sources.map(x=>'<li><a href="'+escBook(x.url)+'" target="_blank" rel="noopener noreferrer">'+escBook(x.title||x.url)+'</a><br><small dir="ltr">'+escBook(x.url)+'</small></li>').join('')+'</ol>';
+ }else refs+='<p>لم تُرجع عملية البحث روابط مصادر قابلة للتحقق في هذه المحاولة. لا تعتبر هذه الصفحة قائمة مراجع، وأضف مراجع المنهج أو المصادر المعتمدة قبل النشر.</p>';
+ bookPages.push({title:'المراجع والمصادر',html:refs});
+}
+$('runBookEngine').addEventListener('click',async()=>{
+ const title=$('bookTitle').value.trim();
+ const status=$('bookEngineStatus'),button=$('runBookEngine');
+ if(title.length<3){status.textContent='اكتب عنوان الكتاب أولاً.';$('bookTitle').focus();return}
+ let settings=readBookEngineSettings();
+ const endpoint=$('bookEngineEndpoint').value.trim(),token=$('bookEngineToken').value.trim();
+ if(endpoint&&token){settings={endpoint,token};try{const u=new URL(endpoint);if(u.protocol!=='https:')throw new Error();if(!u.pathname.endsWith('/api/book'))settings.endpoint=u.toString().replace(/\/$/,'')+'/api/book';localStorage.setItem(BOOK_ENGINE_SETTINGS_KEY,JSON.stringify(settings))}catch(e){status.textContent='رابط الخادم غير صالح؛ استخدم HTTPS ورابطاً صحيحاً.';return}}
+ if(!settings.endpoint||!settings.token){status.textContent='أكمل رابط الخادم ورمز الوصول في إعدادات المحرك أولاً.';return}
+ button.disabled=true;status.textContent='جارٍ إعداد الكتاب والبحث عن مصادر... قد يستغرق التوليد بعض الوقت. لا تغلق الصفحة.';
+ try{
+  const response=await fetch(settings.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+settings.token},body:JSON.stringify({
+   title,subject:$('bookSubject').value,grade:$('bookStage').value,term:'غير محدد',type:$('bookType').value,size:$('bookSize').value,level:$('bookLevel').value,design:$('bookDesign').value,extra:$('bookExtra').value
+  })});
+  let result={};try{result=await response.json()}catch(e){}
+  if(!response.ok||!result.ok)throw new Error(result.error||('فشل الخادم برمز '+response.status));
+  const book=result.book;
+  if(!book||!Array.isArray(book.pages)||book.pages.length<4)throw new Error('الرد لا يحتوي على صفحات كافية.');
+  bookPages=[];
+  if(book.introduction)bookPages.push({title:'مقدمة الكتاب',html:bookMarkdownToHtml(book.introduction)});
+  book.pages.forEach((page,index)=>bookPages.push({title:page.title||'الفصل '+(index+1),html:bookMarkdownToHtml(page.content||'')}));
+  if(book.objectives&&book.objectives.length)bookPages.push({title:'نواتج التعلم',html:'<ul>'+book.objectives.map(x=>'<li>'+escBook(x)+'</li>').join('')+'</ul>'});
+  appendReviewAndSources(book.review,result.sources||[]);
+  $('bookTitle').value=book.book_title||title;$('topic').value=book.book_title||title;
+  $('generatedContent').value='# '+(book.book_title||title)+'\n\n'+(book.subtitle||'')+'\n\n'+(book.introduction||'')+'\n\n'+book.pages.map(p=>'## '+p.title+'\n\n'+p.content).join('\n\n')+'\n\n## الأهداف\n'+(book.objectives||[]).join('\n- ')+'\n\n## مراجعة الجودة\n'+(book.review||[]).map(x=>x.item+' — '+x.status+' — '+x.note).join('\n');
+  renderBookPages();
+  status.textContent='اكتمل تأليف «'+(book.book_title||title)+'»: '+book.pages.length+' صفحات/فصول تعليمية، مع صفحة مراجعة ومصادر البحث. راجع المحتوى والمراجع قبل النشر.';
+  $('bookStatus').textContent='تم إدراج المخطوط داخل المحرر. يمكنك الآن تعديل الصفحات وإضافة الصور والجداول ثم التصدير.';
+  $('bookEditor').scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(error){
+  status.textContent='لم يكتمل التوليد: '+(error.message||'خطأ اتصال')+'. تحقق من رابط الخادم ورمز الوصول وإعدادات الخدمة ثم أعد المحاولة.';
+ }finally{button.disabled=false}
+});
 
 // محرر تأليف الكتب متعدد الصفحات
 let bookPages=[];
