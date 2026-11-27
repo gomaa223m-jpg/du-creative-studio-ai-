@@ -66,8 +66,12 @@ jobs:
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
-          command: secret put OPENAI_API_KEY
+          command: deploy --config wrangler.toml
+          secrets: |
+            APP_ACCESS_TOKEN
+            OPENAI_API_KEY
         env:
+          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
           OPENAI_API_KEY: ${{ env.OPENAI_API_KEY }}
 
       - name: Configure optional ComfyUI image engine
@@ -78,8 +82,12 @@ jobs:
           accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy --config wrangler.toml
           secrets: |
+            APP_ACCESS_TOKEN
             IMAGE_ENGINE_URL
+          vars: |
+            IMAGE_CHECKPOINT
         env:
+          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
           IMAGE_ENGINE_URL: ${{ env.IMAGE_ENGINE_URL }}
           IMAGE_CHECKPOINT: ${{ env.IMAGE_CHECKPOINT }}
 
