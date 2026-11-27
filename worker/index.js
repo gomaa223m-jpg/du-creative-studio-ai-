@@ -142,9 +142,16 @@ async function handleImageEngine(request, env, origin, url) {
       const upstream = await fetch(base + "/system_stats", { headers, signal: AbortSignal.timeout(10000) });
       if (!upstream.ok) throw new Error("محرك الصور أعاد الحالة " + upstream.status);
       const stats = await upstream.json();
+      const modelResponse = await fetch(base + "/object_info/CheckpointLoaderSimple", { headers, signal: AbortSignal.timeout(10000) });
+      if (!modelResponse.ok) throw new Error("تعذر قراءة قائمة النماذج من ComfyUI: HTTP " + modelResponse.status);
+      const modelInfo = await modelResponse.json();
+      const checkpoints = modelInfo?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
+      if (!checkpoints.includes(env.IMAGE_CHECKPOINT)) {
+        throw new Error("النموذج المحدد غير موجود في CheckpointLoaderSimple. تحقق من IMAGE_CHECKPOINT وملفات checkpoints.");
+      }
       return json({ ok: true, configured: true, engine: "ComfyUI", checkpoint: env.IMAGE_CHECKPOINT, device: stats.devices?.[0]?.name || "متصل" }, 200, origin);
     } catch (error) {
-      return json({ ok: false, configured: true, error: "تعذر الوصول إلى محرك الصور: " + String(error.message || error).slice(0, 180) }, 502, origin);
+      return json({ ok: false, configured: true, error: "فشل فحص جاهزية محرك الصور: " + String(error.message || error).slice(0, 180) }, 502, origin);
     }
   }
   if (request.method === "POST" && url.pathname === "/api/v1/images/generate") {
