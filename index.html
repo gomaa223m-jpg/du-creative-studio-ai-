@@ -474,6 +474,7 @@ table{display:block;max-width:100%;overflow-x:auto}
     <div><label for="imageAiMode">طريقة التشغيل</label><select id="imageAiMode"><option value="local">محلي مجاني على جهازي</option><option value="secure">خادم آمن ComfyUI</option></select></div>
     <div><label for="imageAiBase">عنوان المحرك</label><input id="imageAiBase" placeholder="محلي: http://127.0.0.1:8188 أو خادم: https://.../api/v1"></div>
     <div><label for="imageAiToken">رمز الوصول (للخادم الآمن فقط)</label><input id="imageAiToken" type="password" autocomplete="off" placeholder="رمز APP_ACCESS_TOKEN"></div>
+    <div><label for="imageAiCheckpoint">اسم ملف النموذج المحلي (Checkpoint)</label><input id="imageAiCheckpoint" placeholder="مثال: اسم-ملف-SDXL.safetensors"></div>
    </div>
    <p class="muted">يحفظ العنوان والرمز في جلسة المتصفح الحالية فقط. لا تضع مفاتيح المزود في كود الموقع أو المستودع.</p>
    <button id="testImageAiConnection" class="secondary">اختبار الاتصال</button>
@@ -1718,6 +1719,7 @@ $('pptxExport').addEventListener('click',async()=>{
  const savedToken=sessionStorage.getItem('eduImageEngineToken')||sessionStorage.getItem('eduAiToken')||'';
  if(savedBase)baseInput.value=savedBase;
  if(savedToken)tokenInput.value=savedToken;
+ if(savedBase.includes('/api/v1'))mode.value='secure';
  const apiBase=()=>baseInput.value.trim().replace(/\/+$/,'');
  const authHeaders=()=>mode.value==='secure'?{'Authorization':'Bearer '+tokenInput.value.trim()}: {};
  const setStatus=t=>{status.textContent=t};
@@ -1771,8 +1773,9 @@ $('pptxExport').addEventListener('click',async()=>{
    const j=await up.json();uploadedName=j.name;
   }
   const [width,height]=dims();
+  const checkpoint=$('imageAiCheckpoint').value.trim();if(!checkpoint)throw new Error('اكتب اسم ملف النموذج الموجود داخل ComfyUI/models/checkpoints.');
   const graph={
-   '1':{class_type:'CheckpointLoaderSimple',inputs:{ckpt_name:'REPLACE_CHECKPOINT'}},
+   '1':{class_type:'CheckpointLoaderSimple',inputs:{ckpt_name:checkpoint}},
    '2':{class_type:'CLIPTextEncode',inputs:{text:prompt,clip:['1',1]}},
    '3':{class_type:'CLIPTextEncode',inputs:{text:'blurry, low quality, malformed anatomy, distorted hands, watermark, unreadable text',clip:['1',1]}}
   };
@@ -1858,6 +1861,7 @@ $('pptxExport').addEventListener('click',async()=>{
   else{tokenInput.disabled=false;if(!baseInput.value.includes('/api/v1'))baseInput.value='';setStatus('الوضع الآمن: أدخل رابط Worker المنتهي بـ /api/v1 ورمز الوصول.')}
  });
  tokenInput.disabled=mode.value==='local';
+ if(mode.value==='secure')tokenInput.disabled=false;
  if(!baseInput.value)baseInput.value='http://127.0.0.1:8188';
 })();
 </script></body></html>
