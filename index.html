@@ -199,7 +199,9 @@ body{background:#f4f8fb}
 <p class="muted">ملف HTML يفتح في المتصفح ويمكن طباعته. ملف Word متوافق مع Microsoft Word. لحفظ PDF اختر «حفظ كملف PDF» من نافذة الطباعة. ملفات الشرائح والكتاب HTML قابلة للفتح والعرض، ويمكن تعديلها لاحقاً. هذه الوظائف تصدّر النص الذي تلصقه هنا؛ إنشاء المحتوى نفسه يتم أولاً عبر منصة الذكاء الاصطناعي.</p>
 
 <div class="grid" style="margin-top:12px">
-<button id="exportPptx" class="secondary">إنشاء PowerPoint PPTX</button>
+<div><label for="pptxTheme">هوية تصميم العرض</label><select id="pptxTheme"><option value="ocean">أكاديمي احترافي — أزرق وتركواز</option><option value="midnight">تقني داكن — كحلي وذهبي</option><option value="nature">علوم وطبيعة — أخضر</option><option value="warm">إبداعي دافئ — بنفسجي وبرتقالي</option><option value="minimal">بسيط فاخر — أبيض وفحمي</option></select></div>
+<div><label for="pptxDensity">كثافة المحتوى</label><select id="pptxDensity"><option value="balanced">متوازن — موصى به</option><option value="concise">مختصر — شرائح أكثر</option><option value="detailed">تفصيلي — شرائح أقل</option></select></div>
+<button id="exportPptx" class="secondary">إنشاء PowerPoint احترافي</button>
 <button id="exportWorksheets">استخراج أوراق العمل</button>
 <button id="exportLesson">استخراج التحضير والشرح</button>
 <button id="exportVideoPlan">حزمة إنتاج الفيديو + SRT</button>
@@ -654,8 +656,88 @@ function extractByTerms(terms){const t=needContent();if(!t)return null;const lin
 $('exportWorksheets').addEventListener('click',()=>{const t=extractByTerms(['أوراق العمل','ورقة العمل','ورقة عمل']);if(!t){$('exportStatus').textContent='لم أجد عنواناً واضحاً لأوراق العمل؛ تأكد من وجود قسم مستقل بهذا الاسم.';return}saveBlob(safeFileName($('topic').value)+'-أوراق-العمل.txt',t,'text/plain;charset=utf-8');$('exportStatus').textContent='تم استخراج قسم أوراق العمل.'});
 $('exportLesson').addEventListener('click',()=>{const t=extractByTerms(['التحضير','الشرح الكامل','خطة الدرس']);if(!t){$('exportStatus').textContent='لم أجد قسماً واضحاً للتحضير أو الشرح.';return}saveBlob(safeFileName($('topic').value)+'-التحضير-والشرح.txt',t,'text/plain;charset=utf-8');$('exportStatus').textContent='تم استخراج التحضير والشرح.'});
 $('exportVideoPlan').addEventListener('click',()=>{const t=extractByTerms(['الفيديوهات التعليمية','سيناريو الفيديو','الفيديو التعليمي']);const source=t||needContent();if(!source)return;const lines=source.split(/\\r?\\n/).filter(Boolean);const srt=lines.filter(x=>/تعليق صوتي|المشهد|مشهد|لقطة|الثانية|00:|مدة الفيديو/.test(x)).map((x,i)=>{const start=i*8;const fmt=n=>[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':')+',000';return (i+1)+'\\n'+fmt(start)+' --> '+fmt(start+7)+'\\n'+x}).join('\\n\\n');saveBlob(safeFileName($('topic').value)+'-خطة-الفيديو.txt',source,'text/plain;charset=utf-8');if(srt)saveBlob(safeFileName($('topic').value)+'-ترجمة-مبدئية.srt',srt,'text/plain;charset=utf-8');$('exportStatus').textContent='تم تصدير خطة الفيديو'+(srt?' وملف ترجمة مبدئي SRT.':'؛ لم تُستخرج أسطر مناسبة للترجمة.')});
-$('exportPptx').addEventListener('click',async()=>{const t=needContent();if(!t)return;const btn=$('exportPptx');btn.disabled=true;btn.textContent='جارٍ تجهيز PowerPoint...';try{if(!window.PptxGenJS){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}const pptx=new window.PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='مستر محمد جمعة';pptx.subject=$('topic').value;pptx.title='عرض '+$('topic').value;pptx.lang='ar-SA';const parts=splitSections(t);const blocks=[];for(const part of parts){const lines=part.text.join('\\n').split(/(?<=[.!؟])\\s+|\\n/).filter(Boolean);if(!lines.length)continue;blocks.push({title:part.title,body:lines})}let slide=pptx.addSlide();slide.background={color:'10243A'};slide.addText($('topic').value||'عرض تعليمي',{x:.7,y:1.5,w:12,h:1.1,fontFace:'Arial',fontSize:30,bold:true,color:'FFFFFF',align:'center',rtlMode:true});slide.addText('إعداد مستر محمد جمعة',{x:1,y:3,w:11,h:.6,fontFace:'Arial',fontSize:20,color:'8EE4D8',align:'center',rtlMode:true});for(const part of blocks){let chunks=[];let current='';for(const line of part.body){if((current+'\\n'+line).length>620&&current){chunks.push(current);current=line}else current+=(current?'\\n':'')+line}if(current)chunks.push(current);for(let i=0;i<chunks.length;i++){const s=pptx.addSlide();s.background={color:'F5F9FC'};s.addText(part.title+(chunks.length>1?' ('+(i+1)+'/'+chunks.length+')':''),{x:.55,y:.35,w:12.2,h:.65,fontFace:'Arial',fontSize:23,bold:true,color:'12577D',align:'right',rtlMode:true,breakLine:false});s.addText(chunks[i],{x:.75,y:1.25,w:11.8,h:5.5,fontFace:'Arial',fontSize:18,color:'172B3B',align:'right',valign:'top',rtlMode:true,breakLine:false,fit:'shrink'});s.addText('مستر محمد جمعة',{x:.7,y:7.05,w:12,h:.25,fontFace:'Arial',fontSize:10,color:'168F88',align:'center'})}}await pptx.writeFile({fileName:safeFileName($('topic').value)+'-عرض.pptx'});$('exportStatus').textContent='تم إنشاء ملف PowerPoint PPTX قابل للتحرير.'}catch(e){$('exportStatus').textContent='تعذر إنشاء PPTX. تحقق من اتصال الإنترنت ثم أعد المحاولة؛ يمكنك استخدام تصدير HTML كبديل.'}finally{btn.disabled=false;btn.textContent='إنشاء PowerPoint PPTX'}});
-
+$('exportPptx').addEventListener('click',async()=>{
+ const raw=needContent();if(!raw)return;
+ const btn=$('exportPptx');btn.disabled=true;btn.textContent='جارٍ بناء الشرائح الاحترافية...';
+ try{
+  if(!window.PptxGenJS){await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';sc.onload=resolve;sc.onerror=()=>reject(new Error('تعذر تحميل مكتبة PowerPoint؛ تحقق من الاتصال.'));document.head.appendChild(sc)})}
+  const pptx=new window.PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='مستر محمد جمعة';pptx.subject=$('topic').value;pptx.title='عرض '+$('topic').value;pptx.lang='ar-SA';pptx.theme={headFontFace:'Arial',bodyFontFace:'Arial',lang:'ar-SA'};
+  const themes={
+   ocean:{bg:'F3F8FB',ink:'17324D',primary:'12617A',accent:'16A89A',soft:'DDF2F0',dark:'102B43',white:'FFFFFF'},
+   midnight:{bg:'111827',ink:'F8FAFC',primary:'D6A84B',accent:'5BC0BE',soft:'263449',dark:'0B1220',white:'FFFFFF'},
+   nature:{bg:'F3F8F2',ink:'203B2A',primary:'28734D',accent:'A6C95A',soft:'E2F0DF',dark:'183B2C',white:'FFFFFF'},
+   warm:{bg:'FBF6F3',ink:'3D294D',primary:'7041A6',accent:'E58B42',soft:'F2E6FA',dark:'38234C',white:'FFFFFF'},
+   minimal:{bg:'F7F7F5',ink:'242424',primary:'333333',accent:'777777',soft:'EAEAE7',dark:'202020',white:'FFFFFF'}
+  };
+  const C=themes[$('pptxTheme')?.value]||themes.ocean;
+  const density=$('pptxDensity')?.value||'balanced';
+  const W=13.333,H=7.5,margin=.62;
+  const clean=x=>String(x||'').replace(/^\s*(?:[-*•]\s+|\d+[.)]\s+|[٠-٩]+[.)]\s+)/,'').trim();
+  const lines=raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const isHeading=x=>/^#{1,3}\s+/.test(x)||/^(?:الوحدة|الفصل|القسم|الدرس|الشريحة|المحور)\s*[0-9٠-٩:：-]*/.test(x);
+  const sections=[];let current={title:$('topic').value||'الموضوع التعليمي',items:[]};
+  lines.forEach(line=>{
+   if(isHeading(line)){if(current.items.length)sections.push(current);current={title:line.replace(/^#+\s*/,'').trim(),items:[]};}
+   else current.items.push(line);
+  });
+  if(current.items.length)sections.push(current);
+  if(!sections.length)sections.push({title:$('topic').value||'الموضوع التعليمي',items:lines});
+  const maxChars=density==='concise'?330:density==='detailed'?850:560;
+  const maxBullets=density==='concise'?4:density==='detailed'?8:6;
+  const pages=[];
+  sections.forEach(sec=>{
+   const groups=[];let group=[],chars=0;
+   sec.items.forEach(line=>{
+    const bullet=/^(?:[-*•]\s+|\d+[.)]\s+|[٠-٩]+[.)]\s+)/.test(line);
+    const item={text:clean(line),bullet};
+    if(group.length&&(chars+line.length>maxChars||group.length>=maxBullets)){groups.push(group);group=[];chars=0;}
+    group.push(item);chars+=line.length;
+   });
+   if(group.length)groups.push(group);
+   if(!groups.length)groups.push([{text:sec.title,bullet:false}]);
+   groups.forEach((items,i)=>pages.push({title:sec.title,items,part:i+1,total:groups.length}));
+  });
+  const addFooter=(sl,n)=>{sl.addShape(pptx.ShapeType.line,{x:margin,y:7.08,w:12.05,h:0,line:{color:C.accent,transparency:25,width:1}});sl.addText('مستر محمد جمعة  ·  معانا دائماً أنت الأفضل',{x:margin,y:7.12,w:9,h:.18,fontFace:'Arial',fontSize:8,color:C.primary,rtlMode:true,align:'right',margin:0});sl.addText(String(n).padStart(2,'0'),{x:11.95,y:7.1,w:.7,h:.2,fontFace:'Arial',fontSize:9,bold:true,color:C.accent,align:'center',margin:0});};
+  const addTitle=(sl,title,kicker='محتوى تعليمي')=>{
+   sl.addText(kicker,{x:margin,y:.32,w:11.9,h:.25,fontFace:'Arial',fontSize:9,bold:true,color:C.accent,align:'right',rtlMode:true,margin:0});
+   sl.addText(title,{x:margin,y:.72,w:12.05,h:.72,fontFace:'Arial',fontSize:25,bold:true,color:C.primary,align:'right',rtlMode:true,breakLine:false,fit:'shrink',margin:0.04});
+   sl.addShape(pptx.ShapeType.line,{x:margin,y:1.55,w:12.05,h:0,line:{color:C.accent,width:2}});
+  };
+  // Cover: strong title hierarchy and geometric accent.
+  let cover=pptx.addSlide();cover.background={color:C.dark};
+  cover.addShape(pptx.ShapeType.ellipse,{x:9.7,y:-1.1,w:4.6,h:4.6,line:{color:C.accent,transparency:100},fill:{color:C.accent,transparency:78}});
+  cover.addShape(pptx.ShapeType.rect,{x:0,y:0,w:.16,h:H,line:{color:C.accent,transparency:100},fill:{color:C.accent}});
+  cover.addText('عرض تعليمي احترافي',{x:1.0,y:1.15,w:10.9,h:.35,fontFace:'Arial',fontSize:14,bold:true,color:C.accent,align:'right',rtlMode:true,margin:0});
+  cover.addText($('topic').value||sections[0].title,{x:1.0,y:1.85,w:10.9,h:1.65,fontFace:'Arial',fontSize:34,bold:true,color:C.white,align:'right',valign:'mid',rtlMode:true,fit:'shrink',margin:.06});
+  cover.addText('إعداد مستر محمد جمعة',{x:1.0,y:4.25,w:10.9,h:.45,fontFace:'Arial',fontSize:19,color:C.white,align:'right',rtlMode:true,margin:0});
+  cover.addText('معانا دائماً أنت الأفضل',{x:1.0,y:5.0,w:10.9,h:.35,fontFace:'Arial',fontSize:13,color:C.accent,align:'right',rtlMode:true,margin:0});
+  // Agenda slide gives the deck a clear learning path.
+  if(sections.length>1){let ag=pptx.addSlide();ag.background={color:C.bg};addTitle(ag,'مسار العرض','خارطة التعلم');sections.slice(0,8).forEach((sec,i)=>{const y=1.9+i*.58;ag.addShape(pptx.ShapeType.roundRect,{x:1.0,y,w:11.25,h:.43,rectRadius:.08,line:{color:C.soft,transparency:100},fill:{color:C.soft}});ag.addText(String(i+1).padStart(2,'0'),{x:11.55,y:y+.06,w:.42,h:.22,fontFace:'Arial',fontSize:11,bold:true,color:C.primary,align:'center',margin:0});ag.addText(sec.title,{x:1.25,y:y+.04,w:10.0,h:.28,fontFace:'Arial',fontSize:15,bold:true,color:C.ink,align:'right',rtlMode:true,fit:'shrink',margin:0});});addFooter(ag,2);}
+  pages.forEach((page,idx)=>{
+   const sl=pptx.addSlide();sl.background={color:C.bg};addTitle(sl,page.title,page.total>1?'الفكرة الرئيسية · الجزء '+page.part:'شرح وتطبيق');
+   const items=page.items.filter(x=>x.text);
+   const bullets=items.filter(x=>x.bullet),plain=items.filter(x=>!x.bullet);
+   if(bullets.length>=2&&bullets.length<=4){
+    const cols=bullets.length===2?2:2,rows=Math.ceil(bullets.length/cols);
+    bullets.forEach((it,i)=>{const col=i%2,row=Math.floor(i/2),x=margin+col*6.05,y=1.95+row*2.05;sl.addShape(pptx.ShapeType.roundRect,{x,y,w:5.65,h:1.62,rectRadius:.12,line:{color:C.soft,width:1},fill:{color:C.white}});sl.addShape(pptx.ShapeType.ellipse,{x:x+4.95,y:y+.22,w:.38,h:.38,line:{color:C.accent,transparency:100},fill:{color:C.accent}});sl.addText(String(i+1),{x:x+4.95,y:y+.29,w:.38,h:.16,fontFace:'Arial',fontSize:9,bold:true,color:C.white,align:'center',margin:0});sl.addText(it.text,{x:x+.22,y:y+.22,w:4.55,h:1.18,fontFace:'Arial',fontSize:16,bold:true,color:C.ink,align:'right',valign:'mid',rtlMode:true,fit:'shrink',margin:.05});});
+   }else if(bullets.length>=5){
+    const rows=bullets.slice(0,7);rows.forEach((it,i)=>{const y=1.82+i*.69;sl.addShape(pptx.ShapeType.ellipse,{x:11.65,y:y+.12,w:.26,h:.26,line:{color:C.accent,transparency:100},fill:{color:C.accent}});sl.addText(it.text,{x:margin,y,w:10.7,h:.53,fontFace:'Arial',fontSize:15,color:C.ink,align:'right',valign:'mid',rtlMode:true,fit:'shrink',margin:.04});});
+   }else{
+    const textItems=items.slice(0,7);
+    textItems.forEach((it,i)=>{const y=1.86+i*.68;const txt=it.text;sl.addShape(pptx.ShapeType.roundRect,{x:margin,y:y+.08,w:.12,h:.36,rectRadius:.04,line:{color:C.accent,transparency:100},fill:{color:C.accent}});sl.addText(txt,{x:margin+.28,y,w:11.35,h:.56,fontFace:'Arial',fontSize:txt.length>130?13:16,bold:/^(?:تعريف|ملاحظة|تنبيه|الخلاصة|القانون|مثال)/.test(txt),color:C.ink,align:'right',valign:'mid',rtlMode:true,fit:'shrink',margin:.04});});
+   }
+   // Section insight ribbon.
+   const key=items.find(x=>/^(?:الخلاصة|الفكرة الرئيسة|تذكر|مهم|استنتج|النتيجة)/.test(x.text));
+   if(key){sl.addShape(pptx.ShapeType.roundRect,{x:margin,y:6.25,w:12.05,h:.55,rectRadius:.08,line:{color:C.soft,transparency:100},fill:{color:C.soft}});sl.addText(key.text,{x:margin+.16,y:6.34,w:11.7,h:.32,fontFace:'Arial',fontSize:11,bold:true,color:C.primary,align:'right',rtlMode:true,fit:'shrink',margin:0});}
+   addFooter(sl,idx+(sections.length>1?3:2));
+  });
+  // Closing slide.
+  let end=pptx.addSlide();end.background={color:C.dark};end.addShape(pptx.ShapeType.ellipse,{x:-1.1,y:5.0,w:3.8,h:3.8,line:{color:C.accent,transparency:100},fill:{color:C.accent,transparency:78}});end.addText('أحسنت المتابعة',{x:1,y:2.0,w:11.2,h:.8,fontFace:'Arial',fontSize:32,bold:true,color:C.white,align:'center',rtlMode:true,margin:0});end.addText('ما الفكرة الأهم التي ستطبقها؟',{x:1,y:3.15,w:11.2,h:.5,fontFace:'Arial',fontSize:19,color:C.accent,align:'center',rtlMode:true,margin:0});end.addText('معانا دائماً أنت الأفضل',{x:1,y:4.2,w:11.2,h:.35,fontFace:'Arial',fontSize:14,color:C.white,align:'center',rtlMode:true,margin:0});
+  await pptx.writeFile({fileName:safeFileName($('topic').value)+'-عرض-احترافي.pptx'});
+  $('exportStatus').textContent='تم إنشاء عرض PowerPoint احترافي من '+pptx._slides.length+' شريحة. راجع المحتوى العربي وتوزيع النصوص قبل العرض.';
+ }catch(e){$('exportStatus').textContent='تعذر إنشاء PowerPoint: '+(e.message||e)+' — تحقق من الاتصال بمكتبة التصدير.'}
+ finally{btn.disabled=false;btn.textContent='إنشاء PowerPoint احترافي'}
+});
 
 
 const libraryItems=[
