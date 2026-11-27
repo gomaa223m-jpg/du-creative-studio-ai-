@@ -1848,14 +1848,32 @@ $('pptxExport').addEventListener('click',async()=>{
   finally{btn.disabled=false}
  });
  $('testImageAiConnection').addEventListener('click',async()=>{
+  const testButton=$('testImageAiConnection');testButton.disabled=true;setStatus('جارٍ فحص الخادم والنموذج...');
   try{
    const base=apiBase();if(!base)throw new Error('أدخل عنوان المحرك أولاً.');
-   let response;
-   if(mode.value==='secure')response=await fetch(base+'/images/health',{headers:{'Authorization':'Bearer '+tokenInput.value.trim()}});
-   else response=await fetch(base+'/system_stats');
-   const data=await response.json();if(!response.ok||data.ok===false)throw new Error(data.error||'المحرك غير جاهز.');
-   setStatus('الاتصال ناجح — '+(data.engine||'ComfyUI')+' — '+(data.checkpoint||data.devices?.[0]?.name||'جاهز'));
-  }catch(error){setStatus('فشل اختبار الاتصال: '+(error.message||error))}
+   if(mode.value==='secure'){
+    const token=tokenInput.value.trim();if(!token)throw new Error('أدخل رمز الوصول الذي أعددته على Worker.');
+    const response=await fetch(base+'/images/health',{headers:{'Authorization':'Bearer '+token}});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok||data.ok!==true)throw new Error(data.error||'لم يكتمل فحص Worker ومحرك الصور.');
+    setStatus('جاهز فعلياً — '+data.engine+' — النموذج: '+data.checkpoint+' — '+(data.device||'متصل'));
+   }else{
+    const response=await fetch(base+'/system_stats');
+    if(!response.ok)throw new Error('ComfyUI غير متاح: HTTP '+response.status);
+    const stats=await response.json();
+    const modelResponse=await fetch(base+'/object_info/CheckpointLoaderSimple');
+    if(!modelResponse.ok)throw new Error('تعذر قراءة قائمة النماذج من ComfyUI.');
+    const info=await modelResponse.json();
+    const choices=info?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0]||[];
+    const checkpoint=$('imageAiCheckpoint').value.trim();
+    if(!checkpoint)throw new Error('اتصال ComfyUI ناجح، لكن اكتب اسم ملف النموذج أولاً.');
+    if(!choices.includes(checkpoint))throw new Error('الخادم متصل، لكن النموذج "'+checkpoint+'" غير موجود ضمن CheckpointLoaderSimple. اختر اسماً من ملفات checkpoints المثبتة.');
+    setStatus('جاهز فعلياً — ComfyUI — النموذج: '+checkpoint+' — '+(stats.devices?.[0]?.name||'الجهاز متصل'));
+   }
+  }catch(error){
+   const message=error instanceof TypeError&&mode.value==='local'?'تعذر الوصول إلى ComfyUI المحلي. تأكد أنه يعمل على الجهاز نفسه؛ عنوان 127.0.0.1 لا يشير إلى حاسوب آخر عند فتح الموقع من الهاتف.':(error.message||String(error));
+   setStatus('فشل اختبار الاتصال: '+message);
+  }finally{testButton.disabled=false}
  });
  mode.addEventListener('change',()=>{
   if(mode.value==='local'){if(!baseInput.value||baseInput.value.includes('/api/v1'))baseInput.value='http://127.0.0.1:8188';tokenInput.disabled=true;setStatus('الوضع المحلي: يجب أن يكون ComfyUI مثبتاً ويعمل على الجهاز الذي يفتح هذه الصفحة.')}
