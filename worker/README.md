@@ -113,3 +113,19 @@ Reference images are uploaded to the selected ComfyUI instance for image-to-imag
 - Reference image limit: 5 MB at the gateway; PNG, JPEG, and WEBP.
 - Built-in workflow targets classic checkpoint models. Advanced ControlNet, face identity adapters, inpainting, and model-specific workflows are not configured automatically.
 - This is a real generation adapter only after a compatible ComfyUI engine, checkpoint, and Worker secrets are configured and the health test succeeds. GitHub Pages by itself cannot host the GPU model.
+
+
+### GitHub Actions deployment settings (current workflow)
+
+The automated Worker workflow now requires the following repository settings before it deploys. Configure them under **Settings → Secrets and variables → Actions**:
+
+**Repository secrets**
+- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with permission to deploy Workers and manage Worker settings/secrets.
+- `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account ID.
+- `APP_ACCESS_TOKEN`: a long random private token used by the Studio-to-Worker authorization check.
+- `IMAGE_ENGINE_URL`: the protected HTTPS base URL of the reachable ComfyUI host (without `/prompt`).
+
+**Repository variable**
+- `IMAGE_CHECKPOINT`: exact filename of a compatible checkpoint installed on that ComfyUI host.
+
+The workflow validates all five values and fails with the missing setting names instead of reporting a misleading green success when deployment was skipped. When configured, it deploys the Worker and applies the two Worker secrets and checkpoint variable. The GPU host must already be running and reachable over HTTPS; Cloudflare Workers and GitHub Pages do not provide the GPU or model files.
