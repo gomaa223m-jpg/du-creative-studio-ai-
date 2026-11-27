@@ -63,6 +63,17 @@ The adapter supports text-to-image and image-to-image using ComfyUI's built-in c
 
 The gateway keeps the upstream engine address and upstream token on the server. The browser only receives the app access token for its authenticated Worker requests. Keep this token private and use the Studio only on a trusted device.
 
+
+### Deploy the Worker
+
+From the repository root, after signing in to a Cloudflare account with permission to deploy this Worker:
+
+```bash
+npx wrangler deploy --config wrangler.toml
+```
+
+Then configure the variables and secrets in the Cloudflare Worker settings (or with Wrangler). Do not commit secrets to the repository. The GitHub Pages workflow publishes only the static website; it does **not** deploy this Worker or provision a GPU server.
+
 ### Free local mode
 
 - Install and run ComfyUI on the same computer that opens the Studio.
