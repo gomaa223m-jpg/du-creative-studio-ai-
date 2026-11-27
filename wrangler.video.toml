@@ -4,3 +4,8 @@ compatibility_date = "2026-11-27"
 
 [vars]
 ALLOWED_ORIGINS = "https://gomaa223m-jpg.github.io"
+AI_BASE_URL = "https://api.openai.com/v1"
+AI_MODEL = "gpt-4.1-mini"
+
+[observability]
+enabled = true
