@@ -1,1 +1,19 @@
-{"name":"edu-creative-studio-ai","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"vercel dev"}}
+{
+  "name": "edu-creative-studio-ai",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "cloudflare": {
+    "bindings": {
+      "OPENAI_API_KEY": {
+        "description": "Required secret. The account owner or supervising adult should provide the OpenAI API key for the Responses API. Keep it secret; never commit it to GitHub or enter it in the public website."
+      },
+      "APP_ACCESS_TOKEN": {
+        "description": "Required secret. Generate a random token with the Create Secure Access Token button in the book studio. Enter the same token here and in the website connection settings. Never publish it."
+      }
+    }
+  }
+}
