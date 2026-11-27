@@ -8,6 +8,8 @@ on:
       - ".nojekyll"
       - "assets/**"
       - "worker/**"
+      - "api/**"
+      - "package.json"
       - "wrangler.toml"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
@@ -33,6 +35,7 @@ jobs:
           set -euo pipefail
           node --input-type=module --check < worker/index.js
           node --input-type=module --check < worker/ai-gateway.js
+          node --check api/generate.js
           python3 - <<'PY'
           from html.parser import HTMLParser
           from pathlib import Path
