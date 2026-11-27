@@ -40,7 +40,7 @@ jobs:
               echo "## Deployment blocked: missing required secrets"
               echo
               echo "Add these in Settings → Secrets and variables → Actions:"
-              for name in "${missing[@]}"; do echo "- `$name`"; done
+              for name in "${missing[@]}"; do printf '%s\n' "- $name"; done
               echo
               echo "No secrets are printed or exposed by this workflow."
             } >> "$GITHUB_STEP_SUMMARY"
@@ -49,7 +49,9 @@ jobs:
           fi
 
       - name: Validate Worker JavaScript
-        run: node --input-type=module --check < worker/index.js
+        run: |
+          node --input-type=module --check < worker/index.js
+          node --input-type=module --check < worker/ai-gateway.js
 
       - name: Deploy Worker core
         uses: cloudflare/wrangler-action@v4
