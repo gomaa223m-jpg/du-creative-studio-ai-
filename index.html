@@ -178,10 +178,12 @@ body{background:#f4f8fb}
 </div>
 <label for="bookExtra">ملاحظات أو منهج / مرجع تريد الالتزام به (اختياري)</label><textarea id="bookExtra" placeholder="أضف الصف أو الفصل الدراسي أو رابط مرجع أو شروطاً خاصة..."></textarea>
 <div class="grid"><button class="bigstart" id="createBookPrompt">✦ أنشئ كتابي بالذكاء الاصطناعي</button><button class="secondary" id="bookOutline">إنشاء هيكل الكتاب محلياً</button><button class="light" id="bookToExport">اذهب إلى مركز إخراج الكتاب</button></div>
-<p class="muted">أصبح لديك محرر كتب داخلي لتأليف الصفحات وتنسيقها وإضافة الصور والجداول والمعادلات وترتيب الفصول وحفظ العمل وتصديره. التوليد الذكي المستقل داخل الموقع يحتاج خادماً آمناً ومفتاح خدمة محفوظاً خارج المتصفح؛ لا نضع مفاتيح API في صفحة عامة.</p><p class="status" id="bookStatus" aria-live="polite"></p>
+<p class="muted">أصبح لديك محرر كتب داخلي لتأليف الصفحات وتنسيقها وإضافة الصور والجداول والمعادلات وترتيب الفصول وحفظ العمل وتصديره. يمكنك استخدام مسار التأليف المجاني عبر نسخ الطلب إلى مزود ذكاء اصطناعي بخطته المجانية، ثم إعادة النص إلى المحرر. التوليد السحابي التلقائي داخل الموقع خيار إضافي فقط ويحتاج خادماً آمناً ومفتاح خدمة قد تكون له تكلفة مستقلة.</p><p class="status" id="bookStatus" aria-live="polite"></p>
 <div class="stepnote" id="bookEnginePanel">
-<h3>🧠 محرك التأليف الذكي المتصل</h3>
-<p>اكتب عنوان الكتاب ثم اضغط «تأليف الكتاب كاملاً». سيُنشئ الخادم مخطوطاً منظماً ويملأ محرر الصفحات تلقائياً، مع نتائج بحث ومراجعة علمية أولية.</p>
+<h3>✨ وضع الاستوديو المجاني — لا اشتراك ولا مفتاح API</h3>
+<p><strong>ابدأ مجاناً دون إعداد أي خادم:</strong> أنشئ هيكل الكتاب محلياً، أو اضغط «أنشئ كتابي بالذكاء الاصطناعي» لنسخ طلب التأليف وفتحه في ChatGPT. يمكنك استخدام الخطة المجانية المتاحة من مزود الذكاء الاصطناعي، مع مراعاة حدود الاستخدام التي يحددها. بعد ذلك أعد المحتوى إلى محرر الاستوديو لتنسيقه وحفظه وتصديره. أدوات التحرير والتصدير المحلية لا تتطلب رصيد API.</p>
+<details><summary style="cursor:pointer;font-weight:bold;padding:10px 0">إعدادات المحرك السحابي الاختيارية — قد تتطلب تكلفة API</summary>
+<p>هذا الخيار غير مطلوب لتشغيل الاستوديو. استخدمه فقط إذا كان لديك خادم ومفتاح API وفهمت تكاليف المزود؛ لا توجد خدمة سحابية غير محدودة ومضمونة مجاناً.</p>
 <div class="grid">
 <div><label for="bookEngineEndpoint">رابط خادم التأليف (Worker URL + /api/book)</label><input id="bookEngineEndpoint" inputmode="url" placeholder="https://اسم-الخادم.workers.dev/api/book"></div>
 <div><label for="bookEngineToken">رمز الوصول الخاص بالمحرك</label><input id="bookEngineToken" type="password" autocomplete="off" placeholder="أدخله من إعداد الخادم السري"></div>
@@ -196,7 +198,8 @@ body{background:#f4f8fb}
 <a class="button secondary" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none" href="https://deploy.workers.cloudflare.com/?url=https://github.com/gomaa223m-jpg/du-creative-studio-ai-" target="_blank" rel="noopener noreferrer">نشر المحرك على Cloudflare</a>
 <a class="light" href="https://github.com/gomaa223m-jpg/du-creative-studio-ai-/blob/main/BOOK_ENGINE_SETUP.md" target="_blank" rel="noopener noreferrer">دليل التفعيل خطوة بخطوة</a>
 </div>
-<p class="muted">مفتاح مزود الذكاء الاصطناعي يبقى داخل الخادم ولا يُكتب هنا. أنشئ رمز وصول عشوائياً من الزر ثم أضفه كسِر APP_ACCESS_TOKEN في إعدادات Worker، وأدخل الرمز نفسه هنا. التوليد عبر API قد تكون له تكلفة مستقلة؛ اجعل مالك الحساب/ولي الأمر يدير الفوترة والمفاتيح. المراجعة آلية أولية وليست اعتماداً علمياً بشرياً.</p>
+</details>
+<p class="muted">مفتاح مزود الذكاء الاصطناعي يبقى داخل الخادم ولا يُكتب هنا. أنشئ رمز وصول عشوائياً من الزر ثم أضفه كسِر APP_ACCESS_TOKEN في إعدادات Worker، وأدخل الرمز نفسه هنا. هذا المسار اختياري وقد تكون له تكلفة API مستقلة؛ لا تحتاج إليه للاستفادة من الاستوديو المجاني. المراجعة آلية أولية وليست اعتماداً علمياً بشرياً.</p>
 </div>
 <div class="stepnote" id="bookEditor">
 <h3>✍️ محرر الكتاب صفحةً بصفحة</h3>
