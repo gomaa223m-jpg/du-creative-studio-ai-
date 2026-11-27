@@ -29,3 +29,13 @@
 - يرسل Worker الطلبات مع `store: false`.
 - لا تدخل أسماء الطلاب أو بياناتهم الخاصة أو معلومات الاتصال في الطلبات.
 - لا ترفع `.dev.vars` أو `.env` أو أي ملف يحتوي على قيمة سرية إلى GitHub.
+
+## واجهة API الموحدة وMCP للمنصات الخارجية
+بعد نشر آخر نسخة من `worker/index.js` على Cloudflare وإضافة الأسرار:
+
+1. افحص `https://YOUR-WORKER.workers.dev/api/v1/health` ويجب أن يرجع JSON يتضمن `"ok": true`.
+2. افتح `https://YOUR-WORKER.workers.dev/openapi.json` لعرض وصف REST API.
+3. استخدم `https://YOUR-WORKER.workers.dev/mcp` كعنوان Remote MCP في العميل الذي يدعم Streamable HTTP، مع ترويسة `Authorization: Bearer YOUR_APP_ACCESS_TOKEN`.
+4. اختبر أدوات MCP: `health` ثم `tools/list`. لا تختبر توليد كتاب قبل التأكد من ضبط أسرار الخدمة وحدود الفوترة.
+
+التفاصيل وأمثلة الطلبات في [دليل التكاملات](INTEGRATIONS.md). إضافة المسارات إلى GitHub لا تنشر Worker وحدها؛ يجب أن يتم نشر نسخة Worker في Cloudflare. نجاح نشر GitHub Pages لا يعني أن Worker قد نُشر.
