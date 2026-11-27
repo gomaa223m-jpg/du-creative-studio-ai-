@@ -24,6 +24,9 @@ jobs:
       IMAGE_ENGINE_URL: ${{ secrets.IMAGE_ENGINE_URL }}
       IMAGE_CHECKPOINT: ${{ vars.IMAGE_CHECKPOINT }}
       IMAGE_ENGINE_TOKEN: ${{ secrets.IMAGE_ENGINE_TOKEN }}
+      AI_API_KEY: ${{ secrets.AI_API_KEY }}
+      AI_BASE_URL: ${{ vars.AI_BASE_URL }}
+      AI_MODEL: ${{ vars.AI_MODEL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -119,3 +122,24 @@ jobs:
           IMAGE_ENGINE_URL: ${{ env.IMAGE_ENGINE_URL }}
           IMAGE_ENGINE_TOKEN: ${{ env.IMAGE_ENGINE_TOKEN }}
           IMAGE_CHECKPOINT: ${{ env.IMAGE_CHECKPOINT }}
+
+      - name: Deploy optional video AI gateway
+        if: steps.credentials.outputs.ready == 'true' && env.AI_API_KEY != '' && env.AI_BASE_URL != '' && env.AI_MODEL != ''
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.video.toml
+          secrets: |
+            APP_ACCESS_TOKEN
+            AI_API_KEY
+          vars: |
+            AI_BASE_URL
+            AI_MODEL
+            ALLOWED_ORIGINS
+        env:
+          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
+          AI_API_KEY: ${{ env.AI_API_KEY }}
+          AI_BASE_URL: ${{ env.AI_BASE_URL }}
+          AI_MODEL: ${{ env.AI_MODEL }}
+          ALLOWED_ORIGINS: https://gomaa223m-jpg.github.io
