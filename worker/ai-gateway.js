@@ -55,7 +55,10 @@ export default {
     const headers = cors(request, env);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
     const url = new URL(request.url);
-    if (request.method === "GET" && url.pathname === "/health") return json({ ok: true, service: "EDU CREATIVE STUDIO AI Gateway", version: "1.0.0" }, 200, headers);
+    if (request.method === "GET" && url.pathname === "/health") {
+      const missing = ["APP_ACCESS_TOKEN", "AI_API_KEY", "AI_BASE_URL", "AI_MODEL"].filter(name => !String(env[name] || "").trim());
+      return json({ ok: true, service: "EDU CREATIVE STUDIO AI Gateway", version: "1.1.0", configured: missing.length === 0, missing }, 200, headers);
+    }
     if (request.method !== "POST" || !["/api/generate", "/api/book"].includes(url.pathname)) return json({ ok: false, error: "المسار غير موجود." }, 404, headers);
     const origin = request.headers.get("Origin") || "";
     const allowed = (env.ALLOWED_ORIGINS || "").split(",").map(x => x.trim()).filter(Boolean);
