@@ -711,7 +711,7 @@ $('exportPptx').addEventListener('click',async()=>{
    const sl=pptx.addSlide();sl.background={color:C.bg};const items=page.items.filter(x=>x.text);const type=inferType(items);addTitle(sl,page.title,({process:'مخطط تسلسلي قابل للتحرير',compare:'مقارنة بصرية',formula:'علاقة أو قانون علمي',question:'فكر وأجب',definition:'مفهوم أساسي',standard:'شرح وتطبيق'})[type]);
    if(type==='process'&&items.length>=2){
     const arr=items.slice(0,5),n=arr.length,gap=.18,cardW=(11.9-gap*(n-1))/n;
-    arr.forEach((it,i)=>{const x=M+i*(cardW+gap);sl.addShape(pptx.ShapeType.roundRect,{x,y:2.55,w:cardW,h:1.65,rectRadius:.12,line:{color:C.accent,width:1.2},fill:{color:C.white}});addPill(sl,'المرحلة '+(i+1),x+.12,2.72,cardW-.24);addText(sl,it.text,x+.13,3.25,cardW-.26,.72,{size:13,bold:true,align:'center'});if(i<n-1){sl.addShape(pptx.ShapeType.chevron,{x:x+cardW-.02,y:3.12,w:gap+.08,h:.45,line:{color:C.accent,transparency:100},fill:{color:C.accent}});}});
+    arr.forEach((it,i)=>{const x=M+(n-1-i)*(cardW+gap);sl.addShape(pptx.ShapeType.roundRect,{x,y:2.55,w:cardW,h:1.65,rectRadius:.12,line:{color:C.accent,width:1.2},fill:{color:C.white}});addPill(sl,'المرحلة '+(i+1),x+.12,2.72,cardW-.24);addText(sl,it.text,x+.13,3.25,cardW-.26,.72,{size:13,bold:true,align:'center'});if(i<n-1){sl.addShape(pptx.ShapeType.chevron,{x:x-gap-.06,y:3.12,w:gap+.08,h:.45,rotate:180,line:{color:C.accent,transparency:100},fill:{color:C.accent}});}});
     addText(sl,'اقرأ المخطط من اليمين إلى اليسار بحسب ترتيب المراحل.',M,5.05,12,.4,{size:12,color:C.primary,bold:true});
    }else if(type==='compare'&&items.length>=2){
     const halves=[items.filter((_,i)=>i%2===0),items.filter((_,i)=>i%2===1)];
