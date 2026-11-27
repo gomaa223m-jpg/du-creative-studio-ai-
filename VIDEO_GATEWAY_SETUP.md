@@ -5,6 +5,22 @@
 
 قد يترتب على مزود الذكاء الاصطناعي رسوم أو حدود استخدام. يجب أن يتولى مالك الحساب أو الشخص البالغ المسؤول إعداد حساب المزود والفوترة والمفتاح السري. لا تضع أي مفتاح في الموقع أو GitHub أو المحادثة.
 
+## النشر التلقائي من GitHub Actions
+
+يدعم المستودع الآن نشر بوابة الفيديو تلقائياً عند تعديل `worker/ai-gateway.js` أو `wrangler.video.toml` أو ملف سير النشر. أضف الإعدادات التالية في **Settings → Secrets and variables → Actions**:
+
+**Secrets**
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+- `APP_ACCESS_TOKEN`
+- `AI_API_KEY`
+
+**Variables**
+- `AI_BASE_URL`: عنوان أساس API المتوافق مع Chat Completions، مثل `https://api.openai.com/v1`؛ لا تضف `/chat/completions` إلا إذا كان عنوان المزود يتطلبه.
+- `AI_MODEL`: معرّف نموذج متاح لحساب المزود ويدعم إخراج JSON.
+
+بعد حفظ الإعدادات، افتح **Actions → Deploy EDU Creative Studio Worker → Run workflow**. لا تعتبر علامة نجاح سير العمل دليلاً على نشر Worker إذا كانت خطوة النشر قد تم تخطيها؛ راجع ملخص التشغيل وتأكد من ظهور خطوة **Deploy optional video AI gateway** ناجحة.
+
 ## النشر باستخدام Cloudflare Dashboard
 1. افتح Cloudflare ثم **Workers & Pages** وأنشئ Worker جديداً باسم `edu-creative-video-gateway`.
 2. افتح محرر الكود، واستبدل محتواه بالكامل بمحتوى الملف `worker/ai-gateway.js` من هذا المستودع، ثم انشره.
