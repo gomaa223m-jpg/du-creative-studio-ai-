@@ -7,6 +7,7 @@ on:
     paths:
       - "worker/**"
       - "wrangler.toml"
+      - "wrangler.video.toml"
       - ".github/workflows/deploy-image-worker.yml"
 
 permissions:
@@ -21,6 +22,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       APP_ACCESS_TOKEN: ${{ secrets.APP_ACCESS_TOKEN }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      AI_API_KEY: ${{ secrets.AI_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -74,6 +76,20 @@ jobs:
           APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
           OPENAI_API_KEY: ${{ env.OPENAI_API_KEY }}
 
+      - name: Deploy optional video AI gateway
+        if: env.AI_API_KEY != ''
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.video.toml
+          secrets: |
+            APP_ACCESS_TOKEN
+            AI_API_KEY
+        env:
+          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
+          AI_API_KEY: ${{ env.AI_API_KEY }}
+
       - name: Deployment summary
         if: success()
         run: |
@@ -86,5 +102,11 @@ jobs:
             else
               echo "- Cloud text generation is disabled; local browser tools remain available."
             fi
-            echo "- Test the Worker /health endpoint, then save its /api/generate URL and APP_ACCESS_TOKEN in the Studio."
+            echo "- Book engine: edu-creative-book-engine.<your-account-subdomain>.workers.dev"
+            if [[ -n "$AI_API_KEY" ]]; then
+              echo "- Video AI gateway: https://edu-creative-video-gateway.<your-account-subdomain>.workers.dev"
+              echo "- In the Studio, use the video gateway URL with /api/generate and the same APP_ACCESS_TOKEN."
+            else
+              echo "- Video cloud gateway skipped: add AI_API_KEY to enable it; local video scripting remains available."
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
