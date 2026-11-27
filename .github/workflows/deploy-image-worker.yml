@@ -7,7 +7,6 @@ on:
     paths:
       - "worker/**"
       - "wrangler.toml"
-      - "wrangler.video.toml"
       - ".github/workflows/deploy-image-worker.yml"
 
 permissions:
@@ -15,25 +14,18 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy secure Worker when credentials are configured
+    name: Deploy secure educational Worker
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       APP_ACCESS_TOKEN: ${{ secrets.APP_ACCESS_TOKEN }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      IMAGE_ENGINE_URL: ${{ secrets.IMAGE_ENGINE_URL }}
-      IMAGE_CHECKPOINT: ${{ vars.IMAGE_CHECKPOINT }}
-      IMAGE_ENGINE_TOKEN: ${{ secrets.IMAGE_ENGINE_TOKEN }}
-      AI_API_KEY: ${{ secrets.AI_API_KEY }}
-      AI_BASE_URL: ${{ vars.AI_BASE_URL }}
-      AI_MODEL: ${{ vars.AI_MODEL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate deployment credentials
-        id: credentials
+      - name: Validate required deployment secrets
         shell: bash
         run: |
           set -euo pipefail
@@ -42,62 +34,22 @@ jobs:
           [[ -n "$CLOUDFLARE_ACCOUNT_ID" ]] || missing+=("CLOUDFLARE_ACCOUNT_ID")
           [[ -n "$APP_ACCESS_TOKEN" ]] || missing+=("APP_ACCESS_TOKEN")
           if (( ${#missing[@]} )); then
-            ai_missing=()
-            [[ -n "$AI_API_KEY" ]] || ai_missing+=("Secret: AI_API_KEY")
-            [[ -n "$AI_BASE_URL" ]] || ai_missing+=("Variable: AI_BASE_URL")
-            [[ -n "$AI_MODEL" ]] || ai_missing+=("Variable: AI_MODEL")
             {
-              echo "## Worker deployment not run"
+              echo "## Deployment blocked: missing required secrets"
               echo
-              echo "GitHub Pages can still be published, but the server-side AI/video workers were not deployed."
+              echo "Add these in Settings → Secrets and variables → Actions:"
+              for name in "${missing[@]}"; do echo "- `$name`"; done
               echo
-              echo "### Required Cloudflare deployment secrets"
-              for name in "${missing[@]}"; do echo "- Secret: ${name}"; done
-              echo
-              echo "### Required video AI provider settings"
-              if (( ${#ai_missing[@]} )); then
-                for name in "${ai_missing[@]}"; do echo "- ${name}"; done
-              else
-                echo "All video AI provider settings are present."
-              fi
-              echo
-              echo "Add the missing values in Settings → Secrets and variables → Actions, then rerun this workflow."
+              echo "No secrets are printed or exposed by this workflow."
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::warning::Worker deployment skipped because Cloudflare deployment secrets are not configured."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [[ -n "$IMAGE_ENGINE_URL" && "$IMAGE_ENGINE_URL" != https://* ]]; then
-            echo "::error::IMAGE_ENGINE_URL must use HTTPS."
+            echo "::error::Deployment blocked. Configure the required GitHub Actions secrets listed in the job summary."
             exit 1
           fi
-          if [[ -n "$IMAGE_ENGINE_URL" && -z "$IMAGE_CHECKPOINT" ]]; then
-            echo "::warning::IMAGE_ENGINE_URL is set but IMAGE_CHECKPOINT is missing; image generation will remain unavailable."
-          fi
-          ai_missing=()
-          [[ -n "$AI_API_KEY" ]] || ai_missing+=("AI_API_KEY")
-          [[ -n "$AI_BASE_URL" ]] || ai_missing+=("AI_BASE_URL")
-          [[ -n "$AI_MODEL" ]] || ai_missing+=("AI_MODEL")
-          if (( ${#ai_missing[@]} )); then
-            {
-              echo
-              echo "## Video AI gateway not deployed"
-              echo "Cloudflare core Worker credentials are present, but the optional video-writing gateway needs:"
-              for name in "${ai_missing[@]}"; do echo "- ${name}"; done
-              echo "Add these as GitHub Actions secrets/variables, then rerun this workflow."
-            } >> "$GITHUB_STEP_SUMMARY"
-            echo "::warning::Video AI gateway deployment will be skipped; AI_API_KEY, AI_BASE_URL and AI_MODEL are required."
-          else
-            {
-              echo
-              echo "## Video AI gateway configuration"
-              echo "All required AI gateway secrets/variables are present; the gateway deploy step will run."
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Worker JavaScript
+        run: node --input-type=module --check < worker/index.js
 
       - name: Deploy Worker core
-        if: steps.credentials.outputs.ready == 'true'
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
@@ -108,8 +60,8 @@ jobs:
         env:
           APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
 
-      - name: Configure optional cloud text AI
-        if: steps.credentials.outputs.ready == 'true' && env.OPENAI_API_KEY != ''
+      - name: Enable optional cloud text generation
+        if: env.OPENAI_API_KEY != ''
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
@@ -122,59 +74,17 @@ jobs:
           APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
           OPENAI_API_KEY: ${{ env.OPENAI_API_KEY }}
 
-      - name: Configure optional ComfyUI image engine
-        if: steps.credentials.outputs.ready == 'true' && env.IMAGE_ENGINE_URL != '' && env.IMAGE_CHECKPOINT != ''
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --config wrangler.toml
-          secrets: |
-            APP_ACCESS_TOKEN
-            IMAGE_ENGINE_URL
-          vars: |
-            IMAGE_CHECKPOINT
-        env:
-          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
-          IMAGE_ENGINE_URL: ${{ env.IMAGE_ENGINE_URL }}
-          IMAGE_CHECKPOINT: ${{ env.IMAGE_CHECKPOINT }}
-
-      - name: Configure optional ComfyUI bearer token
-        if: steps.credentials.outputs.ready == 'true' && env.IMAGE_ENGINE_TOKEN != '' && env.IMAGE_ENGINE_URL != '' && env.IMAGE_CHECKPOINT != ''
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --config wrangler.toml
-          secrets: |
-            APP_ACCESS_TOKEN
-            IMAGE_ENGINE_URL
-            IMAGE_ENGINE_TOKEN
-          vars: |
-            IMAGE_CHECKPOINT
-        env:
-          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
-          IMAGE_ENGINE_URL: ${{ env.IMAGE_ENGINE_URL }}
-          IMAGE_ENGINE_TOKEN: ${{ env.IMAGE_ENGINE_TOKEN }}
-          IMAGE_CHECKPOINT: ${{ env.IMAGE_CHECKPOINT }}
-
-      - name: Deploy optional video AI gateway
-        if: steps.credentials.outputs.ready == 'true' && env.AI_API_KEY != '' && env.AI_BASE_URL != '' && env.AI_MODEL != ''
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --config wrangler.video.toml
-          secrets: |
-            APP_ACCESS_TOKEN
-            AI_API_KEY
-          vars: |
-            AI_BASE_URL
-            AI_MODEL
-            ALLOWED_ORIGINS
-        env:
-          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
-          AI_API_KEY: ${{ env.AI_API_KEY }}
-          AI_BASE_URL: ${{ env.AI_BASE_URL }}
-          AI_MODEL: ${{ env.AI_MODEL }}
-          ALLOWED_ORIGINS: https://gomaa223m-jpg.github.io
+      - name: Deployment summary
+        if: success()
+        run: |
+          {
+            echo "## Worker deployed successfully"
+            echo
+            echo "- Core Worker endpoints are deployed."
+            if [[ -n "$OPENAI_API_KEY" ]]; then
+              echo "- Cloud text generation secret is configured."
+            else
+              echo "- Cloud text generation is disabled; local browser tools remain available."
+            fi
+            echo "- Test the Worker /health endpoint, then save its /api/generate URL and APP_ACCESS_TOKEN in the Studio."
+          } >> "$GITHUB_STEP_SUMMARY"
