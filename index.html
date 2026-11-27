@@ -225,7 +225,7 @@ body{background:#f4f8fb}
 <p class="muted">الحفظ محلي في المتصفح على هذا الجهاز. احتفظ بنسخة HTML احتياطية؛ مسح بيانات المتصفح قد يحذف المسودة المحلية. PDF يتم عبر نافذة الطباعة واختيار «حفظ PDF».</p>
 </div>
 </section>
-<section class="card"><h2>🧠 البرومبت الجاهز</h2><pre id="out">أدخل بيانات الدرس ثم اضغط «إنشاء البرومبت».</pre><button id="copy">نسخ البرومبت</button><button class="secondary" id="downloadPrompt">تنزيل البرومبت TXT</button><button class="light" id="printPrompt">طباعة البرومبت</button><a class="link secondary" id="chat" href="https://chatgpt.com/" target="_blank" rel="noopener">فتح ChatGPT</a><a class="link secondary" href="https://claude.ai/" target="_blank" rel="noopener">Claude</a><a class="link secondary" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a><button class="light" id="launchChatGPT">إرسال إلى ChatGPT</button><button class="light" id="launchClaude">إرسال إلى Claude</button><button class="light" id="launchGemini">إرسال إلى Gemini</button><p class="muted">زر «ابدأ مع ChatGPT الآن» ينسخ الطلب ويفتح ChatGPT في تبويب جديد؛ الصق الطلب هناك واضغط إرسال. الأداة نفسها مجانية وتعمل دون مفتاح API. انسخ البرومبت إلى إحدى المنصات المجانية المتاحة، مع ملاحظة أن لكل منصة حدود استخدام قد تتغير. إنشاء ملفات العرض والفيديو فعلياً يتم عبر المنصة أو أدوات التصدير التي تختارها.</p></section>
+<section class="card"><h2>🧠 البرومبت الجاهز</h2><pre id="out">أدخل بيانات الدرس ثم اضغط «إنشاء البرومبت».</pre><button id="copy">نسخ البرومبت</button><button class="secondary" id="downloadPrompt">تنزيل البرومبت TXT</button><button class="light" id="printPrompt">طباعة البرومبت</button><a class="link secondary" id="chat" href="https://chatgpt.com/" target="_blank" rel="noopener">فتح ChatGPT</a><a class="link secondary" href="https://claude.ai/" target="_blank" rel="noopener">Claude</a><a class="link secondary" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a><button class="light" id="launchChatGPT">إرسال إلى ChatGPT</button><button class="light" id="launchClaude">إرسال إلى Claude</button><button class="light" id="launchGemini">إرسال إلى Gemini</button><div class="stepnote" style="margin-top:12px"><strong>بوابة المنصات الذكية</strong><p class="muted">جهّز البرومبت مرة واحدة، ثم اختر المنصة. ستفتح المنصة ويُنسخ البرومبت لتلصقه بنفسك؛ لا يوجد إرسال تلقائي أو اتصال داخلي بحساباتك.</p><div class="grid"><button class="secondary" id="launchCopilot">فتح Microsoft Copilot</button><button class="secondary" id="launchPerplexity">فتح Perplexity</button><button class="secondary" id="launchDeepSeek">فتح DeepSeek</button><button class="secondary" id="launchMistral">فتح Le Chat</button><button class="secondary" id="launchGrok">فتح Grok</button><button class="secondary" id="launchQwen">فتح Qwen Chat</button></div></div><p class="muted">التوافق هنا يعني تجهيز الأوامر وفتح واجهات المنصات المدعومة في المتصفح، وليس ربطاً مباشراً أو ضماناً لكل تطبيق. بعض المنصات تتطلب تسجيل الدخول، وقد تتغير الروابط والحدود والخطط المجانية. تبقى ملفات التصدير المحلية متاحة من هذا الاستوديو.</p></section>
 
 <section class="card" id="exportCenter"><h2>📦 مركز تصدير الحقيبة التعليمية</h2>
 <p>بعد أن تنتج المنصة الذكية المحتوى الكامل، الصقه هنا. يمكنك بعدها تنزيل الحقيبة بصيغ متعددة أو طباعة نسخة PDF.</p>
@@ -461,6 +461,12 @@ function launchAI(url){const prompt=$('out').textContent;if(!prompt||prompt.star
 $('launchChatGPT').addEventListener('click',()=>launchAI('https://chatgpt.com/'));
 $('launchClaude').addEventListener('click',()=>launchAI('https://claude.ai/new'));
 $('launchGemini').addEventListener('click',()=>launchAI('https://gemini.google.com/app'));
+$('launchCopilot').addEventListener('click',()=>launchAI('https://copilot.microsoft.com/'));
+$('launchPerplexity').addEventListener('click',()=>launchAI('https://www.perplexity.ai/'));
+$('launchDeepSeek').addEventListener('click',()=>launchAI('https://chat.deepseek.com/'));
+$('launchMistral').addEventListener('click',()=>launchAI('https://chat.mistral.ai/'));
+$('launchGrok').addEventListener('click',()=>launchAI('https://grok.com/'));
+$('launchQwen').addEventListener('click',()=>launchAI('https://chat.qwen.ai/'));
 $('easyStart').addEventListener('click',()=>{
  const topic=$('topic').value.trim();
  if(!topic){$('topic').focus();$('topic').placeholder='اكتب عنوان الدرس هنا أولاً';return}
