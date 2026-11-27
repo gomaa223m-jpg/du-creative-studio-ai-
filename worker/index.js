@@ -94,9 +94,10 @@ const auditSchema = {
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
-    const allowedOrigin = env.ALLOWED_ORIGIN || "https://gomaa223m-jpg.github.io";
-    if (origin && origin !== allowedOrigin) return new Response("Origin not allowed", { status: 403 });
-    const headersOrigin = origin || allowedOrigin;
+    const allowedOrigins = (env.ALLOWED_ORIGINS || env.ALLOWED_ORIGIN || "https://gomaa223m-jpg.github.io")
+      .split(",").map(value => value.trim()).filter(Boolean);
+    if (origin && !allowedOrigins.includes(origin)) return new Response("Origin not allowed", { status: 403 });
+    const headersOrigin = origin || allowedOrigins[0] || "https://gomaa223m-jpg.github.io";
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders(headersOrigin) });
