@@ -82,3 +82,15 @@ curl -X POST https://YOUR-WORKER.workers.dev/api/v1/books/generate \
 - واجهة OpenAPI وصف للـ REST API وليست إضافة تلقائية داخل كل تطبيق.
 - التوليد يستخدم OpenAI API وقد يترتب عليه استهلاك مدفوع. مراجعة المحتوى آلية وليست اعتماداً علمياً بشرياً.
 - لا ترسل بيانات الطلاب الشخصية أو الحساسة.
+
+## توليد الصور والأفاتار عبر ComfyUI
+
+أضيفت إلى كود Worker مسارات محمية لتوليد الصور من النص أو تعديل صورة مرجعية عبر ComfyUI:
+
+- `GET /api/v1/images/health`
+- `POST /api/v1/images/generate`
+- `GET /api/v1/images/status?prompt_id=...`
+
+تحتاج هذه المسارات إلى إعداد Worker فعلي ومتغيرات `IMAGE_ENGINE_URL` و`IMAGE_CHECKPOINT` وسر `APP_ACCESS_TOKEN`. يمكن إضافة `IMAGE_ENGINE_TOKEN` إذا كان البروكسي الأمامي لمحرك ComfyUI يفرض Bearer token. راجع `worker/README.md` لخطوات الإعداد المحلي والآمن.
+
+**الحالة:** كود المسارات موجود في المستودع، لكنه لا يصبح خدمة فعالة بمجرد نشر GitHub Pages. يلزم نشر `worker/index.js` إلى Cloudflare Worker وربطه بخادم ComfyUI ونموذج متوافق، ثم نجاح اختبار الاتصال من الاستوديو. تشغيل ComfyUI محلياً لا يحتاج API key، لكنه يحتاج جهازاً مناسباً ونموذجاً محلياً.
