@@ -840,14 +840,39 @@ $('runBookEngine').addEventListener('click',async()=>{
 // محرر تأليف الكتب متعدد الصفحات
 let bookPages=[];
 function escBook(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+// Sanitize imported/generated rich text before it enters the editable book DOM.
+function sanitizeBookHTML(input){
+ const doc=new DOMParser().parseFromString(String(input||''),'text/html');
+ const allowed=new Set(['p','br','strong','b','em','i','u','ul','ol','li','h2','h3','h4','blockquote','code','pre','table','thead','tbody','tr','th','td']);
+ const blocked=new Set(['script','style','iframe','object','embed','svg','math','template','form','input','button','video','audio','source','link','meta']);
+ const clean=node=>{
+  if(node.nodeType===Node.TEXT_NODE)return doc.createTextNode(node.textContent||'');
+  if(node.nodeType!==Node.ELEMENT_NODE)return doc.createDocumentFragment();
+  const tag=node.tagName.toLowerCase();
+  if(blocked.has(tag))return doc.createDocumentFragment();
+  const fragment=doc.createDocumentFragment();
+  if(!allowed.has(tag)&&tag!=='a'){node.childNodes.forEach(child=>fragment.appendChild(clean(child)));return fragment;}
+  const el=doc.createElement(tag);
+  if(tag==='a'){
+   const raw=node.getAttribute('href')||'';
+   try{const url=new URL(raw,location.href);if(['https:','http:','mailto:'].includes(url.protocol))el.setAttribute('href',url.href);}catch{}
+   if(el.hasAttribute('href')){el.setAttribute('target','_blank');el.setAttribute('rel','noopener noreferrer');}
+  }
+  node.childNodes.forEach(child=>el.appendChild(clean(child)));
+  return el;
+ };
+ const wrapper=doc.createElement('div');
+ doc.body.childNodes.forEach(node=>wrapper.appendChild(clean(node)));
+ return wrapper.innerHTML;
+}
 function renderBookPages(){
  const host=$('bookPages');host.innerHTML='';
  if(!bookPages.length){host.innerHTML='<div class="empty">ابدأ بإضافة الصفحة الأولى إلى كتابك.</div>';return}
  bookPages.forEach((p,i)=>{
   const card=document.createElement('section');card.className='book-page-editor';card.dataset.index=i;
-  card.innerHTML='<div class="page-tools"><strong>صفحة '+(i+1)+'</strong><button type="button" data-act="up" '+(i===0?'disabled':'')+'>↑ أعلى</button><button type="button" data-act="down" '+(i===bookPages.length-1?'disabled':'')+'>↓ أسفل</button><button type="button" data-act="delete" class="light">حذف</button></div><input class="page-title" aria-label="عنوان الصفحة" value="'+escBook(p.title)+'"><div class="page-content" contenteditable="true" spellcheck="true">'+(p.html||'')+'</div>';
+  card.innerHTML='<div class="page-tools"><strong>صفحة '+(i+1)+'</strong><button type="button" data-act="up" '+(i===0?'disabled':'')+'>↑ أعلى</button><button type="button" data-act="down" '+(i===bookPages.length-1?'disabled':'')+'>↓ أسفل</button><button type="button" data-act="delete" class="light">حذف</button></div><input class="page-title" aria-label="عنوان الصفحة" value="'+escBook(p.title)+'"><div class="page-content" contenteditable="true" spellcheck="true">'+sanitizeBookHTML(p.html)+'</div>';
   card.querySelector('.page-title').addEventListener('input',e=>bookPages[i].title=e.target.value);
-  card.querySelector('.page-content').addEventListener('input',e=>bookPages[i].html=e.currentTarget.innerHTML);
+  card.querySelector('.page-content').addEventListener('input',e=>bookPages[i].html=sanitizeBookHTML(e.currentTarget.innerHTML));
   card.querySelectorAll('[data-act]').forEach(btn=>btn.addEventListener('click',()=>{
    const a=btn.dataset.act;if(a==='delete'){bookPages.splice(i,1)}
    if(a==='up'&&i>0){[bookPages[i-1],bookPages[i]]=[bookPages[i],bookPages[i-1]]}
@@ -1191,7 +1216,7 @@ function autoDirectVideo(){
  videoScenes=scenes;
  const names={flame:'احتراق',precipitate:'تكوّن راسب',bubbles:'تصاعد فقاعات',combine:'اتحاد',decompose:'تفكك',electric:'كهرباء',wave:'موجات',motion:'حركة',cell:'خلية',molecule:'جزيئات',concept:'شرح مفاهيمي'};
  $('directorPlan').innerHTML='<strong>اكتمل تحليل المخرج الذكي:</strong> '+scenes.length+' مشهداً، بإجمالي '+Math.floor(videoDurationSeconds(scenes)/60)+' دقيقة و'+Math.round(videoDurationSeconds(scenes)%60)+' ثانية (الحد الأقصى 5 دقائق). لكل مشهد لقطة وحركة كاميرا ومؤثر وانتقال.';
- $('directorShotList').innerHTML=scenes.map((s,i)=>'<div class="saved-item"><strong>المشهد '+(i+1)+' — '+(names[s.kind]||'شرح')+'</strong><div>'+s.director.shot+' · '+s.director.camera+'</div><small>'+s.director.fx+' · انتقال: '+s.director.transition+'</small></div>').join('');
+ $('directorShotList').innerHTML=scenes.map((s,i)=>'<div class="saved-item"><strong>المشهد '+(i+1)+' — '+escBook(names[s.kind]||'شرح')+'</strong><div>'+escBook(s.director.shot)+' · '+escBook(s.director.camera)+'</div><small>'+escBook(s.director.fx)+' · انتقال: '+escBook(s.director.transition)+'</small></div>').join('');
  videoFrame=0;drawVideoScene(0,0);
  $('videoStatus').textContent='أخرج المخرج الذكي '+scenes.length+' مشهداً بمدة إجمالية '+Math.round(videoDurationSeconds(scenes))+' ثانية، دون تجاوز 5 دقائق. راجع الخطة ثم عاين أو صدّر.';
 }
