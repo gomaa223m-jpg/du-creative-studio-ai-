@@ -106,6 +106,20 @@ body{background:#f4f8fb}
 <button id="make">جهّز الحزمة التعليمية</button><button class="bigstart" id="easyStart">ابدأ مع ChatGPT الآن ←</button>
 <button class="secondary" id="clear">مسح العنوان</button>
 </section>
+<section class="card" id="quickBuilder">
+<h2>🧩 منشئ المسودة التعليمية الفوري — يعمل مجاناً دون اتصال بخدمات AI</h2>
+<p>أنشئ هيكلاً تربوياً منظماً فوراً من عنوان الدرس، ثم حرره وأكمل الحقائق العلمية قبل اعتماده. هذه مسودة محلية وليست بديلاً عن مراجعة المحتوى أو التوليد اللغوي بالذكاء الاصطناعي.</p>
+<div class="grid">
+<div><label for="quickStage">المرحلة الدراسية</label><select id="quickStage"><option>المرحلة المتوسطة</option><option selected>المرحلة الثانوية</option><option>المرحلة الابتدائية</option><option>المرحلة الجامعية</option></select></div>
+<div><label for="quickSubject">المادة</label><select id="quickSubject"><option selected>العلوم</option><option>الكيمياء</option><option>الفيزياء</option><option>الأحياء</option><option>الرياضيات</option><option>اللغة العربية</option><option>أخرى</option></select></div>
+</div>
+<div class="grid">
+<button id="buildStarterPack">إنشاء مسودة الحقيبة</button>
+<button class="secondary" id="buildVideoFromTopic">تجهيز سيناريو الفيديو</button>
+<button class="light" id="sendToAIFromQuick">تحسين الحقيبة بالذكاء الاصطناعي</button>
+</div>
+<p class="status" id="quickStatus" aria-live="polite"></p>
+</section>
 <section class="card"><h2>🧠 البرومبت الجاهز</h2><pre id="out">أدخل بيانات الدرس ثم اضغط «إنشاء البرومبت».</pre><button id="copy">نسخ البرومبت</button><button class="secondary" id="downloadPrompt">تنزيل البرومبت TXT</button><button class="light" id="printPrompt">طباعة البرومبت</button><a class="link secondary" id="chat" href="https://chatgpt.com/" target="_blank" rel="noopener">فتح ChatGPT</a><a class="link secondary" href="https://claude.ai/" target="_blank" rel="noopener">Claude</a><a class="link secondary" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a><button class="light" id="launchChatGPT">إرسال إلى ChatGPT</button><button class="light" id="launchClaude">إرسال إلى Claude</button><button class="light" id="launchGemini">إرسال إلى Gemini</button><p class="muted">زر «ابدأ مع ChatGPT الآن» ينسخ الطلب ويفتح ChatGPT في تبويب جديد؛ الصق الطلب هناك واضغط إرسال. الأداة نفسها مجانية وتعمل دون مفتاح API. انسخ البرومبت إلى إحدى المنصات المجانية المتاحة، مع ملاحظة أن لكل منصة حدود استخدام قد تتغير. إنشاء ملفات العرض والفيديو فعلياً يتم عبر المنصة أو أدوات التصدير التي تختارها.</p></section>
 
 <section class="card" id="exportCenter"><h2>📦 مركز تصدير الحقيبة التعليمية</h2>
@@ -241,6 +255,50 @@ return `أنت EDU CREATIVE STUDIO AI، استوديو إنتاج تعليمي �
 ابدأ الآن. لا تسأل المعلم؛ أنت مسؤول عن بناء الحزمة بأفضل حكم مهني ممكن.`
 }
 $('make').addEventListener('click',()=>{const result=build();$('out').textContent=result;if(!result.startsWith('اكتب عنوان'))$('chat').href='https://chatgpt.com/';});
+function buildStarterPack(){
+ const topic=$('topic').value.trim();if(!topic){$('quickStatus').textContent='اكتب عنوان الدرس أولاً.';return}
+ const stage=$('quickStage').value,subject=$('quickSubject').value;
+ const sections=[
+ 'الحقيبة التعليمية: '+topic,
+ 'إعداد: مستر محمد جمعة — معانا دائماً أنت الأفضل',
+ 'الفئة المستهدفة: '+stage+' | المادة: '+subject,
+ 'تنبيه مهني: هذه مسودة تنظيمية. تُستكمل الحقائق والتعريفات والقوانين والأمثلة من مصدر علمي/منهجي موثوق قبل التدريس.',
+ '1. بطاقة الدرس',
+ 'عنوان الدرس: '+topic+'\nالمادة: '+subject+'\nالمرحلة: '+stage+'\nالزمن المقترح: يحدد وفق حجم المحتوى\nالمتطلبات السابقة: [أدخل المعارف السابقة المرتبطة]',
+ '2. نواتج التعلم القابلة للقياس',
+ 'بنهاية الدرس يتوقع أن يكون المتعلم قادراً على: [يعرّف المفهوم بدقة]؛ [يفسر الظاهرة أو الفكرة]؛ [يطبق المعرفة في مثال]؛ [يقارن أو يستنتج بدليل].',
+ '3. التهيئة وإثارة التفكير',
+ 'اعرض ظاهرة/صورة/سؤالاً مرتبطاً بعنوان الدرس: '+topic+'\nسؤال الاستكشاف: ما الذي تتوقع حدوثه؟ ولماذا؟',
+ '4. مسار الشرح',
+ 'المفهوم الأساسي: [يكتب بعد التحقق من المصدر]\nالمصطلحات: [مصطلح 1] — [مصطلح 2] — [مصطلح 3]\nالخطوة الأولى: [شرح]؛ الخطوة الثانية: [شرح]؛ مثال محلول: [بيانات ومصدر وخطوات]',
+ '5. نشاط تعلم نشط',
+ 'مهمة تعاونية: ناقشوا/صنفوا/فسروا [مادة النشاط].\nدور المعلم: التوجيه وطرح أسئلة سابرة.\nدور المتعلم: الملاحظة والتفسير وتبرير الإجابة.',
+ '6. تجربة أو محاكاة آمنة عند ملاءمة الموضوع',
+ 'الهدف: [يحدد]\nالمتغيرات/العناصر: [تحدد]\nالملاحظة المتوقعة: [تتحقق علمياً]\nإرشادات السلامة: لا تنفذ أي تجربة إلا في بيئة تعليمية مناسبة وتحت إشراف مختص.',
+ '7. التقويم البنائي',
+ 'سؤال تذكر: [اكتب سؤالاً]\nسؤال فهم: [اكتب سؤالاً]\nسؤال تطبيق: [اكتب سؤالاً]\nسؤال تفكير عليا: [اكتب سؤالاً مع معيار إجابة].',
+ '8. ورقة عمل الطالب',
+ 'السؤال الأول: أكمل/عرّف: ____________________\nالسؤال الثاني: فسّر: ____________________\nالسؤال الثالث: طبّق: ____________________\nالسؤال الرابع: تحدٍّ: ____________________',
+ '9. دليل المعلم والإجابات',
+ 'تضاف الإجابات النموذجية بعد مراجعة كل سؤال ومطابقتها للمحتوى المعتمد. لا تعتمد إجابات افتراضية.',
+ '10. التمايز',
+ 'الدعم العلاجي: تبسيط المفاهيم وتقديم مثال موجه.\nالمستوى الأساسي: تدريب متدرج.\nالإثراء: مسألة مفتوحة أو تطبيق جديد يتطلب الاستدلال.',
+ '11. ملخص الدرس وبطاقة الخروج',
+ 'أهم ثلاث أفكار: [1] [2] [3].\nبطاقة الخروج: ما الفكرة التي تعلمتها؟ ما السؤال الذي لا يزال لديك؟',
+ '12. تدقيق الجودة قبل النشر',
+ '☐ صحة المصطلحات والحقائق. ☐ مراجعة القوانين والوحدات والحسابات. ☐ صحة الإجابات. ☐ مناسبة العمر. ☐ وضوح الصور والحقوق. ☐ ملاءمة النشاط والسلامة.'
+ ];
+ const pack=sections.join('\n\n');
+ $('generatedContent').value=pack;
+ $('videoScript').value='مقدمة مشوقة عن '+topic+'\n\nأهداف التعلم: ما الذي سنتعلمه اليوم؟\n\nشرح المفهوم الأساسي: [أدخل الشرح الموثق]\n\nمثال أو محاكاة تعليمية: [أدخل المثال وتفسيره]\n\nتطبيق للطلاب: [سؤال تفاعلي]\n\nمراجعة وخاتمة: [أهم الأفكار وسؤال الخروج]';
+ $('quickStatus').textContent='تم إنشاء مسودة منظمة وإرسالها إلى مركز التصدير واستوديو الفيديو. أكمل الحقول بين الأقواس وراجع الدقة العلمية.';
+ $('exportStatus').textContent='المسودة جاهزة للتحرير والتصدير.';
+ $('exportCenter').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('buildStarterPack').addEventListener('click',buildStarterPack);
+$('buildVideoFromTopic').addEventListener('click',()=>{if(!$('topic').value.trim()){$('quickStatus').textContent='اكتب عنوان الدرس أولاً.';return}autoBuildVideoScript();$('videoStudio').scrollIntoView({behavior:'smooth',block:'start'})});
+$('sendToAIFromQuick').addEventListener('click',()=>{const p=build();if(p.startsWith('اكتب عنوان')){$('quickStatus').textContent=p;return}$('out').textContent=p;launchAI('https://chatgpt.com/')});
+
 
 function launchAI(url){const prompt=$('out').textContent;if(!prompt||prompt.startsWith('أدخل بيانات')||prompt.startsWith('اكتب عنوان')){alert('اكتب عنوان الموضوع وجهّز الحزمة أولاً');return}const tab=window.open(url,'_blank');if(!tab){alert('اسمح بفتح النوافذ المنبثقة لهذا الموقع');return}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(prompt).then(()=>alert('تم نسخ الحزمة. الصقها في المحادثة الجديدة.')).catch(()=>alert('انسخ البرومبت يدوياً من المربع ثم الصقه في المنصة.'))}else{alert('انسخ البرومبت من المربع والصقه في المنصة التي فُتحت.')}}
 $('launchChatGPT').addEventListener('click',()=>launchAI('https://chatgpt.com/'));
@@ -278,7 +336,7 @@ $('exportWord').addEventListener('click',()=>{const t=needContent();if(!t)return
 $('exportPdf').addEventListener('click',()=>{const t=needContent();if(!t)return;const w=window.open('','_blank');if(!w){$('exportStatus').textContent='اسمح بالنوافذ المنبثقة لفتح نافذة الطباعة.';return}w.document.open();w.document.write(makeDocument('الحقيبة التعليمية',contentAsHtml(t)));w.document.close();w.focus();setTimeout(()=>w.print(),400);$('exportStatus').textContent='اختر حفظ كملف PDF من خيارات الطباعة.'});
 function splitSections(t){const lines=t.split(/\\r?\\n/);const out=[];let cur={title:'محتوى تعليمي',text:[]};for(const line of lines){if(/^\\s*(?:#{1,3}\\s+|(?:القسم|الوحدة|الفصل|الشريحة|مشهد|ورقة عمل|الدرس)\\s*[0-9٠-٩:：-]*)/i.test(line)&&cur.text.length){out.push(cur);cur={title:line.replace(/^#+\\s*/,''),text:[]}}else if(/^\\s*(?:#{1,3}\\s+|(?:القسم|الوحدة|الفصل|الشريحة|مشهد|ورقة عمل|الدرس)\\s*[0-9٠-٩:：-]*)/i.test(line)){cur.title=line.replace(/^#+\\s*/,'')}cur.text.push(line)}if(cur.text.length)out.push(cur);return out}
 $('exportSlides').addEventListener('click',()=>{const t=needContent();if(!t)return;const chunks=[];for(let i=0;i<t.length;i+=850)chunks.push(t.slice(i,i+850));const slides=chunks.map((s,i)=>'<article class="slide"><small>مستر محمد جمعة · '+(i+1)+' / '+chunks.length+'</small><pre>'+htmlEscape(s)+'</pre><nav><button onclick="document.querySelectorAll(\'.slide\')['+(Math.max(0,i-1))+"].scrollIntoView()"+'">السابق</button> <button onclick="document.querySelectorAll(\'.slide\')['+(Math.min(chunks.length-1,i+1))+"].scrollIntoView()"+'">التالي</button></nav></article>').join('');const style='<style>body{margin:0;background:#10243a;color:#fff}.slide{min-height:100vh;padding:7vw;display:flex;flex-direction:column;justify-content:center;page-break-after:always}.slide pre{font-size:clamp(18px,2.2vw,30px);white-space:pre-wrap;line-height:1.8}small{color:#8ee4d8}button{padding:10px 22px;border:0;border-radius:8px;margin:8px}</style>';saveBlob(safeFileName($('topic').value)+'-عرض.html',makeDocument('العرض التقديمي',slides,style),'text/html;charset=utf-8');$('exportStatus').textContent='تم تصدير نسخة عرض HTML مقسمة إلى صفحات.'});
-$('exportBook').addEventListener('click',()=>{const t=needContent();if(!t)return;const parts=splitSections(t);const nav=parts.map((p,i)=>'<a href="#part'+i+'">'+htmlEscape(p.title||('الفصل '+(i+1)))+'</a>').join(' · ');const chapters=parts.map((p,i)=>'<section id="part'+i+'"><h2>'+htmlEscape(p.title||('الفصل '+(i+1)))+'</h2><pre>'+htmlEscape(p.text.join('\\n'))+'</pre></section>').join('');const style='<style>body{max-width:950px;margin:auto;padding:20px}nav{position:sticky;top:0;background:#eaf4f7;padding:14px;line-height:2}nav a{margin:6px;color:#075c80}section{padding:22px 0;border-bottom:2px solid #dce6ed}pre{white-space:pre-wrap}</style>';saveBlob(safeFileName($('topic').value)+'-كتاب-تفاعلي.html',makeDocument('الكتاب التعليمي التفاعلي','<h1>الكتاب التعليمي</h1><nav>'+nav+'</nav>'+chapters,style),'text/html;charset=utf-8');$('exportStatus').textContent='تم تصدير الكتاب بصيغة HTML مع فهرس تنقل بين الأقسام.'});
+$('exportBook').addEventListener('click',()=>{const t=needContent();if(!t)return;const parts=splitSections(t).filter(p=>p.text.join('').trim());const nav=parts.map((p,i)=>'<a href="#chapter'+i+'">'+htmlEscape(p.title||('الفصل '+(i+1)))+'</a>').join('');const chapters=parts.map((p,i)=>'<article class="chapter" id="chapter'+i+'"><div class="chapter-kicker">الفصل '+(i+1)+'</div><h2>'+htmlEscape(p.title||('الفصل '+(i+1)))+'</h2><pre>'+htmlEscape(p.text.join('\n'))+'</pre><label class="done"><input type="checkbox" data-done="'+i+'"> أنهيت هذا الفصل</label></article>').join('');const quiz='<section class="quiz"><h2>اختبر فهمك</h2><p>اكتب إجابتك أو ناقشها مع معلمك:</p><textarea placeholder="ما أهم فكرة تعلمتها؟ وما الدليل أو المثال الذي يدعم فهمك؟"></textarea><p>سؤال تطبيق: اختر فكرة من الدرس واشرح كيف تستخدمها في موقف جديد.</p><textarea placeholder="إجابتك هنا..."></textarea><button onclick="window.print()">طباعة / حفظ PDF</button></section>';const style='<style>*{box-sizing:border-box}body{margin:0;background:#f2f6f9;color:#152b3c;font:17px/2 Tahoma,Arial;direction:rtl}.bookhead{background:linear-gradient(120deg,#0b2943,#126b86);color:white;padding:34px 7vw}.bookhead h1{margin:0 0 8px;font-size:clamp(26px,4vw,42px)}.bookhead p{margin:0;color:#c8f5ef}.toolbar{position:sticky;top:0;background:#fff;box-shadow:0 3px 16px #18334a18;padding:12px 4vw;z-index:5;display:flex;gap:10px;flex-wrap:wrap}.toolbar a{color:#075c80;text-decoration:none;border:1px solid #d7e4ec;border-radius:20px;padding:4px 12px}.toolbar button,.quiz button{border:0;background:#087d83;color:#fff;padding:9px 16px;border-radius:10px}.layout{max-width:1050px;margin:26px auto;padding:0 18px}.chapter,.quiz{background:white;border:1px solid #e1eaf0;border-radius:18px;padding:clamp(18px,4vw,38px);margin:20px 0;box-shadow:0 8px 28px #102b4010;scroll-margin-top:100px}.chapter-kicker{color:#087d83;font-weight:bold}.chapter h2{color:#105a7a}.chapter pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}.done{display:inline-flex;gap:8px;align-items:center;color:#087d83}.quiz textarea{width:100%;min-height:90px;padding:12px;border:1px solid #ccdce5;border-radius:10px;font:inherit}.progress{height:7px;background:#e1ebef}.progress span{display:block;height:100%;width:0;background:#0ba69a;transition:width .2s}body.dark{background:#101d2b;color:#e9f2f8}body.dark .chapter,body.dark .quiz,body.dark .toolbar{background:#1b2d40;color:#e9f2f8;border-color:#38516a}body.dark .chapter h2{color:#8be5db}@media print{.toolbar,.done,.quiz button{display:none}.chapter,.quiz{box-shadow:none;break-after:page}body{background:white}}</style>';const script='<script>const checks=[...document.querySelectorAll("[data-done]")];function update(){const n=checks.filter(x=>x.checked).length;document.getElementById("progressText").textContent=n+" / "+checks.length+" فصول مكتملة";document.getElementById("progressBar").style.width=(checks.length?n/checks.length*100:0)+"%"}checks.forEach(x=>x.addEventListener("change",update));document.getElementById("themeToggle").onclick=()=>document.body.classList.toggle("dark");document.getElementById("fontPlus").onclick=()=>document.body.style.fontSize=(parseInt(getComputedStyle(document.body).fontSize)+1)+"px";document.getElementById("fontMinus").onclick=()=>document.body.style.fontSize=Math.max(14,parseInt(getComputedStyle(document.body).fontSize)-1)+"px";</script>';const body='<header class="bookhead"><h1>'+htmlEscape($('topic').value||'الكتاب التفاعلي')+'</h1><p>كتاب تعليمي تفاعلي — إعداد مستر محمد جمعة</p></header><div class="progress"><span id="progressBar"></span></div><div class="toolbar"><span id="progressText">0 / '+checksCount(parts)+' فصول مكتملة</span>'+nav+'<button id="themeToggle">الوضع الليلي</button><button id="fontMinus">A−</button><button id="fontPlus">A+</button></div><main class="layout">'+chapters+quiz+'</main>';saveBlob(safeFileName($('topic').value)+'-كتاب-تفاعلي.html',makeDocument('الكتاب التعليمي التفاعلي',body+script,style),'text/html;charset=utf-8');$('exportStatus').textContent='تم إنشاء كتاب تفاعلي بفهرس وتنقل وتتبع تقدم ووضع ليلي وتغيير حجم الخط ومساحة مراجعة.'});
 $('exportVideo').addEventListener('click',()=>{const t=needContent();if(!t)return;const m=t.match(/(?:8[.、]?\\s*الفيديوهات التعليمية|الفيديوهات التعليمية|سيناريو الفيديو|الفيديو التعليمي)[\\s\\S]*?(?=\\n\\s*(?:9[.、]|الإنفوجرافيك|الكتاب التفاعلي)|$)/i);saveBlob(safeFileName($('topic').value)+'-سيناريو-الفيديو.txt',m?m[0]:t,'text/plain;charset=utf-8');$('exportStatus').textContent=m?'تم استخراج قسم الفيديو. لم نعثر على عنوان واضح للقسم، فتم تصدير المحتوى كاملاً.': 'لم يُكتشف عنوان مستقل للفيديو؛ تم تصدير المحتوى كاملاً حتى لا نفقد أي جزء.'});
 
 const STORE_KEY='eduCreativeStudioProjects_v1';
