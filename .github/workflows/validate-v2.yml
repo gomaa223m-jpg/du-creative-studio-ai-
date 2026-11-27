@@ -1,7 +1,7 @@
 name: Validate AlShareef Studio V2
 on:
   push:
-    branches: [alshareef-studio-v2]
+    branches: [main, alshareef-studio-v2]
     paths:
       - "v2/**"
       - ".github/workflows/validate-v2.yml"
