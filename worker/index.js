@@ -96,7 +96,7 @@ function imageEngineUrl(env) {
   const raw = cleanText(env.IMAGE_ENGINE_URL, 500).replace(/\/+$/, "");
   if (!raw) throw new Error("لم يتم إعداد IMAGE_ENGINE_URL على الخادم.");
   const parsed = new URL(raw);
-  if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") throw new Error("يجب أن يستخدم عنوان محرك الصور HTTPS.");
+  if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.search || parsed.hash) throw new Error("يجب أن يكون عنوان محرك الصور HTTPS آمناً دون بيانات دخول أو معاملات URL.");
   return raw;
 }
 function imageHeaders(env) {
