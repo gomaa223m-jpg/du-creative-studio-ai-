@@ -40,6 +40,9 @@ jobs:
         run: |
           set -euo pipefail
           missing=()
+          # Remove accidental whitespace/newlines from the repository secret without printing its value.
+          CLOUDFLARE_ACCOUNT_ID="$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '[:space:]')"
+          echo "CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID" >> "$GITHUB_ENV"
           [[ -n "$CLOUDFLARE_API_TOKEN" ]] || missing+=("CLOUDFLARE_API_TOKEN")
           [[ -n "$CLOUDFLARE_ACCOUNT_ID" ]] || missing+=("CLOUDFLARE_ACCOUNT_ID")
           if [[ -n "$CLOUDFLARE_ACCOUNT_ID" && ! "$CLOUDFLARE_ACCOUNT_ID" =~ ^[a-fA-F0-9]{32}$ ]]; then
