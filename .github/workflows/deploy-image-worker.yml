@@ -25,7 +25,7 @@ jobs:
       AI_API_KEY: ${{ secrets.AI_API_KEY }}
       IMAGE_ENGINE_URL: ${{ secrets.IMAGE_ENGINE_URL }}
       IMAGE_ENGINE_TOKEN: ${{ secrets.IMAGE_ENGINE_TOKEN }}
-      IMAGE_CHECKPOINT: ${{ secrets.IMAGE_CHECKPOINT }}
+      IMAGE_CHECKPOINT: ${{ vars.IMAGE_CHECKPOINT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,14 +42,15 @@ jobs:
           missing=()
           [[ -n "$CLOUDFLARE_API_TOKEN" ]] || missing+=("CLOUDFLARE_API_TOKEN")
           [[ -n "$CLOUDFLARE_ACCOUNT_ID" ]] || missing+=("CLOUDFLARE_ACCOUNT_ID")
+          [[ -n "$APP_ACCESS_TOKEN" ]] || missing+=("APP_ACCESS_TOKEN")
           if (( ${#missing[@]} )); then
             {
               echo "## Deployment blocked: missing required secrets"
               echo
-              echo "Add these in Settings → Secrets and variables → Actions:"
+              echo "Add these in Settings → Secrets and variables → Actions → Repository secrets:"
               for name in "${missing[@]}"; do printf '%s\n' "- $name"; done
               echo
-              echo "No secrets are printed or exposed by this workflow."
+              echo "Values are never printed by this workflow."
             } >> "$GITHUB_STEP_SUMMARY"
             echo "::error::Deployment blocked. Configure the required GitHub Actions secrets listed in the job summary."
             exit 1
@@ -61,8 +62,8 @@ jobs:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy --config wrangler.toml
+
       - name: Configure application access secret
-        if: env.APP_ACCESS_TOKEN != ''
         uses: cloudflare/wrangler-action@v4.1.3
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
@@ -72,7 +73,7 @@ jobs:
           APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
 
       - name: Enable optional cloud text generation
-        if: env.OPENAI_API_KEY != '' && env.APP_ACCESS_TOKEN != ''
+        if: env.OPENAI_API_KEY != ''
         uses: cloudflare/wrangler-action@v4.1.3
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
@@ -86,7 +87,7 @@ jobs:
           OPENAI_API_KEY: ${{ env.OPENAI_API_KEY }}
 
       - name: Deploy optional video AI gateway
-        if: env.AI_API_KEY != '' && env.APP_ACCESS_TOKEN != ''
+        if: env.AI_API_KEY != ''
         uses: cloudflare/wrangler-action@v4.1.3
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
@@ -129,19 +130,20 @@ jobs:
         if: success()
         run: |
           {
-            echo "## Worker deployed successfully"
+            echo "## Worker deployment completed"
             echo
-            echo "- Core Worker endpoints are deployed."
+            echo "- Core Worker deployed."
+            echo "- Private application access token configured."
             if [[ -n "$OPENAI_API_KEY" ]]; then
-              echo "- Cloud text generation secret is configured."
+              echo "- Cloud text generation configured."
             else
               echo "- Cloud text generation is disabled; local browser tools remain available."
             fi
-            echo "- Book engine: edu-creative-book-engine.<your-account-subdomain>.workers.dev"
+            echo "- Core Worker: edu-creative-book-engine.<your-account-subdomain>.workers.dev"
             if [[ -n "$AI_API_KEY" ]]; then
-              echo "- Video AI gateway: https://edu-creative-video-gateway.<your-account-subdomain>.workers.dev"
-              echo "- In the Studio, use the video gateway URL with /api/generate and the same APP_ACCESS_TOKEN."
+              echo "- Video script gateway deployed: https://edu-creative-video-gateway.<your-account-subdomain>.workers.dev"
+              echo "- This gateway creates video scripts and scene plans; it does not render final MP4 files."
             else
-              echo "- Video cloud gateway skipped: add AI_API_KEY to enable it; local video scripting remains available."
+              echo "- Optional video script gateway skipped: add AI_API_KEY to enable it."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
