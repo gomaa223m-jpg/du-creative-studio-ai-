@@ -926,16 +926,24 @@ async function convertVideoBlobToMp4(blob,status){
  status.textContent='جارٍ تجهيز محوّل MP4؛ قد يستغرق التحميل الأول بعض الوقت...';
  const ff=await getFfmpegInstance(status);
  const input='lesson-input.webm',output='lesson-output.mp4';
- try{ff.FS('unlink',input)}catch(e){}
- try{ff.FS('unlink',output)}catch(e){}
- ff.FS('writeFile',input,new Uint8Array(await blob.arrayBuffer()));
- await ff.run('-i',input,'-c:v','libx264','-preset','ultrafast','-threads','1','-crf','23','-pix_fmt','yuv420p','-movflags','+faststart','-c:a','aac','-b:a','96k',output);
- const data=ff.FS('readFile',output);
- const result=new Blob([data],{type:'video/mp4'});
- try{ff.FS('unlink',input)}catch(e){}
- try{ff.FS('unlink',output)}catch(e){}
- return result;
+ try{
+  try{ff.FS('unlink',input)}catch(e){}
+  try{ff.FS('unlink',output)}catch(e){}
+  if(!blob||!blob.size)throw new Error('ملف التسجيل الأصلي فارغ؛ أعد التسجيل ثم حاول مجدداً.');
+  ff.FS('writeFile',input,new Uint8Array(await blob.arrayBuffer()));
+  await ff.run('-i',input,'-c:v','libx264','-preset','ultrafast','-threads','1','-crf','23','-pix_fmt','yuv420p','-movflags','+faststart','-c:a','aac','-b:a','96k',output);
+  const data=ff.FS('readFile',output);
+  if(!data||data.length<16)throw new Error('ملف MP4 الناتج فارغ أو غير مكتمل.');
+  const signature=String.fromCharCode(data[4],data[5],data[6],data[7]);
+  if(signature!=='ftyp')throw new Error('تعذر التحقق من بنية MP4؛ لن يتم تسمية الملف MP4 قبل اجتياز الفحص.');
+  status.textContent='تم التحقق من بنية MP4 بنجاح؛ جارٍ تجهيز الملف للتنزيل...';
+  return new Blob([data],{type:'video/mp4'});
+ }finally{
+  try{ff.FS('unlink',input)}catch(e){}
+  try{ff.FS('unlink',output)}catch(e){}
+ }
 }
+
 function autoBuildVideoScript(){
  const topic=currentVideoTitle();
  const supplied=($('generatedContent')&&$('generatedContent').value.trim())||'';
