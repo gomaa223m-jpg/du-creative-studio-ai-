@@ -250,7 +250,20 @@ export default {
 
     const url = new URL(request.url);
     if (request.method === "GET" && ["/health", "/api/v1/health"].includes(url.pathname)) {
-      return json({ ok: true, service: "edu-creative-studio-api", apiVersion: "v1", mcp: "/mcp", tools: ["health", "generate_video_plan", "generate_book"] }, 200, headersOrigin);
+      const missingRequired = ["APP_ACCESS_TOKEN"].filter(name => !String(env[name] || "").trim());
+      const missingOptional = ["OPENAI_API_KEY"].filter(name => !String(env[name] || "").trim());
+      return json({
+        ok: true,
+        service: "edu-creative-studio-api",
+        apiVersion: "v1",
+        configured: missingRequired.length === 0,
+        readyForCloudAI: missingRequired.length === 0 && missingOptional.length === 0,
+        missingRequired,
+        missingOptional,
+        localModeAvailable: true,
+        mcp: "/mcp",
+        tools: ["health", "generate_video_plan", "generate_book"]
+      }, 200, headersOrigin);
     }
 
     if (url.pathname.startsWith("/api/v1/images/")) return handleImageEngine(request, env, headersOrigin, url);
