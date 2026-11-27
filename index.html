@@ -913,7 +913,7 @@ $('importProjects').addEventListener('click',()=>$('importFile').click());
 $('importFile').addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;try{const imported=JSON.parse(await file.text());if(!Array.isArray(imported))throw new Error('invalid');const valid=imported.filter(p=>p&&typeof p==='object'&&typeof p.title==='string');const existing=getProjects();const merged=[...valid.map(p=>({...p,id:String(p.id||Date.now()+Math.random()),updatedAt:p.updatedAt||new Date().toISOString()})),...existing];setProjects(merged);renderProjects();showStatus('تم استيراد '+valid.length+' مشروع بنجاح.')}catch(err){showStatus('ملف النسخة الاحتياطية غير صالح.')}e.target.value=''});
 renderProjects();
 
-function extractByTerms(terms){const t=needContent();if(!t)return null;const lines=t.split(/\\r?\\n/);const hits=[];let active=false;for(const line of lines){const heading=/^\\s*(?:#{1,4}\\s*)?/.test(line)&&terms.some(x=>line.includes(x));if(heading){active=true;hits.push(line);continue}if(active&&/^\\s*(?:#{1,4}\\s*)?(?:[0-9٠-٩]+[.、)\\-]|القسم|الوحدة|الفصل)\\s*/.test(line)&&!terms.some(x=>line.includes(x)))active=false;if(active)hits.push(line)}return hits.length?hits.join('\\n'):null}
+function extractByTerms(terms){const t=needContent();if(!t)return null;const lines=t.split(/\\r?\\n/);const hits=[];let active=false;for(const line of lines){const heading=/^\\s*(?:#{1,4}\\s*)?/.test(line)&&terms.some(x=>line.includes(x));if(heading){active=true;hits.push(line);continue}if(active&&/^\\s*(?:#{1,4}\\s*)?(?:[0-9٠-٩]+[.、)\\-]|القسم|الوحدة|الفصل)\\s*/.test(line)&&!terms.some(x=>line.includes(x)))active=false;if(active)hits.push(line)}return hits.length?hits.join('\n'):null}
 $('exportWorksheets').addEventListener('click',()=>{const t=extractByTerms(['أوراق العمل','ورقة العمل','ورقة عمل']);if(!t){$('exportStatus').textContent='لم أجد عنواناً واضحاً لأوراق العمل؛ تأكد من وجود قسم مستقل بهذا الاسم.';return}saveBlob(safeFileName($('topic').value)+'-أوراق-العمل.txt',t,'text/plain;charset=utf-8');$('exportStatus').textContent='تم استخراج قسم أوراق العمل.'});
 $('exportLesson').addEventListener('click',()=>{const t=extractByTerms(['التحضير','الشرح الكامل','خطة الدرس']);if(!t){$('exportStatus').textContent='لم أجد قسماً واضحاً للتحضير أو الشرح.';return}saveBlob(safeFileName($('topic').value)+'-التحضير-والشرح.txt',t,'text/plain;charset=utf-8');$('exportStatus').textContent='تم استخراج التحضير والشرح.'});
 $('exportVideoPlan').addEventListener('click',()=>{const t=extractByTerms(['الفيديوهات التعليمية','سيناريو الفيديو','الفيديو التعليمي']);const source=t||needContent();if(!source)return;const lines=source.split(/\\r?\\n/).filter(Boolean);const srt=lines.filter(x=>/تعليق صوتي|المشهد|مشهد|لقطة|الثانية|00:|مدة الفيديو/.test(x)).map((x,i)=>{const start=i*8;const fmt=n=>[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':')+',000';return (i+1)+'\\n'+fmt(start)+' --> '+fmt(start+7)+'\\n'+x}).join('\n\n');saveBlob(safeFileName($('topic').value)+'-خطة-الفيديو.txt',source,'text/plain;charset=utf-8');if(srt)saveBlob(safeFileName($('topic').value)+'-ترجمة-مبدئية.srt',srt,'text/plain;charset=utf-8');$('exportStatus').textContent='تم تصدير خطة الفيديو'+(srt?' وملف ترجمة مبدئي SRT.':'؛ لم تُستخرج أسطر مناسبة للترجمة.')});
@@ -1439,7 +1439,7 @@ $('pptxExport').addEventListener('click',async()=>{
    ['تحقق من الفهم','اطرح سؤالاً قصيراً يختبر فهم الفكرة الأساسية','امنح المشاهد وقتاً للتفكير ثم أظهر الإجابة مع التعليل'],
    ['الخلاصة','لخّص أهم ثلاث نقاط من '+title,'اختم برسالة: معانا دائماً أنت الأفضل — إعداد مستر محمد جمعة']
   ];
-  document.getElementById('videoScript').value=scenes.map((x,i)=>'المشهد '+(i+1)+': '+x[0]+' — '+x[1]+' — '+x[2]).join('\\n');
+  document.getElementById('videoScript').value=scenes.map((x,i)=>'المشهد '+(i+1)+': '+x[0]+' — '+x[1]+' — '+x[2]).join('\n');
   statusEl.textContent=isReaction?'تم إنشاء سيناريو كيميائي متخصص من 7 مشاهد مع معادلات موزونة محلياً. راجع المحتوى ثم اضغط «إخراج ذكي تلقائي» للمعاينة.':'تم إنشاء 7 مشاهد محلياً مجاناً دون اتصال بخادم ذكاء اصطناعي. راجع الدقة العلمية ثم اضغط «إخراج ذكي تلقائي».';
   if(typeof autoDirectVideo==='function')autoDirectVideo();
  });
@@ -1475,7 +1475,7 @@ $('pptxExport').addEventListener('click',async()=>{
     'المشهد '+(i+1)+': '+(scene.title||''),
     scene.on_screen_text||'',
     scene.voiceover||scene.visual||''
-   ].filter(Boolean).join(' — ')).join('\\n');
+   ].filter(Boolean).join(' — ')).join('\n');
    statusEl.textContent='اكتمل السيناريو: '+result.scenes.length+' مشهداً. راجعه ثم اضغط «ابنِ الفيديو تلقائياً» لمعاينة التكوين المحلي.';
    if(result.voiceover)statusEl.textContent+=' نص التعليق الصوتي الكامل متاح من رد المحرك، ويمكن نسخه من سجل الخادم عند الحاجة.';
    if(typeof autoDirectVideo==='function')autoDirectVideo();
@@ -1531,7 +1531,7 @@ $('pptxExport').addEventListener('click',async()=>{
      const aiData=await aiResponse.json().catch(()=>({}));
      const aiScenes=aiData.result&&aiData.result.scenes;
      if(!aiResponse.ok||!aiData.ok||!Array.isArray(aiScenes)||!aiScenes.length)throw new Error(aiData.error||'لم يرجع الخادم مشاهد صالحة.');
-     $('videoScript').value=aiScenes.map((scene,i)=>['المشهد '+(i+1)+': '+(scene.title||''),scene.on_screen_text||'',scene.voiceover||scene.visual||''].filter(Boolean).join(' — ')).join('\\n');
+     $('videoScript').value=aiScenes.map((scene,i)=>['المشهد '+(i+1)+': '+(scene.title||''),scene.on_screen_text||'',scene.voiceover||scene.visual||''].filter(Boolean).join(' — ')).join('\n');
      cloudScriptReady=true;
      progress.textContent='تم إنشاء السيناريو بواسطة محرك الذكاء الاصطناعي.';
     }catch(aiError){
