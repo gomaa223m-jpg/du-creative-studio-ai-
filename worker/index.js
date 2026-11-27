@@ -54,7 +54,7 @@ function collectSources(response) {
 const schema = {
   type: "object",
   additionalProperties: false,
-  required: ["book_title", "subtitle", "introduction", "pages", "objectives", "review"],
+  required: ["book_title", "subtitle", "introduction", "pages", "objectives"],
   properties: {
     book_title: { type: "string" },
     subtitle: { type: "string" },
@@ -67,9 +67,17 @@ const schema = {
         properties: { title: { type: "string" }, content: { type: "string" } }
       }
     },
-    objectives: { type: "array", minItems: 3, maxItems: 8, items: { type: "string" } },
+    objectives: { type: "array", minItems: 3, maxItems: 8, items: { type: "string" } }
+  }
+};
+
+const auditSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["review"],
+  properties: {
     review: {
-      type: "array", minItems: 3, maxItems: 8,
+      type: "array", minItems: 4, maxItems: 8,
       items: {
         type: "object", additionalProperties: false,
         required: ["item", "status", "note"],
@@ -155,7 +163,8 @@ export default {
           model: env.AI_MODEL || "gpt-6.2-astra",
           store: false,
           max_output_tokens: 12000,
-          tools: [{ type: "web_search" }],
+          tools: [{ type: "web_search", search_context_size: "high" }],
+          tool_choice: "required",
           include: ["web_search_call.action.sources"],
           instructions,
           input: "أنشئ الكتاب الآن. اجعل كل صفحة مادة تعليمية مكتملة وليست مجرد نقاط عناوين.",
@@ -185,13 +194,65 @@ export default {
         return json({ error: "الكتاب الناتج غير مكتمل؛ لم يتم إدخاله إلى المحرر." }, 502, headersOrigin);
       }
 
+      // Independent second-pass scientific/editorial audit with a fresh web search.
+      let auditRaw = null;
+      try {
+        const auditResponse = await fetch("https://api.openai.com/v1/responses", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + env.OPENAI_API_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: env.REVIEW_MODEL || env.AI_MODEL || "gpt-6.2-astra",
+            store: false,
+            max_output_tokens: 3500,
+            tools: [{ type: "web_search", search_context_size: "high" }],
+            tool_choice: "required",
+            include: ["web_search_call.action.sources"],
+            instructions: "أنت مراجع علمي مستقل لمخطوط تعليمي. لا تفترض صحة النص لمجرد أنه مولّد. افحص الادعاءات العلمية والمصطلحات والوحدات والمعادلات والأرقام والملاءمة للمرحلة بالرجوع إلى مصادر موثوقة عبر البحث. لا توافق إلا عند وجود دعم كافٍ. أخرج 4 إلى 8 ملاحظات محددة؛ استخدم الحالة راجعه فقط لما أمكن التحقق منه، واستخدم يحتاج تحقق أو غير محسوم عند نقص الدليل. لا تدّعِ اعتماداً بشرياً أو رسمياً. أعد JSON فقط.",
+            input: JSON.stringify({ title, context, manuscript: book }),
+            text: {
+              format: {
+                type: "json_schema",
+                name: "scientific_audit",
+                strict: true,
+                schema: auditSchema
+              }
+            }
+          })
+        });
+        auditRaw = await auditResponse.json();
+        if (auditResponse.ok) {
+          const auditText = getOutputText(auditRaw);
+          const audit = JSON.parse(auditText);
+          if (audit && Array.isArray(audit.review)) book.review = audit.review;
+        }
+      } catch (auditError) {
+        // Keep the manuscript available, but explicitly mark all review as pending.
+      }
+
+      if (!Array.isArray(book.review) || !book.review.length) {
+        book.review = [
+          { item: "الحقائق والمفاهيم العلمية", status: "يحتاج تحقق", note: "لم تكتمل المراجعة المستقلة؛ راجع المعلومات مع مصدر علمي معتمد." },
+          { item: "المعادلات والوحدات والأرقام", status: "يحتاج تحقق", note: "تحقق من جميع العمليات والوحدات والأرقام قبل الاستخدام." },
+          { item: "مطابقة المرحلة والمنهج", status: "غير محسوم", note: "يلزم مطابقة المحتوى مع المنهج الدراسي المعتمد." },
+          { item: "المراجع والاستشهادات", status: "يحتاج تحقق", note: "افحص المصادر الأصلية وتأكد من دعمها للمعلومات المذكورة." }
+        ];
+      }
+
+      const sources = [...collectSources(raw), ...(auditRaw ? collectSources(auditRaw) : [])]
+        .filter((source, index, all) => all.findIndex(x => x.url === source.url) === index)
+        .slice(0, 25);
+
       return json({
         ok: true,
         book,
-        sources: collectSources(raw),
+        sources,
         model: raw.model || env.AI_MODEL || "configured-model",
-        usage: raw.usage || null,
-        note: "المراجعة آلية أولية وليست اعتماداً علمياً بشرياً."
+        reviewModel: auditRaw?.model || env.REVIEW_MODEL || env.AI_MODEL || "configured-model",
+        usage: { generation: raw.usage || null, review: auditRaw?.usage || null },
+        note: "أُجريت مراجعة آلية مستقلة في مرحلة ثانية عند نجاح الاتصال؛ يلزم اعتماد المعلم أو المختص قبل النشر."
       }, 200, headersOrigin);
     } catch (error) {
       return json({ error: "حدث خطأ أثناء التوليد: " + String(error?.message || error).slice(0, 240) }, 500, headersOrigin);
