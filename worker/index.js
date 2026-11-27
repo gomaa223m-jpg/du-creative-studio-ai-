@@ -150,6 +150,7 @@ async function handleImageEngine(request, env, origin, url) {
   if (request.method === "POST" && url.pathname === "/api/v1/images/generate") {
     let input;
     try { input = await request.json(); } catch { return json({ ok: false, error: "تعذر قراءة بيانات الطلب." }, 400, origin); }
+    if (!env.IMAGE_CHECKPOINT) return json({ ok: false, error: "لم يتم تحديد IMAGE_CHECKPOINT على الخادم." }, 503, origin);
     const prompt = cleanText(input.prompt, 5000);
     const negative = cleanText(input.negative, 1600) || "blurry, low quality, distorted anatomy, malformed hands, unreadable text, watermark, logo";
     if (prompt.length < 8) return json({ ok: false, error: "اكتب وصفاً بصرياً أطول قبل التوليد." }, 400, origin);
