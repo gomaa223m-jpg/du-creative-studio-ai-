@@ -64,6 +64,24 @@ The adapter supports text-to-image and image-to-image using ComfyUI's built-in c
 The gateway keeps the upstream engine address and upstream token on the server. The browser only receives the app access token for its authenticated Worker requests. Keep this token private and use the Studio only on a trusted device.
 
 
+
+#### Automated deployment from GitHub Actions
+
+A workflow is now available at `.github/workflows/deploy-image-worker.yml`. To enable it:
+
+1. In GitHub, open **Settings → Secrets and variables → Actions** for this repository.
+2. Add `CLOUDFLARE_API_TOKEN` with permission to deploy Workers, and `CLOUDFLARE_ACCOUNT_ID`.
+3. Run **Actions → Deploy image generation Worker → Run workflow**, or push a change under `worker/`.
+4. If either GitHub secret is missing, the workflow deliberately skips deployment and reports why; a successful Pages build is not proof that the Worker was deployed.
+5. After deployment, set the Worker runtime values in Cloudflare:
+   - Variable `IMAGE_ENGINE_URL`: protected HTTPS base URL of ComfyUI.
+   - Variable `IMAGE_CHECKPOINT`: exact model filename.
+   - Secret `APP_ACCESS_TOKEN`: a long random access token.
+   - Optional secret `IMAGE_ENGINE_TOKEN`: upstream proxy token.
+   - Keep `ALLOWED_ORIGIN` set to the Studio's GitHub Pages origin.
+
+Do not paste Cloudflare tokens, access tokens, or private server URLs into chat, source files, commits, or screenshots. Enter secrets only in the relevant GitHub/Cloudflare settings pages.
+
 ### Deploy the Worker
 
 From the repository root, after signing in to a Cloudflare account with permission to deploy this Worker:
