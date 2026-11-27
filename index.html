@@ -369,7 +369,7 @@ body{background:#f4f8fb}
 <p>اتصل بخادمك الآمن لتوليد سيناريو ومشاهد وتعليق صوتي من عنوان الدرس. لا تضع مفتاح مزود الذكاء الاصطناعي هنا؛ أدخل رمز الوصول الخاص بخادمك فقط.</p>
 <div class="grid">
 <div><label for="aiVideoEndpoint">رابط خادم الذكاء الاصطناعي</label><input id="aiVideoEndpoint" inputmode="url" placeholder="https://your-worker.workers.dev/api/generate"></div>
-<div><label for="aiVideoToken">رمز وصول التطبيق</label><input id="aiVideoToken" type="password" autocomplete="off" placeholder="رمز الوصول الذي أنشأته في الخادم"></div>
+<div><label for="aiVideoToken">رمز وصول التطبيق</label><input id="aiVideoToken" type="password" autocomplete="off" placeholder="أنشئ الرمز ثم أضفه إلى أسرار Worker"><button type="button" class="light" id="generateAiVideoToken" style="margin-top:8px">إنشاء رمز وصول آمن ونسخه</button></div>
 </div>
 <div class="grid"><button type="button" id="freeWriteVideoScript">✦ إنشاء سيناريو ومشاهد مجاناً دون API</button><button type="button" id="aiWriteVideoScript">استخدام محرك ذكاء اصطناعي سحابي (اختياري)</button></div><div class="grid"><button type="button" class="secondary" id="aiSaveVideoGateway">حفظ إعدادات المحرك السحابي لهذه الجلسة</button></div><p class="muted">الوضع المجاني المحلي هو الخيار الافتراضي ولا يحتاج مفتاحاً أو اشتراكاً. المحرك السحابي اختياري وقد يفرض مزوده رسوماً.</p>
 <p class="status" id="aiVideoGatewayStatus" aria-live="polite">يتطلب هذا الخيار نشر Worker وإعداد أسرار المزود أولاً. لا يعمل قبل إعداد الخادم.</p>
@@ -1328,7 +1328,17 @@ $('pptxExport').addEventListener('click',async()=>{
   if(typeof autoDirectVideo==='function')autoDirectVideo();
  });
  document.getElementById('aiSaveVideoGateway')?.addEventListener('click',save);
- document.getElementById('aiWriteVideoScript')?.addEventListener('click',async()=>{
+ document.getElementById('generateAiVideoToken')?.addEventListener('click',async()=>{
+   try{
+    if(!window.crypto?.getRandomValues)throw new Error('المتصفح لا يدعم إنشاء رمز آمن.');
+    const bytes=new Uint8Array(32);window.crypto.getRandomValues(bytes);
+    const token=Array.from(bytes,x=>x.toString(16).padStart(2,'0')).join('');
+    tokenEl.value=token;
+    try{await navigator.clipboard.writeText(token);statusEl.textContent='أُنشئ رمز وصول عشوائي قوي ونُسخ. أضف القيمة نفسها كسِر APP_ACCESS_TOKEN في Worker الخاص بالفيديو، ثم احفظ الإعدادات هنا.'}
+    catch(e){statusEl.textContent='أُنشئ الرمز. انسخه يدوياً من الخانة وأضف القيمة نفسها كسِر APP_ACCESS_TOKEN في Worker الخاص بالفيديو.'}
+   }catch(error){statusEl.textContent=error.message||'تعذر إنشاء الرمز.'}
+  });
+  document.getElementById('aiWriteVideoScript')?.addEventListener('click',async()=>{
   if(!save())return;
   const title=document.getElementById('videoTitle').value.trim();
   if(!title){statusEl.textContent='اكتب عنوان الفيديو أولاً.';return}
