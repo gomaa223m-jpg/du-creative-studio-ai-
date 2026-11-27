@@ -42,6 +42,8 @@ jobs:
           missing=()
           # Prefer a valid configured ID; otherwise resolve it securely from the API token.
           CLOUDFLARE_ACCOUNT_ID="$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '[:space:]')"
+          # Normalize accidental whitespace or a pasted Bearer prefix in the token secret.
+          CLOUDFLARE_API_TOKEN="$(printf '%s' "$CLOUDFLARE_API_TOKEN" | sed -E 's/^[[:space:]]*//; s/[[:space:]]*$//; s/^Bearer[[:space:]]+//I')"
           [[ -n "$CLOUDFLARE_API_TOKEN" ]] || missing+=("CLOUDFLARE_API_TOKEN")
           if [[ -n "$CLOUDFLARE_ACCOUNT_ID" && ! "$CLOUDFLARE_ACCOUNT_ID" =~ ^[a-fA-F0-9]{32}$ ]]; then
             echo "::warning::Configured CLOUDFLARE_ACCOUNT_ID is invalid; attempting secure account discovery."
