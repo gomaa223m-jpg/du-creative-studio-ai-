@@ -1,7 +1,7 @@
 const corsHeaders = (origin) => ({
   "Access-Control-Allow-Origin": origin,
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept, MCP-Protocol-Version, MCP-Session-Id",
   "Access-Control-Max-Age": "86400",
   "Vary": "Origin"
 });
@@ -103,10 +103,78 @@ export default {
     }
 
     const url = new URL(request.url);
-    if (request.method === "GET" && url.pathname === "/health") {
-      return json({ ok: true, service: "edu-creative-book-engine", version: "1.0.0" }, 200, headersOrigin);
+    if (request.method === "GET" && ["/health", "/api/v1/health"].includes(url.pathname)) {
+      return json({ ok: true, service: "edu-creative-studio-api", apiVersion: "v1", mcp: "/mcp", tools: ["health", "generate_book"] }, 200, headersOrigin);
     }
-    if (request.method !== "POST" || url.pathname !== "/api/book") {
+
+    if (request.method === "GET" && url.pathname === "/openapi.json") {
+      return json({
+        openapi: "3.1.0",
+        info: { title: "EDU Creative Studio API", version: "1.0.0", description: "Unified API for educational content authoring." },
+        servers: [{ url: url.origin }],
+        paths: {
+          "/api/v1/health": { get: { summary: "Service health", responses: { "200": { description: "Service status" } } } },
+          "/api/v1/books/generate": { post: { summary: "Generate an educational book", security: [{ bearerAuth: [] }], requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["title"], properties: { title: { type: "string" }, subject: { type: "string" }, grade: { type: "string" }, term: { type: "string" }, type: { type: "string" }, size: { type: "string" }, level: { type: "string" }, design: { type: "string" }, extra: { type: "string" } } } } } }, responses: { "200": { description: "Generated book and review" }, "401": { description: "Unauthorized" }, "503": { description: "Service not configured" } } } }
+        },
+        components: { securitySchemes: { bearerAuth: { type: "http", scheme: "bearer" } } }
+      }, 200, headersOrigin);
+    }
+
+    if (request.method === "POST" && url.pathname === "/mcp") {
+      if (!env.APP_ACCESS_TOKEN) return json({ jsonrpc: "2.0", id: null, error: { code: -32000, message: "MCP server is not configured." } }, 503, headersOrigin);
+      const auth = request.headers.get("Authorization") || "";
+      if (auth !== "Bearer " + env.APP_ACCESS_TOKEN) return json({ jsonrpc: "2.0", id: null, error: { code: -32001, message: "Unauthorized. Provide a valid bearer token." } }, 401, headersOrigin);
+      let rpc;
+      try { rpc = await request.json(); } catch { return json({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } }, 400, headersOrigin); }
+      if (!rpc || rpc.jsonrpc !== "2.0" || typeof rpc.method !== "string") {
+        return json({ jsonrpc: "2.0", id: rpc?.id ?? null, error: { code: -32600, message: "Invalid JSON-RPC request" } }, 400, headersOrigin);
+      }
+      if (rpc.method === "notifications/initialized" || rpc.method.startsWith("notifications/")) {
+        return new Response(null, { status: 202, headers: corsHeaders(headersOrigin) });
+      }
+      if (rpc.method === "initialize") {
+        return json({
+          jsonrpc: "2.0", id: rpc.id,
+          result: {
+            protocolVersion: "2025-03-26",
+            capabilities: { tools: { listChanged: false } },
+            serverInfo: { name: "edu-creative-studio", version: "1.0.0" },
+            instructions: "Educational content tools. Call health to check service status, or generate_book to create an Arabic educational manuscript with source collection and automated review."
+          }
+        }, 200, headersOrigin);
+      }
+      if (rpc.method === "ping") return json({ jsonrpc: "2.0", id: rpc.id, result: {} }, 200, headersOrigin);
+      if (rpc.method === "tools/list") {
+        return json({
+          jsonrpc: "2.0", id: rpc.id,
+          result: { tools: [
+            { name: "health", description: "Check whether EDU Creative Studio API is available.", inputSchema: { type: "object", properties: {}, additionalProperties: false } },
+            { name: "generate_book", description: "Generate an Arabic educational book with objectives, pages, web sources, and an automated scientific/editorial review. Requires configured API secrets and may incur API charges.", inputSchema: { type: "object", required: ["title"], properties: { title: { type: "string", minLength: 3, maxLength: 180 }, subject: { type: "string" }, grade: { type: "string" }, term: { type: "string" }, type: { type: "string" }, size: { type: "string" }, level: { type: "string" }, design: { type: "string" }, extra: { type: "string", maxLength: 1800 } }, additionalProperties: false } }
+          ] }
+        }, 200, headersOrigin);
+      }
+      if (rpc.method === "tools/call") {
+        const toolName = rpc.params?.name;
+        const args = rpc.params?.arguments || {};
+        if (toolName === "health") {
+          return json({ jsonrpc: "2.0", id: rpc.id, result: { content: [{ type: "text", text: JSON.stringify({ ok: true, service: "edu-creative-studio-api", apiVersion: "v1" }) }], isError: false } }, 200, headersOrigin);
+        }
+        if (toolName === "generate_book") {
+          const internalRequest = new Request(new URL("/api/book", url.origin), {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": auth },
+            body: JSON.stringify(args)
+          });
+          const bookResponse = await this.fetch(internalRequest, env);
+          const resultText = await bookResponse.text();
+          return json({ jsonrpc: "2.0", id: rpc.id, result: { content: [{ type: "text", text: resultText }], isError: !bookResponse.ok } }, 200, headersOrigin);
+        }
+        return json({ jsonrpc: "2.0", id: rpc.id, error: { code: -32602, message: "Unknown tool: " + String(toolName || "") } }, 200, headersOrigin);
+      }
+      return json({ jsonrpc: "2.0", id: rpc.id, error: { code: -32601, message: "Method not found" } }, 200, headersOrigin);
+    }
+
+    if (request.method !== "POST" || !["/api/book", "/api/v1/books/generate"].includes(url.pathname)) {
       return json({ error: "المسار غير متاح." }, 404, headersOrigin);
     }
     if (!env.OPENAI_API_KEY || !env.APP_ACCESS_TOKEN) {
