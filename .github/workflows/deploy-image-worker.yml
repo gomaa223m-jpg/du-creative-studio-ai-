@@ -42,14 +42,28 @@ jobs:
           [[ -n "$CLOUDFLARE_ACCOUNT_ID" ]] || missing+=("CLOUDFLARE_ACCOUNT_ID")
           [[ -n "$APP_ACCESS_TOKEN" ]] || missing+=("APP_ACCESS_TOKEN")
           if (( ${#missing[@]} )); then
+            ai_missing=()
+            [[ -n "$AI_API_KEY" ]] || ai_missing+=("Secret: AI_API_KEY")
+            [[ -n "$AI_BASE_URL" ]] || ai_missing+=("Variable: AI_BASE_URL")
+            [[ -n "$AI_MODEL" ]] || ai_missing+=("Variable: AI_MODEL")
             {
               echo "## Worker deployment not run"
               echo
-              echo "The website can still be published on GitHub Pages, but the server-side AI/video worker was not deployed."
-              echo "Configure the following GitHub Actions secrets, then rerun this workflow:"
-              for name in "${missing[@]}"; do echo "- ${name}"; done
+              echo "GitHub Pages can still be published, but the server-side AI/video workers were not deployed."
+              echo
+              echo "### Required Cloudflare deployment secrets"
+              for name in "${missing[@]}"; do echo "- Secret: ${name}"; done
+              echo
+              echo "### Required video AI provider settings"
+              if (( ${#ai_missing[@]} )); then
+                for name in "${ai_missing[@]}"; do echo "- ${name}"; done
+              else
+                echo "All video AI provider settings are present."
+              fi
+              echo
+              echo "Add the missing values in Settings → Secrets and variables → Actions, then rerun this workflow."
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::warning::Worker deployment skipped because required secrets are not configured."
+            echo "::warning::Worker deployment skipped because Cloudflare deployment secrets are not configured."
             echo "ready=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
