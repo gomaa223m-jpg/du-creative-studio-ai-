@@ -27,6 +27,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate Worker JavaScript
+        run: |
+          node --input-type=module --check < worker/index.js
+          node --input-type=module --check < worker/ai-gateway.js
+
       - name: Validate required deployment secrets
         shell: bash
         run: |
@@ -47,11 +52,6 @@ jobs:
             echo "::error::Deployment blocked. Configure the required GitHub Actions secrets listed in the job summary."
             exit 1
           fi
-
-      - name: Validate Worker JavaScript
-        run: |
-          node --input-type=module --check < worker/index.js
-          node --input-type=module --check < worker/ai-gateway.js
 
       - name: Deploy Worker core
         uses: cloudflare/wrangler-action@v4
