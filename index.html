@@ -300,7 +300,7 @@ body{background:#f4f8fb}
 <div><label for="aiVideoEndpoint">رابط خادم الذكاء الاصطناعي</label><input id="aiVideoEndpoint" inputmode="url" placeholder="https://your-worker.workers.dev/api/generate"></div>
 <div><label for="aiVideoToken">رمز وصول التطبيق</label><input id="aiVideoToken" type="password" autocomplete="off" placeholder="رمز الوصول الذي أنشأته في الخادم"></div>
 </div>
-<div class="grid"><button type="button" id="aiWriteVideoScript">✦ اكتب السيناريو والمشاهد بالذكاء الاصطناعي</button><button type="button" class="secondary" id="aiSaveVideoGateway">حفظ الرابط والرمز لهذه الجلسة</button></div>
+<div class="grid"><button type="button" id="freeWriteVideoScript">✦ إنشاء سيناريو ومشاهد مجاناً دون API</button><button type="button" id="aiWriteVideoScript">استخدام محرك ذكاء اصطناعي سحابي (اختياري)</button></div><div class="grid"><button type="button" class="secondary" id="aiSaveVideoGateway">حفظ إعدادات المحرك السحابي لهذه الجلسة</button></div><p class="muted">الوضع المجاني المحلي هو الخيار الافتراضي ولا يحتاج مفتاحاً أو اشتراكاً. المحرك السحابي اختياري وقد يفرض مزوده رسوماً.</p>
 <p class="status" id="aiVideoGatewayStatus" aria-live="polite">يتطلب هذا الخيار نشر Worker وإعداد أسرار المزود أولاً. لا يعمل قبل إعداد الخادم.</p>
 </div>
 <div class="grid">
@@ -382,7 +382,7 @@ body{background:#f4f8fb}
 <div id="pptxTextList" class="saved-list"></div>
 </section>
 
-</main><footer>إعداد مستر محمد جمعة · EDU CREATIVE STUDIO AI</footer>
+</main><footer>إعداد مستر محمد جمعة · EDU CREATIVE STUDIO AI · أدوات التأليف والتصدير المحلي متاحة مجاناً؛ الخدمات السحابية الخارجية اختيارية وقد تكون مدفوعة</footer>
 <script>
 const $=id=>document.getElementById(id);
 function build(){
@@ -1220,6 +1220,25 @@ $('pptxExport').addEventListener('click',async()=>{
   statusEl.textContent='تم حفظ إعداد الاتصال في جلسة المتصفح الحالية فقط.';
   return true;
  };
+
+ // Free local script builder: no API key, account, or paid service required.
+ document.getElementById('freeWriteVideoScript')?.addEventListener('click',()=>{
+  const title=document.getElementById('videoTitle').value.trim();
+  const statusEl=document.getElementById('aiVideoGatewayStatus');
+  if(!title){statusEl.textContent='اكتب عنوان الفيديو أولاً.';return}
+  const scenes=[
+   ['افتتاح مشوّق','سؤال تمهيدي يثير الفضول حول: '+title,'ابدأ بسؤال بصري واضح، ثم اعرض عنوان الدرس'],
+   ['الفكرة الأساسية','ما المقصود بـ '+title+'؟','قدّم تعريفاً مبسطاً ومفهوماً مناسباً للمرحلة المستهدفة'],
+   ['شرح المفاهيم','قسّم '+title+' إلى أفكار رئيسية متسلسلة','استخدم رسوماً توضيحية وكلمات مفتاحية قصيرة'],
+   ['مثال تطبيقي','اعرض مثالاً تعليمياً محلولاً خطوة بخطوة مرتبطاً بالموضوع','أظهر خطوات الحل أو التفسير على الشاشة بالتتابع'],
+   ['تطبيق بصري','اربط '+title+' بموقف من الحياة أو تجربة آمنة مناسبة','اعرض محاكاة أو رسماً تعليمياً مع توضيح ما نلاحظه'],
+   ['تحقق من الفهم','اطرح سؤالاً قصيراً يختبر فهم الفكرة الأساسية','امنح المشاهد وقتاً للتفكير ثم أظهر الإجابة مع التعليل'],
+   ['الخلاصة','لخّص أهم ثلاث نقاط من '+title,'اختم برسالة: معانا دائماً أنت الأفضل — إعداد مستر محمد جمعة']
+  ];
+  document.getElementById('videoScript').value=scenes.map((x,i)=>'المشهد '+(i+1)+': '+x[0]+' — '+x[1]+' — '+x[2]).join('\\n');
+  statusEl.textContent='تم إنشاء 7 مشاهد محلياً مجاناً دون اتصال بخادم ذكاء اصطناعي. راجع الدقة العلمية وأكمل التفاصيل الخاصة بالدرس، ثم اضغط «إخراج ذكي تلقائي».';
+  if(typeof autoDirectVideo==='function')autoDirectVideo();
+ });
  document.getElementById('aiSaveVideoGateway')?.addEventListener('click',save);
  document.getElementById('aiWriteVideoScript')?.addEventListener('click',async()=>{
   if(!save())return;
