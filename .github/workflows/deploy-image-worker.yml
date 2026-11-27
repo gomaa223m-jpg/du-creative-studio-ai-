@@ -60,6 +60,26 @@ jobs:
           if [[ -n "$IMAGE_ENGINE_URL" && -z "$IMAGE_CHECKPOINT" ]]; then
             echo "::warning::IMAGE_ENGINE_URL is set but IMAGE_CHECKPOINT is missing; image generation will remain unavailable."
           fi
+          ai_missing=()
+          [[ -n "$AI_API_KEY" ]] || ai_missing+=("AI_API_KEY")
+          [[ -n "$AI_BASE_URL" ]] || ai_missing+=("AI_BASE_URL")
+          [[ -n "$AI_MODEL" ]] || ai_missing+=("AI_MODEL")
+          if (( ${#ai_missing[@]} )); then
+            {
+              echo
+              echo "## Video AI gateway not deployed"
+              echo "Cloudflare core Worker credentials are present, but the optional video-writing gateway needs:"
+              for name in "${ai_missing[@]}"; do echo "- ${name}"; done
+              echo "Add these as GitHub Actions secrets/variables, then rerun this workflow."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::Video AI gateway deployment will be skipped; AI_API_KEY, AI_BASE_URL and AI_MODEL are required."
+          else
+            {
+              echo
+              echo "## Video AI gateway configuration"
+              echo "All required AI gateway secrets/variables are present; the gateway deploy step will run."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
           echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Deploy Worker core
