@@ -1418,7 +1418,24 @@ $('pptxExport').addEventListener('click',async()=>{
    render.click();
   }catch(err){progress.textContent='تعذر بدء الإنتاج: '+(err.message||err);busy=false;start.disabled=false}
  });
- avatar.addEventListener('change',()=>{progress.textContent='جارٍ تحميل صورة الأفاتار...';const wait=()=>{if(typeof videoAvatarImage!=='undefined'&&videoAvatarImage){progress.textContent='تم تحميل صورة الأفاتار. أدخل العنوان واضغط ابدأ.';drawVideoScene(0,0)}};setTimeout(wait,500)});
+ avatar.addEventListener('change',()=>{
+  const file=avatar.files&&avatar.files[0];
+  if(!file){progress.textContent='لم يتم اختيار صورة بعد.';return}
+  if(!file.type||!file.type.startsWith('image/')){progress.textContent='الملف المختار ليس صورة مدعومة. اختر JPG أو PNG أو WebP.';avatar.value='';return}
+  progress.textContent='جارٍ تحميل صورة الأفاتار ومعالجتها...';
+  let attempts=0;
+  const waitForAvatar=()=>{
+   if(typeof videoAvatarImage!=='undefined'&&videoAvatarImage&&videoAvatarImage.complete!==false){
+    progress.textContent='تم تحميل صورة الأفاتار بنجاح. أدخل العنوان واضغط ابدأ.';
+    try{drawVideoScene(0,0)}catch(e){progress.textContent='تم تحميل الصورة، ويمكن متابعة الإنتاج.'}
+    return;
+   }
+   attempts++;
+   if(attempts<100){setTimeout(waitForAvatar,100);return}
+   progress.textContent='تأخر تحميل الصورة. اختر صورة أصغر أو بصيغة JPG/PNG ثم حاول مجدداً.';
+  };
+  waitForAvatar();
+ });
  if(status){const observer=new MutationObserver(()=>{const t=status.textContent||'';if(/اكتمل إنشاء ملف MP4|تم تنزيل|تعذر تحويل WebM|تعذر بدء التسجيل|حدث خطأ|تعذر/.test(t)){progress.textContent=t;busy=false;start.disabled=false}});observer.observe(status,{childList:true,subtree:true,characterData:true})}
  render.addEventListener('click',()=>{if(busy)progress.textContent='التصدير جارٍ — '+(status.textContent||'يرجى الانتظار حتى اكتمال الملف')});
 })();
