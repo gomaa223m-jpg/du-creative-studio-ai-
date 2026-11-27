@@ -1802,6 +1802,43 @@ $('pptxExport').addEventListener('click',async()=>{
    };reader.readAsDataURL(file);
   });
  }
+ // Network resilience: retry safe GET requests, wait through brief offline periods,
+ // and never automatically replay generation POSTs (which could create duplicate jobs).
+ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+ async function waitForNetwork(){
+  if(navigator.onLine!==false)return;
+  setStatus('انقطع الاتصال مؤقتاً. سأنتظر عودة الشبكة تلقائياً...');
+  await new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>{cleanup();reject(new Error('لم يعد الاتصال خلال خمس دقائق. أعد المحاولة عند استقرار الشبكة.'));},300000);
+   const online=()=>{cleanup();resolve()};
+   const cleanup=()=>{clearTimeout(timer);window.removeEventListener('online',online)};
+   window.addEventListener('online',online,{once:true});
+  });
+  setStatus('عاد الاتصال. استؤنفت متابعة المهمة...');
+ }
+ async function fetchWithRecovery(url,options={},label='الخادم'){
+  const maxRetries=5;
+  for(let attempt=0;attempt<=maxRetries;attempt++){
+   await waitForNetwork();
+   try{
+    const response=await fetch(url,{...options,signal:options.signal||AbortSignal.timeout(25000)});
+    if(response.ok||![408,425,429,500,502,503,504].includes(response.status))return response;
+    if(attempt===maxRetries)return response;
+    const delay=Math.min(10000,1200*Math.pow(2,attempt));
+    setStatus('استجابة مؤقتة من '+label+' ('+response.status+'). إعادة الاتصال خلال '+Math.ceil(delay/1000)+' ثوانٍ...');
+    await sleep(delay);
+   }catch(error){
+    if(error.name==='AbortError'&&options.signal&&options.signal!==undefined)throw error;
+    if(attempt===maxRetries)throw new Error('تعذر الاتصال بـ'+label+' بعد عدة محاولات. تحقق من الشبكة ثم أعد المحاولة. التفاصيل: '+(error.message||error));
+    const delay=Math.min(10000,1200*Math.pow(2,attempt));
+    setStatus('الاتصال بـ'+label+' غير مستقر. محاولة تلقائية '+(attempt+1)+' من '+maxRetries+'...');
+    await sleep(delay);
+   }
+  }
+  throw new Error('تعذر استعادة الاتصال بـ'+label+'.');
+ }
+ window.addEventListener('offline',()=>setStatus('الاتصال بالإنترنت منقطع. لن أفقد المهمة؛ أنتظر عودة الشبكة أثناء المتابعة.'));
+ window.addEventListener('online',()=>setStatus('عاد الاتصال بالإنترنت. جارٍ استكمال متابعة المهمة...'));
  async function localGenerate(prompt,imageData){
   const base=apiBase()||'http://127.0.0.1:8188';
   const headers={'Content-Type':'application/json'};
@@ -1837,12 +1874,12 @@ $('pptxExport').addEventListener('click',async()=>{
   const queued=await promptRequest.json();if(!promptRequest.ok||!queued.prompt_id)throw new Error(queued.error?.message||'تعذر إرسال المهمة. تأكد من اسم النموذج checkpoint في الكود المحلي.');
   for(let attempt=0;attempt<100;attempt++){
    await new Promise(resolve=>setTimeout(resolve,2500));
-   const hr=await fetch(base+'/history/'+queued.prompt_id);if(!hr.ok)continue;
+   const hr=await fetchWithRecovery(base+'/history/'+queued.prompt_id,{},'محرك الصور المحلي');if(!hr.ok)continue;
    const history=await hr.json(),job=history[queued.prompt_id];
    const image=job&&Object.values(job.outputs||{}).flatMap(x=>x.images||[])[0];
    if(image){
     const view=new URL(base+'/view');view.searchParams.set('filename',image.filename);view.searchParams.set('subfolder',image.subfolder||'');view.searchParams.set('type',image.type||'output');
-    const response=await fetch(view);if(!response.ok)throw new Error('انتهى التوليد لكن تعذر تنزيل الصورة.');
+    const response=await fetchWithRecovery(view,{},'تنزيل الصورة');if(!response.ok)throw new Error('انتهى التوليد لكن تعذر تنزيل الصورة: HTTP '+response.status);
     return await response.blob();
    }
    if(job?.status?.status_str==='error')throw new Error('فشل ComfyUI في تنفيذ سير العمل. راجع سجل المحرك والنموذج المثبت.');
@@ -1858,7 +1895,7 @@ $('pptxExport').addEventListener('click',async()=>{
   const queued=await queuedResponse.json();if(!queuedResponse.ok||!queued.prompt_id)throw new Error(queued.error||'تعذر بدء توليد الصورة.');
   for(let attempt=0;attempt<100;attempt++){
    await new Promise(resolve=>setTimeout(resolve,2500));
-   const response=await fetch(base+'/images/status?prompt_id='+encodeURIComponent(queued.prompt_id),{headers:{'Authorization':'Bearer '+token}});
+   const response=await fetchWithRecovery(base+'/images/status?prompt_id='+encodeURIComponent(queued.prompt_id),{headers:{'Authorization':'Bearer '+token}},'محرك الصور السحابي');
    if(!response.ok){const err=await response.json().catch(()=>({}));throw new Error(err.error||'تعذر متابعة المهمة.');}
    if((response.headers.get('Content-Type')||'').startsWith('image/'))return await response.blob();
    const state=await response.json();
