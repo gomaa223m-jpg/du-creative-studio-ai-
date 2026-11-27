@@ -1368,75 +1368,59 @@ $('pptxExport').addEventListener('click',async()=>{
  });
 })();
 
-/* Quick video workflow: title + avatar, with optional advanced controls. */
+/* One-click video workflow: title + avatar, automatic defaults, clear progress. */
 (()=>{
  const studio=document.getElementById('videoStudio');
- if(!studio||document.getElementById('quickVideoPanel'))return;
- const title=document.getElementById('videoTitle');
- const avatar=document.getElementById('videoAvatar');
- const consent=document.getElementById('presenterConsent');
- const canvas=document.getElementById('videoCanvas');
- const status=document.getElementById('videoStatus');
- const render=document.getElementById('renderVideo');
- const share=document.getElementById('shareVideo');
+ if(!studio)return;
+ const $=id=>document.getElementById(id);
+ const title=$('videoTitle'),avatar=$('videoAvatar'),consent=$('presenterConsent');
+ const status=$('videoStatus'),render=$('renderVideo');
+ if(!title||!avatar||!render)return;
  const intro=studio.querySelector('p');
  const quick=document.createElement('section');
  quick.id='quickVideoPanel';quick.className='stepnote';
- quick.innerHTML='<h3>ابدأ فيديوك في خطوتين</h3><p>أدخل عنوان الدرس وارفع صورة الأفاتار فقط. سيجهز الاستوديو المشاهد والإخراج ثم يبدأ التصدير تلقائياً.</p><div id="quickTitleHost"></div><div id="quickAvatarHost"></div><div id="quickConsentHost"></div><button type="button" class="bigstart" id="startQuickVideo">🚀 ابدأ توليد الفيديو</button><p id="quickVideoProgress" class="status" aria-live="polite">بانتظار عنوان الفيديو وصورة الأفاتار.</p>';
+ quick.innerHTML='<h3>🎬 أنشئ فيديوك بخطوتين</h3><p>اكتب عنوان الدرس وارفع صورة الأفاتار. يتولى الاستوديو إعداد المشاهد والإخراج والتصدير تلقائياً.</p><div id="quickTitleHost"></div><div id="quickAvatarHost"></div><button type="button" class="bigstart" id="startQuickVideo">🚀 ابدأ إنتاج الفيديو</button><ol id="quickVideoSteps"><li>انتظار عنوان الدرس وصورة الأفاتار</li><li>إنشاء السيناريو والمشاهد</li><li>إخراج المشاهد وتحريك التصميم</li><li>تسجيل الفيديو وتجهيز الملف للتنزيل</li></ol><p id="quickVideoProgress" class="status" aria-live="polite">جاهز للبدء.</p>';
  studio.insertBefore(quick,intro?intro.nextSibling:studio.children[1]);
- const move=(node,host)=>{if(node&&host){const label=studio.querySelector('label[for="'+node.id+'"]');if(label)host.appendChild(label);host.appendChild(node)}};
- move(title,quick.querySelector('#quickTitleHost'));
- move(avatar,quick.querySelector('#quickAvatarHost'));
- move(consent,quick.querySelector('#quickConsentHost'));
- const consentLabel=studio.querySelector('label[for="presenterConsent"]')||Array.from(studio.querySelectorAll('label')).find(x=>x.textContent.includes('أؤكد أن لدي حق استخدام'));
- if(consentLabel&&consentLabel.parentElement!==quick.querySelector('#quickConsentHost'))quick.querySelector('#quickConsentHost').appendChild(consentLabel);
- if(consent){consent.checked=false}
- const advanced=document.createElement('details');
- advanced.id='advancedVideoOptions';
- advanced.innerHTML='<summary>إعدادات متقدمة (اختيارية) — السيناريو، الصوت، المقاس والجودة ومحرك الذكاء الاصطناعي</summary>';
- const keep=new Set([quick,canvas,status,render,share]);
- const nodes=Array.from(studio.children);
- for(const node of nodes){if(keep.has(node)||node===intro||node.tagName==='H2')continue;advanced.appendChild(node)}
- studio.insertBefore(advanced,canvas||null);
+ const move=(node,host)=>{const label=studio.querySelector('label[for="'+node.id+'"]');if(label)host.appendChild(label);host.appendChild(node)};
+ move(title,quick.querySelector('#quickTitleHost'));move(avatar,quick.querySelector('#quickAvatarHost'));
+ const advanced=document.createElement('details');advanced.id='advancedVideoOptions';advanced.innerHTML='<summary>إعدادات احترافية اختيارية</summary>';
+ const keep=new Set([quick,$('videoCanvas'),status,render,$('shareVideo')]);
+ Array.from(studio.children).forEach(node=>{if(!keep.has(node)&&node!==intro&&node.tagName!=='H2')advanced.appendChild(node)});
+ studio.insertBefore(advanced,$('videoCanvas'));
  const style=document.createElement('style');
- style.textContent='#quickVideoPanel{margin:18px 0;padding:18px;border:2px solid #12b8a6;border-radius:18px;background:#eefaf8}#quickVideoPanel h3{margin-top:0}#quickVideoPanel label{display:block;margin:12px 0 6px;font-weight:700}#quickVideoPanel input[type=text],#quickVideoPanel input:not([type]),#quickVideoPanel input[type=file]{display:block;width:100%;box-sizing:border-box;margin:6px 0 14px}#startQuickVideo{width:100%;min-height:58px;font-size:1.1rem}#quickVideoProgress{font-weight:700}#advancedVideoOptions{margin:14px 0;padding:12px;border:1px dashed #8aa;border-radius:12px}#advancedVideoOptions>summary{cursor:pointer;font-weight:700;color:#126b67;padding:8px}';
+ style.textContent='#quickVideoPanel{margin:18px 0;padding:18px;border:2px solid #12b8a6;border-radius:18px;background:#effbf9}#quickVideoPanel h3{margin-top:0}#quickVideoPanel label{display:block;font-weight:700;margin:12px 0 6px}#quickVideoPanel input[type=text],#quickVideoPanel input:not([type]),#quickVideoPanel input[type=file]{display:block;width:100%;box-sizing:border-box;padding:12px;margin:6px 0 14px}#startQuickVideo{width:100%;min-height:58px;font-size:1.1rem}#quickVideoSteps{line-height:2;padding-inline-start:24px}#quickVideoProgress{font-weight:700}#advancedVideoOptions{margin:14px 0;padding:12px;border:1px dashed #8aa;border-radius:12px}#advancedVideoOptions>summary{cursor:pointer;font-weight:700;padding:8px}';
  studio.appendChild(style);
- const progress=document.getElementById('quickVideoProgress');
- const start=document.getElementById('startQuickVideo');
- const fileReady=()=>!!(avatar&&avatar.files&&avatar.files[0]&&typeof videoAvatarImage!=='undefined'&&videoAvatarImage);
- start.addEventListener('click',()=>{
+ const progress=$('quickVideoProgress'),start=$('startQuickVideo');
+ const step=(n,msg)=>{progress.textContent=n+'/4 — '+msg;const li=$('quickVideoSteps').children;for(let i=0;i<li.length;i++)li[i].style.fontWeight=i===n-1?'bold':'normal'};
+ let busy=false;
+ start.addEventListener('click',async()=>{
   const topic=title.value.trim();
-  if(topic.length<3){progress.textContent='الخطوة 1 من 2: اكتب عنواناً واضحاً للفيديو.';title.focus();return}
-  if(!avatar.files||!avatar.files[0]){progress.textContent='الخطوة 2 من 2: ارفع صورة الأفاتار أولاً.';avatar.click();return}
-  if(!fileReady()){progress.textContent='جارٍ تحميل صورة الأفاتار وتجهيزها؛ انتظر لحظة ثم اضغط البدء مرة أخرى.';return}
-  if(consent&&!consent.checked){progress.textContent='يرجى تأكيد امتلاك حق استخدام الصورة وموافقة الشخص الظاهر فيها قبل التصدير.';consent.focus();return}
-  start.disabled=true;
+  if(topic.length<3){progress.textContent='اكتب عنوان الفيديو أولاً.';title.focus();return}
+  if(!avatar.files||!avatar.files[0]){progress.textContent='ارفع صورة الأفاتار للمتابعة.';avatar.click();return}
+  if(!window.videoAvatarImage){progress.textContent='جارٍ تجهيز الصورة؛ انتظر لحظة ثم اضغط البدء مجدداً.';return}
+  if(!window.confirm('هل لديك حق استخدام صورة الأفاتار وموافقة الشخص الظاهر فيها؟')){progress.textContent='لم يبدأ التصدير. يلزم تأكيد حق استخدام الصورة.';return}
+  if(busy)return;busy=true;start.disabled=true;
   try{
-   progress.textContent='1/4 — إنشاء سيناريو مبدئي من عنوان الفيديو...';
-   const generated=document.getElementById('generatedContent');if(generated)generated.value='';
+   if(consent)consent.checked=true;
+   $('videoQuality').value='720';$('videoSeconds').value='5';$('videoAspect').value='landscape';$('videoStyle').value='infographic';$('videoMotion').value='normal';
+   const generated=$('generatedContent');if(generated)generated.value='';
+   $('videoScript').value='';
+   step(1,'إنشاء سيناريو مبدئي من عنوان الدرس...');
    autoBuildVideoScript();
-   progress.textContent='2/4 — تقسيم المحتوى إلى مشاهد واختيار اللقطات والحركة...';
+   if(!$('videoScript').value.trim())throw new Error('لم يتم إنشاء سيناريو. راجع العنوان وحاول مرة أخرى.');
+   step(2,'تقسيم الدرس إلى مشاهد وتجهيز الإخراج...');
    autoDirectVideo();
-   progress.textContent='3/4 — تجهيز الأفاتار ومعاينة المشهد الأول...';
+   if(!videoScenes||!videoScenes.length)throw new Error('لم يتم إنشاء مشاهد صالحة.');
+   step(3,'رسم المعاينة وتجهيز الأفاتار...');
    drawVideoScene(0,0);
-   if(status)status.textContent='بدأ التوليد. سيُسجل الفيديو داخل المتصفح؛ لا تغلق الصفحة حتى يكتمل التصدير.';
-   progress.textContent='4/4 — بدأ تسجيل الفيديو وتجهيزه للتنزيل. اترك الصفحة مفتوحة.';
+   step(4,'بدأ تسجيل الفيديو. اترك الصفحة مفتوحة حتى يكتمل التنزيل...');
+   if(status)status.textContent='بدأ التسجيل. لا تغلق الصفحة أو تنتقل إلى تطبيق آخر أثناء التصدير.';
    render.click();
-  }catch(error){
-   progress.textContent='تعذر بدء التوليد: '+(error.message||error);
-   start.disabled=false;
-  }
+  }catch(err){progress.textContent='تعذر بدء الإنتاج: '+(err.message||err);busy=false;start.disabled=false}
  });
- avatar.addEventListener('change',()=>{
-  progress.textContent='جارٍ تحميل صورة الأفاتار...';
-  const check=()=>{if(window.videoAvatarImage){progress.textContent='تم تحميل الأفاتار. اكتب العنوان ثم اضغط «ابدأ توليد الفيديو».';drawVideoScene(0,0)}};
-  setTimeout(check,250);
- });
- if(render)render.addEventListener('click',()=>{if(start.disabled){progress.textContent='التصدير جارٍ. اترك الصفحة مفتوحة حتى تظهر رسالة اكتمال التنزيل.'}});
- if(status){
-  const observer=new MutationObserver(()=>{const t=status.textContent||'';if(/اكتمل إنشاء ملف MP4|تم تنزيل|تعذر تحويل WebM|تعذر بدء التسجيل|حدث خطأ|تعذر/.test(t)){progress.textContent=t;start.disabled=false}});
-  observer.observe(status,{childList:true,subtree:true,characterData:true});
- }
+ avatar.addEventListener('change',()=>{progress.textContent='جارٍ تحميل صورة الأفاتار...';const wait=()=>{if(window.videoAvatarImage){progress.textContent='تم تحميل صورة الأفاتار. أدخل العنوان واضغط ابدأ.';drawVideoScene(0,0)}};setTimeout(wait,500)});
+ if(status){const observer=new MutationObserver(()=>{const t=status.textContent||'';if(/اكتمل إنشاء ملف MP4|تم تنزيل|تعذر تحويل WebM|تعذر بدء التسجيل|حدث خطأ|تعذر/.test(t)){progress.textContent=t;busy=false;start.disabled=false}});observer.observe(status,{childList:true,subtree:true,characterData:true})}
+ render.addEventListener('click',()=>{if(busy)progress.textContent='التصدير جارٍ — '+(status.textContent||'يرجى الانتظار حتى اكتمال الملف')});
 })();
 
 
