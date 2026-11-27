@@ -69,7 +69,7 @@ jobs:
             response="$(cat /tmp/cloudflare-accounts.json)"
             if [[ ! "$http_code" =~ ^2[0-9][0-9]$ ]] || [[ "$(printf '%s' "$response" | jq -r '.success // false')" != "true" ]]; then
               echo "::error::Cloudflare token is valid, but account lookup failed. Grant Account: Read permission or set the correct CLOUDFLARE_ACCOUNT_ID secret."
-              printf '%s' "$response" | jq -r '.errors[]? | "Cloudflare error \\(.code): \\(.message)"' || true
+              printf '%s' "$response" | jq -r '.errors[]? | "Cloudflare error \(.code): \(.message)"' || true
               exit 1
             fi
             count="$(printf '%s' "$response" | jq -r '.result | length')"
