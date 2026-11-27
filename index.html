@@ -1444,22 +1444,27 @@ $('pptxExport').addEventListener('click',async()=>{
   if(typeof autoDirectVideo==='function')autoDirectVideo();
  });
  document.getElementById('aiTestVideoGateway')?.addEventListener('click',async()=>{
-   if(!save())return;
    const button=document.getElementById('aiTestVideoGateway');
-   button.disabled=true;statusEl.textContent='جارٍ فحص بوابة الفيديو وإعداداتها...';
+   let healthUrl;
    try{
-    const healthUrl=new URL(sessionStorage.getItem('eduAiEndpoint'));
-    healthUrl.pathname='/health';healthUrl.search='';healthUrl.hash='';
-    const response=await fetch(healthUrl.toString(),{method:'GET',headers:{'Accept':'application/json'}});
+    const raw=endpointEl.value.trim();
+    const endpoint=new URL(raw);
+    if(endpoint.protocol!=='https:')throw new Error('يجب أن يبدأ رابط الخادم بـ HTTPS.');
+    healthUrl=new URL('/health',endpoint.origin);
+   }catch(error){statusEl.textContent='أدخل رابط Worker صحيحاً وآمناً أولاً: '+(error.message||error);return}
+   button.disabled=true;statusEl.textContent='جارٍ فحص اتصال بوابة الفيديو دون الحاجة إلى رمز الوصول...';
+   try{
+    const response=await fetch(healthUrl.toString(),{method:'GET',headers:{'Accept':'application/json'},cache:'no-store'});
     const data=await response.json().catch(()=>({}));
     if(!response.ok||data.ok!==true)throw new Error(data.error||('تعذر الوصول إلى الخادم: HTTP '+response.status));
     if(data.configured!==true){
      const missing=Array.isArray(data.missing)?data.missing.join(', '):'إعدادات الخادم';
-     throw new Error('الخادم متصل، لكن إعداداته غير مكتملة. العناصر الناقصة: '+missing+'. أضفها في Cloudflare Worker Secrets/Variables.');
+     statusEl.textContent='الخادم متصل ويستجيب، لكن النشر غير مكتمل. الإعدادات الناقصة: '+missing+'. أضفها في Cloudflare Worker Secrets/Variables.';
+     return;
     }
-    statusEl.textContent='الاتصال ناجح — بوابة الذكاء الاصطناعي جاهزة. يمكنك الآن توليد سيناريو الفيديو.';
+    statusEl.textContent='الاتصال ناجح — بوابة الذكاء الاصطناعي جاهزة. أدخل رمز APP_ACCESS_TOKEN واحفظه قبل التوليد.';
    }catch(error){
-    statusEl.textContent='فشل فحص محرك الفيديو: '+(error.message||error)+' — تأكد من رابط Worker وإعدادات Cloudflare وCORS.';
+    statusEl.textContent='فشل فحص محرك الفيديو: '+(error.message||error)+' — تحقق من نشر Worker ورابطه وإعداد CORS.';
    }finally{button.disabled=false}
   });
  document.getElementById('aiSaveVideoGateway')?.addEventListener('click',save);
