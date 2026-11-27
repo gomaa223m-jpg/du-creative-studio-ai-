@@ -97,6 +97,15 @@ jobs:
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
-          command: secret put IMAGE_ENGINE_TOKEN
+          command: deploy --config wrangler.toml
+          secrets: |
+            APP_ACCESS_TOKEN
+            IMAGE_ENGINE_URL
+            IMAGE_ENGINE_TOKEN
+          vars: |
+            IMAGE_CHECKPOINT
         env:
+          APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
+          IMAGE_ENGINE_URL: ${{ env.IMAGE_ENGINE_URL }}
           IMAGE_ENGINE_TOKEN: ${{ env.IMAGE_ENGINE_TOKEN }}
+          IMAGE_CHECKPOINT: ${{ env.IMAGE_CHECKPOINT }}
