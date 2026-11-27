@@ -430,6 +430,32 @@ table{display:block;max-width:100%;overflow-x:auto}
 <div><label for="videoQuality">جودة الفيديو</label><select id="videoQuality"><option value="720" selected>HD — 720p سريع ومناسب للهاتف</option><option value="1080">Full HD — 1080p عالي الجودة</option><option value="1440">QHD — 1440p فائق الوضوح</option></select></div>
 <div><label for="videoAspect">مقاس النشر</label><select id="videoAspect"><option value="landscape" selected>أفقي 16:9 — يوتيوب والعروض</option><option value="portrait">رأسي 9:16 — ريلز وتيك توك وشورتس</option><option value="square">مربع 1:1 — المنشورات</option></select></div>
 </div>
+
+<section class="card" id="imageStudio">
+ <h2>🎨 استوديو الصور والتصميم البصري المجاني</h2>
+ <p>أنشئ ملصقات تعليمية وأغلفة وملخصات وإنفوجرافيك قابلة للتنزيل مباشرة من جهازك، دون اشتراك أو مفتاح API. يعمل المصمم المحلي داخل المتصفح، ويمكنك أيضاً نسخ وصف احترافي لاستخدامه في مولّد صور بالذكاء الاصطناعي.</p>
+ <div class="stepnote"><strong>توضيح مهم:</strong> التصميم المحلي ينتج رسومات وتنسيقات ونصوصاً عالية الدقة، لكنه ليس نموذج توليد صور واقعية بالانتشار Diffusion. توليد الصور الواقعية بالذكاء الاصطناعي يحتاج مزود نموذج أو خادماً GPU، وقد تكون له حدود أو تكاليف مستقلة.</div>
+ <div class="grid">
+  <div><label for="imageTitle">عنوان الصورة</label><input id="imageTitle" maxlength="120" placeholder="مثال: تصنيف التفاعلات الكيميائية"></div>
+  <div><label for="imageSubtitle">العنوان الفرعي</label><input id="imageSubtitle" maxlength="180" placeholder="ملخص بصري مبسط لطلاب المرحلة الثانوية"></div>
+  <div><label for="imageKind">نوع التصميم</label><select id="imageKind"><option value="infographic">إنفوجرافيك تعليمي</option><option value="poster">ملصق علمي</option><option value="cover">غلاف درس أو كتاب</option><option value="thumbnail">صورة مصغرة لفيديو</option><option value="diagram">مخطط مفاهيمي</option><option value="flashcard">بطاقة تعليمية</option></select></div>
+  <div><label for="imageRatio">مقاس الصورة</label><select id="imageRatio"><option value="portrait">عمودي 4:5</option><option value="landscape">أفقي 16:9</option><option value="square">مربع 1:1</option><option value="story">قصة 9:16</option><option value="a4">A4 عمودي</option></select></div>
+  <div><label for="imageTheme">الهوية البصرية</label><select id="imageTheme"><option value="ocean">تقني أزرق وتركواز</option><option value="midnight">سينمائي داكن وذهبي</option><option value="nature">علمي أخضر</option><option value="violet">إبداعي بنفسجي</option><option value="clean">أبيض أكاديمي</option></select></div>
+  <div><label for="imageDetail">مستوى التفاصيل</label><select id="imageDetail"><option value="simple">بسيط وواضح</option><option value="balanced" selected>متوازن واحترافي</option><option value="rich">تفصيلي وغني</option></select></div>
+ </div>
+ <label for="imagePoints">النقاط أو النصوص (كل نقطة في سطر مستقل)</label>
+ <textarea id="imagePoints" rows="5" placeholder="تفاعل الاتحاد: تتحد مادتان لتكوين ناتج واحد&#10;تفاعل التفكك: يتحلل مركب إلى مواد أبسط&#10;الإحلال: يحل عنصر محل عنصر آخر"></textarea>
+ <div class="grid">
+  <button id="buildLocalImage" class="bigstart">إنشاء التصميم الآن مجاناً</button>
+  <button id="downloadLocalImage" class="secondary" disabled>تنزيل PNG عالي الدقة</button>
+  <button id="copyImagePrompt" class="light">نسخ وصف احترافي لمولّد الصور AI</button>
+  <button id="openImageAI" class="secondary">فتح مركز أدوات الصور</button>
+ </div>
+ <p class="status" id="imageStudioStatus" aria-live="polite">اكتب عنوان الصورة ثم اضغط إنشاء التصميم. لا يتم رفع بياناتك إلى خادم عند استخدام المصمم المحلي.</p>
+ <div style="margin-top:14px;border:1px solid var(--line);border-radius:14px;background:#edf3f7;padding:10px;overflow:hidden">
+  <canvas id="imageStudioCanvas" width="1600" height="2000" aria-label="معاينة التصميم التعليمي" style="width:100%;height:auto;max-height:75vh;object-fit:contain;border-radius:10px;background:white"></canvas>
+ </div>
+</section>
 <section class="stepnote" id="avatarEngine">
 <strong>🎭 محرك الأفاتار التعليمي</strong>
 <p>ارفع صورة واضحة للوجه، ثم اضبط موضع الفم على المعاينة مرة واحدة. يحرك المحرك تعبير الفم وفق مستوى الصوت أثناء التشغيل والتصدير، مع إبقاء ملامح الصورة الأصلية دون توليد وجه بديل.</p>
@@ -1565,4 +1591,85 @@ $('pptxExport').addEventListener('click',async()=>{
  document.head.appendChild(style);
 })();
 
+
+/* Free local educational image designer: renders editable text/shapes to a high-resolution PNG. */
+(()=>{
+ const $=id=>document.getElementById(id);
+ const canvas=$('imageStudioCanvas');if(!canvas)return;
+ const ctx=canvas.getContext('2d');
+ let ready=false;
+ const themes={
+  ocean:{bg:['#071b31','#126b80'],accent:'#68e6d3',card:'#ffffff',ink:'#12334a',soft:'#e9f8f6'},
+  midnight:{bg:['#101729','#3b3151'],accent:'#f4cf83',card:'#fffaf0',ink:'#25283b',soft:'#f8eed9'},
+  nature:{bg:['#103a35','#4b8461'],accent:'#b7edb8',card:'#ffffff',ink:'#174638',soft:'#edf8ef'},
+  violet:{bg:['#271a49','#7352a1'],accent:'#e2c7ff',card:'#ffffff',ink:'#34234f',soft:'#f5efff'},
+  clean:{bg:['#edf5fa','#d9edf0'],accent:'#087f83',card:'#ffffff',ink:'#17364c',soft:'#e9f5f5'}
+ };
+ const rounded=(x,y,w,h,r,fill)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill()};
+ const wrap=(text,maxWidth,font)=>{ctx.font=font;const words=String(text).split(/\s+/);const lines=[];let line='';for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);return lines};
+ function make(){
+  const title=$('imageTitle').value.trim();if(title.length<2){$('imageStudioStatus').textContent='اكتب عنواناً واضحاً للصورة أولاً.';return}
+  const ratio=$('imageRatio').value;
+  const dims={portrait:[1600,2000],landscape:[1920,1080],square:[1600,1600],story:[1200,2133],a4:[1654,2339]}[ratio];
+  canvas.width=dims[0];canvas.height=dims[1];
+  const W=canvas.width,H=canvas.height,T=themes[$('imageTheme').value]||themes.ocean;
+  const kind=$('imageKind').value,subtitle=$('imageSubtitle').value.trim();
+  const points=$('imagePoints').value.split(/\n+/).map(x=>x.trim()).filter(Boolean).slice(0,9);
+  const scale=W/1600;ctx.save();ctx.scale(scale,scale);
+  const w=1600,h=H/scale;
+  const grad=ctx.createLinearGradient(0,0,w,h);grad.addColorStop(0,T.bg[0]);grad.addColorStop(1,T.bg[1]);ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+  // Subtle technical grid and ambient circles.
+  ctx.globalAlpha=.11;ctx.strokeStyle='#ffffff';ctx.lineWidth=1;
+  for(let x=0;x<w;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+  for(let y=0;y<h;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+  ctx.globalAlpha=.10;ctx.fillStyle=T.accent;[[w-120,140,230],[110,h-100,290],[w*.52,h*.58,380]].forEach(([x,y,r])=>{ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()});ctx.globalAlpha=1;
+  const margin=100,top=110;
+  rounded(margin,top,w-margin*2,54,27,'rgba(255,255,255,.12)');
+  ctx.fillStyle=T.accent;ctx.font='bold 22px Tahoma';ctx.textAlign='center';ctx.direction='rtl';ctx.fillText('EDU CREATIVE STUDIO  •  تصميم تعليمي',w/2,top+36);
+  const titleLines=wrap(title,w-2*margin-60,'bold 72px Tahoma');
+  ctx.fillStyle='#ffffff';ctx.font='bold 72px Tahoma';ctx.textAlign='center';ctx.direction='rtl';
+  let ty=top+170;titleLines.slice(0,3).forEach(line=>{ctx.fillText(line,w/2,ty);ty+=88});
+  if(subtitle){ctx.fillStyle='#e2f2f5';ctx.font='32px Tahoma';wrap(subtitle,w-2*margin-80,'32px Tahoma').slice(0,2).forEach((line,i)=>ctx.fillText(line,w/2,ty+38+i*45));ty+=120}
+  const label={infographic:'إنفوجرافيك تعليمي',poster:'ملصق علمي',cover:'غلاف تعليمي',thumbnail:'فيديو تعليمي',diagram:'مخطط مفاهيمي',flashcard:'بطاقة تعليمية'}[kind];
+  rounded(margin,ty+15,w-2*margin,54,18,'rgba(255,255,255,.14)');ctx.fillStyle=T.accent;ctx.font='bold 25px Tahoma';ctx.fillText(label,w/2,ty+51);
+  const contentTop=ty+110,available=h-contentTop-150;
+  const gap=24,cols=(kind==='diagram'||kind==='flashcard')?2:1;
+  const rows=Math.max(1,Math.ceil(Math.max(points.length,1)/cols));
+  const cardH=Math.min(available/rows-gap,kind==='cover'?260:300);
+  const cardW=(w-2*margin-gap*(cols-1))/cols;
+  const content=points.length?points:['أضف نقاط الدرس في خانة النصوص لتظهر هنا في بطاقات منظمة.'];
+  content.forEach((item,i)=>{
+   const col=i%cols,row=Math.floor(i/cols),x=margin+col*(cardW+gap),y=contentTop+row*(cardH+gap);
+   rounded(x,y,cardW,cardH,26,T.card);
+   rounded(x+22,y+22,62,62,20,T.soft);
+   ctx.fillStyle=T.accent;ctx.font='bold 30px Tahoma';ctx.textAlign='center';ctx.direction='ltr';ctx.fillText(String(i+1).padStart(2,'0'),x+53,y+63);
+   const parts=item.split(/[:：—–]/);const head=parts.length>1?parts.shift():('الفكرة '+(i+1));const body=parts.join(' — ')||item;
+   ctx.textAlign='right';ctx.direction='rtl';ctx.fillStyle=T.ink;
+   ctx.font='bold 34px Tahoma';const headLines=wrap(head,cardW-140,'bold 34px Tahoma').slice(0,2);
+   headLines.forEach((line,j)=>ctx.fillText(line,x+cardW-28,y+55+j*42));
+   ctx.fillStyle='#526a79';ctx.font='27px Tahoma';
+   const bodyLines=wrap(body,cardW-60,'27px Tahoma').slice(0,Math.max(2,Math.floor((cardH-125)/38)));
+   bodyLines.forEach((line,j)=>ctx.fillText(line,x+cardW-30,y+140+j*38));
+  });
+  const footY=h-85;ctx.fillStyle='rgba(255,255,255,.82)';ctx.font='22px Tahoma';ctx.textAlign='center';ctx.direction='rtl';ctx.fillText('إعداد مستر محمد جمعة  •  معانا دائماً أنت الأفضل',w/2,footY);
+  ctx.restore();ready=true;$('downloadLocalImage').disabled=false;
+  $('imageStudioStatus').textContent='تم إنشاء التصميم محلياً بدقة '+canvas.width+' × '+canvas.height+' بكسل. يمكنك تنزيله PNG.';
+ }
+ $('buildLocalImage').addEventListener('click',make);
+ $('downloadLocalImage').addEventListener('click',()=>{
+  if(!ready)return;canvas.toBlob(blob=>{if(!blob){$('imageStudioStatus').textContent='تعذر إنشاء ملف PNG على هذا الجهاز.';return}
+   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='EDU-Image-'+($('imageTitle').value.trim().replace(/[^\p{L}\p{N}-]+/gu,'-').slice(0,45)||'design')+'.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  },'image/png');
+ });
+ $('copyImagePrompt').addEventListener('click',async()=>{
+  const title=$('imageTitle').value.trim();if(!title){$('imageStudioStatus').textContent='اكتب عنوان الصورة أولاً.';return}
+  const points=$('imagePoints').value.trim();
+  const ratio=$('imageRatio').selectedOptions[0].text;
+  const kind=$('imageKind').selectedOptions[0].text;
+  const prompt='Create a premium, publication-quality Arabic educational visual about: '+title+'. Format: '+ratio+'. Type: '+kind+'. Art direction: cinematic lighting, sophisticated composition, crisp visual hierarchy, accurate scientific visual metaphors, elegant depth, balanced negative space, polished editorial design, professional color grading. Arabic text must be correctly spelled, right-to-left, highly legible, and limited to short labels. Do not invent scientific facts, chemical symbols, equations, or labels. Content to include: '+(points||'Create a clear visual concept around the title without adding unverified facts')+'. No watermark, no logos of third parties. Keep all important elements within safe margins.';
+  try{await navigator.clipboard.writeText(prompt);$('imageStudioStatus').textContent='تم نسخ وصف احترافي جاهز لمولّد صور AI.'}
+  catch(e){$('imageStudioStatus').textContent='تعذر النسخ التلقائي؛ جرّب من متصفح يدعم Clipboard أو انسخ النص من الوصف عند الطلب.'}
+ });
+ $('openImageAI').addEventListener('click',()=>document.getElementById('aiToolsHub').scrollIntoView({behavior:'smooth',block:'start'}));
+})();
 </script></body></html>
