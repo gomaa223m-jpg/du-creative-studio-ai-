@@ -1,34 +1,38 @@
 # EDU Creative Studio — Secure Book Engine
 
-This Worker is the private server-side bridge between the public GitHub Pages editor and the OpenAI Responses API.
+## نشر المحرك
+يمكن بدء إعداد Worker من زر **نشر المحرك على Cloudflare** داخل استوديو الكتب، أو فتح رابط النشر:
+https://deploy.workers.cloudflare.com/?url=https://github.com/gomaa223m-jpg/du-creative-studio-ai-
 
-## What it does
-- Accepts a book title and educational context from the editor.
-- Generates structured Arabic book pages (not just an outline).
-- Uses the Responses API with web search enabled.
-- Returns actual web-search citations when available, plus an automated review checklist.
-- Keeps the provider API key on the server, never in the public HTML.
-- Requires a separate app access token before allowing generation.
-- Uses `store: false` for Responses API requests.
+سيتطلب ذلك تسجيل الدخول إلى حساب Cloudflare وربطه بمستودع GitHub. تنشئ Cloudflare نسخة من المستودع في حسابك وتقوم بنشر Worker من ملف `wrangler.toml` الموجود في الجذر. لا يستطيع الموقع العام إتمام موافقة الحساب نيابةً عنك.
 
-## Deploy
-1. Install Node.js and Wrangler, then sign in to Cloudflare:
-   `npx wrangler login`
-2. From this repository root, set the provider key as a Worker secret:
-   `npx wrangler secret put OPENAI_API_KEY`
-3. Create a long, random app access token and store it as another secret:
-   `npx wrangler secret put APP_ACCESS_TOKEN`
-4. Deploy:
-   `npx wrangler deploy`
-5. Copy the Worker URL shown by Wrangler. Its API endpoint is:
-   `https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/api/book`
-6. In the website's Book Engine settings, enter that endpoint and the same app access token.
+## إعداد الأسرار بعد النشر
+في لوحة Cloudflare:
+1. افتح **Workers & Pages** ثم اختر `edu-creative-book-engine`.
+2. افتح **Settings → Variables and Secrets**.
+3. أضف Secret باسم `OPENAI_API_KEY` وضع فيه مفتاح API الخاص بمزود الخدمة.
+4. أضف Secret آخر باسم `APP_ACCESS_TOKEN`.
+5. احفظ التغييرات وانشر النسخة.
 
-Optional: change `AI_MODEL` in `wrangler.toml` to a model enabled for your API project. The default is configurable and may need to be changed depending on API access.
+لا تضع أيّاً من هذين السرّين في HTML أو JavaScript أو مستودع GitHub أو المحادثة. زر **إنشاء رمز وصول آمن** في الموقع يولّد رمزاً عشوائياً؛ انسخ الرمز نفسه إلى Secret باسم `APP_ACCESS_TOKEN` في Cloudflare، ثم احتفظ به في حقل رمز الوصول بالموقع.
 
-## Important
-- The OpenAI API is billed separately from ChatGPT subscriptions. Cloudflare's free allowance does not make model inference free or unlimited.
-- Never put `OPENAI_API_KEY` or `APP_ACCESS_TOKEN` in GitHub Pages, HTML, JavaScript, or a committed config file.
-- Do not commit local secret files such as `.dev.vars`.
-- The source list contains URLs returned by web search annotations. If no source is returned, the editor must show that clearly rather than fabricate a bibliography.
-- Automated review is an initial aid, not a substitute for a qualified teacher/subject-matter expert checking the final book before classroom use.
+## ربط الموقع
+1. انسخ عنوان Worker الذي ينتهي بـ `workers.dev`.
+2. في محرك التأليف داخل الموقع، أدخل `https://YOUR-WORKER.workers.dev/api/book`.
+3. أدخل رمز الوصول نفسه الذي وضعته في `APP_ACCESS_TOKEN`.
+4. اضغط **حفظ إعدادات الربط على هذا الجهاز**.
+5. اختبر أولاً بعنوان قصير وكتاب تجريبي صغير.
+
+## إعداد النموذج والمصادر
+- النموذج الافتراضي مضبوط على `gpt-6.1-sol`. قد تحتاج إلى تغييره في متغير `AI_MODEL` إذا لم يكن متاحاً لمشروع API الخاص بك.
+- يستخدم المحرك البحث عبر الويب لجلب المصادر، ويعيد فقط الروابط التي ترجعها خدمة البحث.
+- يستخدم إخراج JSON منظماً حتى يستطيع المحرر توزيع المحتوى على الصفحات.
+- صفحة المراجعة آلية أولية؛ يجب أن يراجع المعلم أو المختص الحقائق والمعادلات والوحدات ومطابقة المنهج والمراجع قبل النشر.
+
+## التكلفة والخصوصية
+- استخدام OpenAI API منفصل عن اشتراك ChatGPT وقد تترتب عليه رسوم للنموذج والبحث.
+- الخطة المجانية لخادم الاستضافة لا تجعل توليد الذكاء الاصطناعي مجانياً أو غير محدود.
+- ابدأ باختبار قصير، وراقب حدود الاستخدام والتنبيهات المالية في حساب API.
+- يرسل Worker الطلبات مع `store: false`.
+- لا تدخل أسماء الطلاب أو بياناتهم الخاصة أو معلومات اتصالهم في الطلبات.
+- لا ترفع ملفات الأسرار المحلية مثل `.dev.vars` أو `.env` إلى GitHub.
