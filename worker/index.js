@@ -300,6 +300,7 @@ export default {
           jsonrpc: "2.0", id: rpc.id,
           result: { tools: [
             { name: "health", description: "Check whether EDU Creative Studio API is available.", inputSchema: { type: "object", properties: {}, additionalProperties: false } },
+            { name: "generate_video_plan", description: "Generate an Arabic educational video script and scene plan. Requires an optional paid API key.", inputSchema: { type: "object", required: ["topic"], properties: { task: { type: "string" }, topic: { type: "string", minLength: 3, maxLength: 180 }, subject: { type: "string" }, grade: { type: "string" }, context: { type: "string", maxLength: 1800 } }, additionalProperties: false } },
             { name: "generate_book", description: "Generate an Arabic educational book with objectives, pages, web sources, and an automated scientific/editorial review. Requires configured API secrets and may incur API charges.", inputSchema: { type: "object", required: ["title"], properties: { title: { type: "string", minLength: 3, maxLength: 180 }, subject: { type: "string" }, grade: { type: "string" }, term: { type: "string" }, type: { type: "string" }, size: { type: "string" }, level: { type: "string" }, design: { type: "string" }, extra: { type: "string", maxLength: 1800 } }, additionalProperties: false } }
           ] }
         }, 200, headersOrigin);
@@ -309,6 +310,16 @@ export default {
         const args = rpc.params?.arguments || {};
         if (toolName === "health") {
           return json({ jsonrpc: "2.0", id: rpc.id, result: { content: [{ type: "text", text: JSON.stringify({ ok: true, service: "edu-creative-studio-api", apiVersion: "v1" }) }], isError: false } }, 200, headersOrigin);
+        }
+        if (toolName === "generate_video_plan") {
+          const internalRequest = new Request(new URL("/api/generate", url.origin), {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": auth },
+            body: JSON.stringify({ ...args, task: args.task || "video" })
+          });
+          const planResponse = await handleGenerate(internalRequest, env, headersOrigin);
+          const resultText = await planResponse.text();
+          return json({ jsonrpc: "2.0", id: rpc.id, result: { content: [{ type: "text", text: resultText }], isError: !planResponse.ok } }, 200, headersOrigin);
         }
         if (toolName === "generate_book") {
           const internalRequest = new Request(new URL("/api/book", url.origin), {
