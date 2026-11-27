@@ -561,7 +561,7 @@ $('initFaceTracker').addEventListener('click',async()=>{
 });
 $('toggleFaceMesh').addEventListener('click',()=>{faceMeshVisible=!faceMeshVisible;$('faceTrackerStatus').textContent=faceMeshVisible?'شبكة المعالم ظاهرة عند توفر التتبع.':'تم إخفاء شبكة المعالم.';drawVideoScene(videoFrame,0)});
 $('downloadCueTemplate').addEventListener('click',()=>{const sample={phonemes:[{start:0.2,end:0.42,viseme:'A'},{start:0.42,end:0.65,viseme:'M'},{start:0.65,end:0.9,viseme:'O'}],gestures:[{start:1,end:2,gesture:'explain'},{start:2.1,end:2.7,gesture:'point'}],expressions:[{start:0,end:1.8,expression:'enthusiastic'},{start:1.8,end:3.2,expression:'thinking'}]};const blob=new Blob([JSON.stringify(sample,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='قالب-توقيت-الأداء.json';a.click();URL.revokeObjectURL(url)});
-$('performanceCues').addEventListener('change',async e=>{}
+$('performanceCues').addEventListener('change',async e=>{
  const f=e.target.files&&e.target.files[0];if(!f)return;
  try{
   const d=JSON.parse(await f.text());
