@@ -1421,7 +1421,7 @@ $('pptxExport').addEventListener('click',async()=>{
   const title=document.getElementById('videoTitle').value.trim();
   const statusEl=document.getElementById('aiVideoGatewayStatus');
   if(!title){statusEl.textContent='اكتب عنوان الفيديو أولاً.';return}
-  const isReaction=/تصنيف\\s*التفاعلات\\s*الكيميائية/i.test(title);
+  const isReaction=/تصنيف\s*التفاعلات\s*الكيميائية/i.test(title);
   const scenes=isReaction?[
    ['افتتاح مشوّق','كيف نعرف نوع التفاعل الكيميائي من شكل المعادلة؟','اعرض معادلة غامضة ثم أبرز المتفاعلات والسهم والنواتج. التعليق: اليوم سنتعلم كيف نقرأ المعادلة ونصنّف التفاعل.'],
    ['تفاعل الاتحاد','تتحد مادتان أو أكثر لتكوين ناتج واحد.','اعرض اتحاد جزيئات الهيدروجين والأكسجين لتكوين الماء. المعادلة: 2H2 + O2 → 2H2O. التعليق: نلاحظ وجود ناتج واحد؛ إذن هذا تفاعل اتحاد.'],
