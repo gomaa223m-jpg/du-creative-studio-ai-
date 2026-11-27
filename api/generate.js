@@ -1,5 +1,21 @@
+import { timingSafeEqual } from "node:crypto";
+
+function validBearer(header, expected) {
+  const supplied = String(header || "").replace(/^Bearer\\s+/i, "");
+  if (!supplied || !expected) return false;
+  const a = Buffer.from(supplied);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 export default async function handler(req, res) {
+  res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({error:"طريقة الطلب غير مدعومة."}); }
+  if (!validBearer(req.headers.authorization, process.env.APP_ACCESS_TOKEN)) {
+    return res.status(401).json({error:"رمز الوصول غير صحيح أو لم يُضبط على الخادم."});
+  }
+  const bodySize = Buffer.byteLength(JSON.stringify(req.body ?? {}), "utf8");
+  if (bodySize > 20000) return res.status(413).json({error:"الطلب أكبر من الحد المسموح."});
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return res.status(503).json({error:"الخادم غير مكتمل الإعداد: أضف OPENAI_API_KEY كمتغير سري في الاستضافة."});
   const prompt = typeof req.body?.prompt === "string" ? req.body.prompt.trim() : "";
@@ -9,6 +25,7 @@ export default async function handler(req, res) {
     const upstream = await fetch("https://api.openai.com/v1/responses", {
       method:"POST",
       headers:{"Authorization":`Bearer ${apiKey}`,"Content-Type":"application/json"},
+      signal:AbortSignal.timeout(45000),
       body:JSON.stringify({model:process.env.OPENAI_MODEL || "gpt-6",instructions:"أنت مساعد متخصص في إنتاج محتوى تعليمي عربي دقيق. لا تختلق مراجع أو بيانات، وراعِ عمر الطلاب وسلامتهم.",input:prompt,max_output_tokens:7000,store:false})
     });
     const data = await upstream.json().catch(()=>({}));
