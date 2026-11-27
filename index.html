@@ -148,7 +148,12 @@ body{background:#f4f8fb}
 <button class="bigstart" id="runBookEngine">✦ ألّف الكتاب واملأ الصفحات تلقائياً</button>
 </div>
 <p class="status" id="bookEngineStatus" aria-live="polite"></p>
-<p class="muted">مفتاح مزود الذكاء الاصطناعي يبقى داخل الخادم ولا يُكتب هنا. رمز الوصول يُحفظ محلياً في متصفحك فقط. التوليد يستخدم API قد تكون له تكلفة وحدود مستقلة؛ اطلب من ولي الأمر/مسؤول الحساب إدارة الفوترة والمفاتيح. المراجعة آلية أولية وليست اعتماداً علمياً بشرياً.</p>
+<div class="grid">
+<button class="light" id="generateBookEngineToken">إنشاء رمز وصول آمن</button>
+<a class="button secondary" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none" href="https://deploy.workers.cloudflare.com/?url=https://github.com/gomaa223m-jpg/du-creative-studio-ai-" target="_blank" rel="noopener noreferrer">نشر المحرك على Cloudflare</a>
+<a class="light" href="https://github.com/gomaa223m-jpg/du-creative-studio-ai-/blob/main/BOOK_ENGINE_SETUP.md" target="_blank" rel="noopener noreferrer">دليل التفعيل خطوة بخطوة</a>
+</div>
+<p class="muted">مفتاح مزود الذكاء الاصطناعي يبقى داخل الخادم ولا يُكتب هنا. أنشئ رمز وصول عشوائياً من الزر ثم أضفه كسِر APP_ACCESS_TOKEN في إعدادات Worker، وأدخل الرمز نفسه هنا. التوليد عبر API قد تكون له تكلفة مستقلة؛ اجعل مالك الحساب/ولي الأمر يدير الفوترة والمفاتيح. المراجعة آلية أولية وليست اعتماداً علمياً بشرياً.</p>
 </div>
 <div class="stepnote" id="bookEditor">
 <h3>✍️ محرر الكتاب صفحةً بصفحة</h3>
@@ -491,6 +496,16 @@ const savedBookEngineSettings=readBookEngineSettings();
 if(savedBookEngineSettings.endpoint)$('bookEngineEndpoint').value=savedBookEngineSettings.endpoint;
 if(savedBookEngineSettings.token)$('bookEngineToken').value=savedBookEngineSettings.token;
 $('saveBookEngineSettings').addEventListener('click',saveBookEngineSettings);
+$('generateBookEngineToken').addEventListener('click',async()=>{
+ try{
+  if(!window.crypto||!window.crypto.getRandomValues)throw new Error('المتصفح لا يدعم إنشاء رمز آمن.');
+  const bytes=new Uint8Array(32);window.crypto.getRandomValues(bytes);
+  const token=Array.from(bytes,x=>x.toString(16).padStart(2,'0')).join('');
+  $('bookEngineToken').value=token;
+  $('bookEngineStatus').textContent='تم إنشاء رمز عشوائي قوي. أضفه الآن كسِر APP_ACCESS_TOKEN في Cloudflare ثم احفظ إعدادات الربط هنا.';
+  try{await navigator.clipboard.writeText(token);$('bookEngineStatus').textContent+=' نُسخت قيمة الرمز إلى الحافظة.'}catch(e){}
+ }catch(e){$('bookEngineStatus').textContent=e.message||'تعذر إنشاء الرمز.'}
+ });
 
 function bookMarkdownToHtml(markdown){
  const safe=escBook(markdown).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`([^`]+)`/g,'<code>$1</code>');
