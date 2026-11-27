@@ -1,0 +1,33 @@
+name: Validate AlShareef Studio V2
+on:
+  push:
+    branches: [alshareef-studio-v2]
+    paths:
+      - "v2/**"
+      - ".github/workflows/validate-v2.yml"
+  pull_request:
+    paths:
+      - "v2/**"
+      - ".github/workflows/validate-v2.yml"
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate HTML and embedded JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path("v2/index.html").read_text(encoding="utf-8")
+          assert '<html lang="ar" dir="rtl">' in html
+          assert 'id="video"' in html and 'id="worksheet"' in html and 'id="quiz"' in html
+          scripts = re.findall(r"<script>([\\s\\S]*?)</script>", html)
+          assert scripts, "No inline application script found"
+          Path("/tmp/v2-app.js").write_text(scripts[-1], encoding="utf-8")
+          print(f"Validated document structure; extracted {len(scripts[-1])} JavaScript characters")
+          PY
+          node --check /tmp/v2-app.js
