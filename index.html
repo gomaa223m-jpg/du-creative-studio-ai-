@@ -149,19 +149,25 @@ body{background:#f4f8fb}
 <p class="muted">تنبيه حقوقي: المكتبة دليل وصول وليست مستودعاً لنسخ الكتب أو المحتوى المحمي. استخدم المواد وفق تراخيصها وشروط أصحابها، وتحقق من توافقها مع منهج بلدك قبل اعتمادها.</p>
 </section>
 <section class="card" id="videoStudio">
-<h2>🎬 استوديو إنتاج الفيديو التعليمي المجاني</h2>
-<p>حوّل محتوى الدرس إلى فيديو شرائح متحركة بدقة 1080p، مع إمكانية إضافة تعليق صوتي مسجل من جهازك. تتم المعالجة داخل المتصفح ولا تحتاج إلى مفتاح API.</p>
-<label for="videoScript">نص الفيديو أو محتوى الدرس</label>
-<textarea id="videoScript" rows="7" placeholder="اكتب أو الصق نص الشرح. كل فقرة ستتحول إلى مشهد مرئي..."></textarea>
+<h2>🎬 استوديو إنتاج الفيديو الذكي — يعمل داخل جهازك</h2>
+<p><b>اكتب عنوان الدرس ثم اضغط «ابنِ الفيديو تلقائياً».</b> ينشئ الاستوديو مساراً تعليمياً ومشاهد متتابعة، ويحوّلها إلى فيديو متحرك قابل للتنزيل دون الحاجة إلى مساعد خارجي أو مفتاح API.</p>
+<div class="stepnote"><strong>محرك إنتاج مستقل:</strong> تجهيز السيناريو والمشاهد، معاينة فورية، تعليق صوتي تجريبي عبر أصوات المتصفح المتاحة، إضافة ملف صوتي اختياري، ثم تسجيل الفيديو وتصديره. يعمل محلياً؛ ولا يدّعي توليد لقطات سينمائية واقعية أو استنساخ صوت بشري.</div>
+<label for="videoScript">سيناريو الدرس (يمكن تعديله قبل التصدير)</label>
+<textarea id="videoScript" rows="9" placeholder="اكتب عنوان الدرس ثم اضغط ابنِ الفيديو تلقائياً، أو الصق شرحك هنا..."></textarea>
 <div class="grid">
-<div><label for="videoSeconds">مدة كل مشهد (ثوانٍ)</label><select id="videoSeconds"><option value="5">5 ثوانٍ</option><option value="7" selected>7 ثوانٍ</option><option value="10">10 ثوانٍ</option></select></div>
+<div><label for="videoSeconds">مدة كل مشهد</label><select id="videoSeconds"><option value="5">5 ثوانٍ</option><option value="7" selected>7 ثوانٍ</option><option value="10">10 ثوانٍ</option><option value="14">14 ثانية</option></select></div>
 <div><label for="videoQuality">جودة الفيديو</label><select id="videoQuality"><option value="1080" selected>Full HD — 1080p</option><option value="720">HD — 720p</option></select></div>
 </div>
-<label for="videoAudio">إضافة تعليق صوتي مسجل (اختياري)</label>
+<label for="videoAudio">إضافة تعليق صوتي مسجل أو موسيقى (اختياري)</label>
 <input id="videoAudio" type="file" accept="audio/*">
+<div class="grid">
+<button id="autoVideoBuild">✨ ابنِ الفيديو تلقائياً من عنوان الدرس</button>
+<button class="secondary" id="speakVideoScript">🔊 استمع إلى السيناريو</button>
+</div>
+<p class="muted">التعليق الصوتي التجريبي يستخدم الأصوات العربية المثبتة في جهازك عبر المتصفح، وقد يختلف توفرها وجودتها. زر الاستماع لا يضيف الصوت إلى ملف الفيديو؛ لإدراج تعليق داخل الملف أرفق تسجيلاً صوتياً في خانة الصوت. المحرك لا يحتاج إلى خدمة ذكاء اصطناعي خارجية، لكنه لا يخترع حقائق الدرس: إذا لم يتوفر شرح في المحتوى، ينشئ هيكل سيناريو يحتاج إلى استكمال ومراجعة علمية.</p>
 <canvas id="videoCanvas" width="1920" height="1080" style="width:100%;height:auto;background:#10243a;border-radius:14px;margin-top:12px"></canvas>
-<p class="muted">يُسجَّل الفيديو أولاً ثم يُحوَّل إلى MP4 داخل المتصفح باستخدام FFmpeg WebAssembly المجاني عند الحاجة. قد يستغرق التحويل وقتاً ويستهلك ذاكرة كبيرة، خصوصاً على الهاتف. للحصول على صوت داخل الفيديو، أرفق ملفاً صوتياً مسجلاً. لا يصنع هذا المحرك مشاهد تصوير واقعية أو شخصيات ثلاثية الأبعاد.</p>
-<button id="previewVideo">معاينة الفيديو</button><button class="secondary" id="renderVideo">إنشاء وتنزيل MP4</button>
+<p class="muted">يُسجَّل الفيديو داخل المتصفح ثم يحاول الاستوديو تحويله إلى MP4 باستخدام FFmpeg WebAssembly. اترك الصفحة مفتوحة حتى يكتمل التصدير؛ قد يستغرق ذلك وقتاً على الهاتف.</p>
+<button id="previewVideo">▶ معاينة المشاهد</button><button class="secondary" id="renderVideo">⬇ إنشاء وتنزيل الفيديو</button>
 <p class="status" id="videoStatus" aria-live="polite"></p>
 </section>
 <section class="card" id="savedProjects"><h2>💾 مشاريعي المحفوظة</h2>
@@ -346,6 +352,43 @@ async function convertVideoBlobToMp4(blob,status){
   const data=ff.FS('readFile',output);
   return new Blob([data.buffer],{type:'video/mp4'});
 }
+function autoBuildVideoScript(){
+ const topic=$('topic').value.trim()||'موضوع الدرس';
+ const supplied=($('generatedContent')&&$('generatedContent').value.trim())||'';
+ let body='';
+ if(supplied){
+  body=supplied.split(/\\n+/).map(x=>x.trim()).filter(x=>x.length>25).slice(0,18).join('\\n\\n');
+ }
+ if(!body){
+  body=[
+   'مقدمة مشوقة: ما السؤال أو الظاهرة التي يفسرها درس '+topic+'؟ ابدأ بسؤال يثير الفضول.',
+   'أهداف التعلم: في نهاية الدرس سيكون الطالب قادراً على تعريف المفهوم وشرح فكرته وتطبيقها.',
+   'الفكرة الأساسية: اشرح مفهوم '+topic+' بلغة واضحة، ثم اذكر المصطلحات الأساسية.',
+   'خطوات الفهم: قسّم الفكرة إلى خطوات مرتبة، واربط كل خطوة بما قبلها.',
+   'مثال تطبيقي: اعرض مثالاً مناسباً للموضوع مع تفسير خطوات الحل أو الملاحظة.',
+   'تطبيق ومشاركة: اطرح سؤالاً قصيراً وامنح المتعلم وقتاً للتفكير قبل إظهار التفسير.',
+   'أخطاء شائعة: نبّه إلى مواضع الالتباس، وبيّن طريقة التحقق من الإجابة.',
+   'ملخص الدرس: اجمع أهم الأفكار في نقاط موجزة مترابطة.',
+   'تقويم ختامي: اطرح سؤالاً يقيس الفهم والتطبيق، ثم اختم برسالة تشجيعية.'
+  ].join('\\n\\n');
+ }
+ $('videoScript').value=body;
+ makeVideoScenes();drawVideoScene(0,0);
+ $('videoStatus').textContent='تم تجهيز '+videoScenes.length+' مشاهد مبدئية للدرس: '+topic+'. راجع المعلومات وأكمل الأمثلة المتخصصة قبل التصدير.';
+}
+$('autoVideoBuild').addEventListener('click',autoBuildVideoScript);
+$('speakVideoScript').addEventListener('click',()=>{
+ const text=$('videoScript').value.trim();
+ if(!text){$('videoStatus').textContent='أنشئ السيناريو أولاً.';return}
+ if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window)){$('videoStatus').textContent='ميزة القراءة الصوتية غير مدعومة في هذا المتصفح.';return}
+ window.speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(text);u.lang='ar-SA';u.rate=.92;u.pitch=1;
+ const voices=window.speechSynthesis.getVoices();const ar=voices.find(v=>/^ar/i.test(v.lang));if(ar)u.voice=ar;
+ u.onstart=()=>{$('videoStatus').textContent='يُقرأ السيناريو بصوت المتصفح. هذا استماع تجريبي ولا يُدمج تلقائياً في ملف الفيديو.'};
+ u.onend=()=>{$('videoStatus').textContent='انتهت قراءة السيناريو.'};
+ u.onerror=()=>{$('videoStatus').textContent='تعذر تشغيل الصوت في هذا الجهاز.'};
+ window.speechSynthesis.speak(u);
+});
 function makeVideoScenes(){const raw=$('videoScript').value.trim()||$('generatedContent').value.trim()||$('out').textContent;const lines=raw.split(/\\n+/).map(x=>x.replace(/^\\s*(?:[-*#]+|[0-9٠-٩]+[.)、-])\\s*/,'').trim()).filter(x=>x.length>12);const unique=lines.filter((x,i)=>i===0||x!==lines[i-1]);videoScenes=(unique.length?unique:[$('topic').value||'رحلة تعلم ممتعة']).slice(0,36).map((text,i)=>({title:i===0?($('topic').value||'درسنا اليوم'):('الفكرة '+(i+1)),text:text.slice(0,240)}));return videoScenes}
 function drawVideoScene(index,progress=0){const W=videoCanvas.width,H=videoCanvas.height;const s=videoScenes[index%videoScenes.length]||{title:'درسنا اليوم',text:'اكتب نص الدرس لبدء إنتاج الفيديو'};const g=vctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#10243a');g.addColorStop(1,'#176b9b');vctx.fillStyle=g;vctx.fillRect(0,0,W,H);vctx.globalAlpha=.12;for(let i=0;i<18;i++){vctx.beginPath();vctx.arc((i*173+index*31)%W,(i*97+120)%H,40+(i%4)*22,0,Math.PI*2);vctx.fillStyle='#16a89a';vctx.fill()}vctx.globalAlpha=1;vctx.fillStyle='#16a89a';vctx.fillRect(130,135,14,810);vctx.textAlign='right';vctx.direction='rtl';vctx.fillStyle='#8ee4d8';vctx.font='bold 42px Tahoma';vctx.fillText('EDU CREATIVE STUDIO AI',W-150,155);vctx.fillStyle='#ffffff';vctx.font='bold 76px Tahoma';wrapCanvasText(s.title,W-170,360,1450,100);vctx.fillStyle='#edf6fb';vctx.font='48px Tahoma';wrapCanvasText(s.text,W-170,590,1450,78);vctx.fillStyle='#8ee4d8';vctx.fillRect(150,930,(W-300)*Math.max(.03,progress),10);vctx.fillStyle='#ffffff';vctx.font='30px Tahoma';vctx.fillText('إعداد مستر محمد جمعة',W-150,1010);vctx.textAlign='left';vctx.direction='ltr';vctx.fillText((index+1)+' / '+videoScenes.length,150,1010)}
 function wrapCanvasText(text,x,y,maxWidth,lineHeight){const words=String(text).split(/\\s+/);let line='',yy=y;for(const word of words){const test=line?line+' '+word:word;if(vctx.measureText(test).width>maxWidth&&line){vctx.fillText(line,x,yy);line=word;yy+=lineHeight}else line=test}if(line)vctx.fillText(line,x,yy)}
