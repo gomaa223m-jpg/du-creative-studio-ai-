@@ -421,7 +421,7 @@ table{display:block;max-width:100%;overflow-x:auto}
 <div><label for="aiVideoEndpoint">رابط خادم الذكاء الاصطناعي</label><input id="aiVideoEndpoint" inputmode="url" placeholder="https://your-worker.workers.dev/api/generate"></div>
 <div><label for="aiVideoToken">رمز وصول التطبيق</label><input id="aiVideoToken" type="password" autocomplete="off" placeholder="أنشئ الرمز ثم أضفه إلى أسرار Worker"><button type="button" class="light" id="generateAiVideoToken" style="margin-top:8px">إنشاء رمز وصول آمن ونسخه</button></div>
 </div>
-<div class="grid"><button type="button" id="freeWriteVideoScript">✦ إنشاء سيناريو ومشاهد مجاناً دون API</button><button type="button" id="aiWriteVideoScript">استخدام محرك ذكاء اصطناعي سحابي (اختياري)</button></div><div class="grid"><button type="button" class="secondary" id="aiSaveVideoGateway">حفظ إعدادات المحرك السحابي لهذه الجلسة</button></div><p class="muted">الوضع المجاني المحلي هو الخيار الافتراضي ولا يحتاج مفتاحاً أو اشتراكاً. المحرك السحابي اختياري وقد يفرض مزوده رسوماً.</p>
+<div class="grid"><button type="button" id="freeWriteVideoScript">✦ إنشاء سيناريو ومشاهد مجاناً دون API</button><button type="button" id="aiWriteVideoScript">استخدام محرك ذكاء اصطناعي سحابي (اختياري)</button></div><div class="grid"><button type="button" class="secondary" id="aiSaveVideoGateway">حفظ إعدادات المحرك السحابي لهذه الجلسة</button><button type="button" class="secondary" id="aiTestVideoGateway">فحص اتصال محرك الفيديو</button></div><p class="muted">الوضع المجاني المحلي هو الخيار الافتراضي ولا يحتاج مفتاحاً أو اشتراكاً. المحرك السحابي اختياري وقد يفرض مزوده رسوماً.</p>
 <p class="status" id="aiVideoGatewayStatus" aria-live="polite">يتطلب هذا الخيار نشر Worker وإعداد أسرار المزود أولاً. لا يعمل قبل إعداد الخادم.</p><p><a href="https://github.com/gomaa223m-jpg/du-creative-studio-ai-/blob/main/VIDEO_GATEWAY_SETUP.md" target="_blank" rel="noopener noreferrer">دليل إعداد محرك الفيديو السحابي خطوة بخطوة</a></p>
 </div>
 <div class="grid">
@@ -1443,6 +1443,25 @@ $('pptxExport').addEventListener('click',async()=>{
   statusEl.textContent=isReaction?'تم إنشاء سيناريو كيميائي متخصص من 7 مشاهد مع معادلات موزونة محلياً. راجع المحتوى ثم اضغط «إخراج ذكي تلقائي» للمعاينة.':'تم إنشاء 7 مشاهد محلياً مجاناً دون اتصال بخادم ذكاء اصطناعي. راجع الدقة العلمية ثم اضغط «إخراج ذكي تلقائي».';
   if(typeof autoDirectVideo==='function')autoDirectVideo();
  });
+ document.getElementById('aiTestVideoGateway')?.addEventListener('click',async()=>{
+   if(!save())return;
+   const button=document.getElementById('aiTestVideoGateway');
+   button.disabled=true;statusEl.textContent='جارٍ فحص بوابة الفيديو وإعداداتها...';
+   try{
+    const healthUrl=new URL(sessionStorage.getItem('eduAiEndpoint'));
+    healthUrl.pathname='/health';healthUrl.search='';healthUrl.hash='';
+    const response=await fetch(healthUrl.toString(),{method:'GET',headers:{'Accept':'application/json'}});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok||data.ok!==true)throw new Error(data.error||('تعذر الوصول إلى الخادم: HTTP '+response.status));
+    if(data.configured!==true){
+     const missing=Array.isArray(data.missing)?data.missing.join(', '):'إعدادات الخادم';
+     throw new Error('الخادم متصل، لكن إعداداته غير مكتملة. العناصر الناقصة: '+missing+'. أضفها في Cloudflare Worker Secrets/Variables.');
+    }
+    statusEl.textContent='الاتصال ناجح — بوابة الذكاء الاصطناعي جاهزة. يمكنك الآن توليد سيناريو الفيديو.';
+   }catch(error){
+    statusEl.textContent='فشل فحص محرك الفيديو: '+(error.message||error)+' — تأكد من رابط Worker وإعدادات Cloudflare وCORS.';
+   }finally{button.disabled=false}
+  });
  document.getElementById('aiSaveVideoGateway')?.addEventListener('click',save);
  document.getElementById('generateAiVideoToken')?.addEventListener('click',async()=>{
    try{
