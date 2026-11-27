@@ -255,6 +255,8 @@ export default {
 
     if (url.pathname.startsWith("/api/v1/images/")) return handleImageEngine(request, env, headersOrigin, url);
 
+    if (request.method === "POST" && url.pathname === "/api/generate") return handleGenerate(request, env, headersOrigin);
+
     if (request.method === "GET" && url.pathname === "/openapi.json") {
       return json({
         openapi: "3.1.0",
@@ -328,6 +330,69 @@ export default {
     return handleBook(request, env, headersOrigin);
   }
 };
+
+
+async function handleGenerate(request, env, headersOrigin) {
+  if (!env.APP_ACCESS_TOKEN) return json({ ok: false, error: "لم يتم إعداد رمز الوصول على الخادم." }, 503, headersOrigin);
+  const auth = request.headers.get("Authorization") || "";
+  if (auth !== "Bearer " + env.APP_ACCESS_TOKEN) return json({ ok: false, error: "رمز الوصول غير صحيح." }, 401, headersOrigin);
+  if (!env.OPENAI_API_KEY) return json({ ok: false, error: "محرك الذكاء الاصطناعي السحابي غير مفعّل. يتطلب مفتاح مزود API وقد تترتب عليه تكلفة؛ استخدم الوضع المحلي المجاني بدلاً منه." }, 503, headersOrigin);
+  const length = Number(request.headers.get("Content-Length") || 0);
+  if (length > 12000) return json({ ok: false, error: "الطلب أكبر من الحد المسموح." }, 413, headersOrigin);
+  let input;
+  try { input = await request.json(); } catch { return json({ ok: false, error: "تعذر قراءة بيانات الطلب." }, 400, headersOrigin); }
+  const task = cleanText(input.task, 40) || "video";
+  const topic = cleanText(input.topic, 180);
+  if (topic.length < 3) return json({ ok: false, error: "أدخل عنواناً واضحاً للدرس." }, 400, headersOrigin);
+  const context = {
+    subject: cleanText(input.subject, 80) || "يُستنتج من عنوان الدرس",
+    grade: cleanText(input.grade, 100) || "يُستنتج مع التصريح بالافتراض",
+    context: cleanText(input.context, 1800)
+  };
+  const sceneSchema = {
+    type: "object", additionalProperties: false,
+    required: ["title", "on_screen_text", "voiceover", "visual"],
+    properties: {
+      title: { type: "string" },
+      on_screen_text: { type: "string" },
+      voiceover: { type: "string" },
+      visual: { type: "string" }
+    }
+  };
+  const outputSchema = {
+    type: "object", additionalProperties: false,
+    required: ["title", "scenes", "voiceover", "content"],
+    properties: {
+      title: { type: "string" },
+      scenes: { type: "array", minItems: 5, maxItems: 10, items: sceneSchema },
+      voiceover: { type: "string" },
+      content: { type: "string" }
+    }
+  };
+  const instructions = `أنت كاتب ومخرج محتوى تعليمي عربي. أنشئ مادة دقيقة وواضحة تناسب السياق، وصرّح بالافتراضات عندما لا تُذكر المرحلة أو المادة. لا تخترع حقائق أو أرقاماً أو مراجع أو معادلات. إذا لم تكن واثقاً من معلومة تخصصية فضع تنبيهاً واضحاً داخل المحتوى. اكتب مشاهد مرئية قابلة للتحويل إلى موشن جرافيك، ونص تعليق صوتي طبيعي، وعناوين قصيرة على الشاشة. لا تدّعِ إنشاء ملف فيديو أو صوت؛ أعد سيناريو ومخطط مشاهد فقط. المهمة: ${task}. العنوان: ${topic}. السياق: ${JSON.stringify(context)}. أخرج JSON مطابقاً للمخطط فقط.`;
+  try {
+    const ai = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + env.OPENAI_API_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: env.AI_MODEL || "gpt-6.2-astra",
+        store: false,
+        max_output_tokens: 7000,
+        instructions,
+        input: "أنشئ المادة الآن مع مراجعة اتساق المصطلحات والتسلسل التعليمي.",
+        text: { format: { type: "json_schema", name: "educational_video_plan", strict: true, schema: outputSchema } }
+      })
+    });
+    const raw = await ai.json().catch(() => ({}));
+    if (!ai.ok) return json({ ok: false, error: String(raw?.error?.message || "تعذر الاتصال بمزود الذكاء الاصطناعي.").slice(0, 450) }, ai.status === 429 ? 429 : 502, headersOrigin);
+    let result;
+    try { result = JSON.parse(getOutputText(raw)); } catch { return json({ ok: false, error: "وصل رد غير مكتمل أو غير منسق. أعد المحاولة." }, 502, headersOrigin); }
+    if (!result || !Array.isArray(result.scenes) || result.scenes.length < 5) return json({ ok: false, error: "المحتوى الناتج غير مكتمل؛ لم يتم اعتماده." }, 502, headersOrigin);
+    return json({ ok: true, result }, 200, headersOrigin);
+  } catch (error) {
+    return json({ ok: false, error: String(error.message || error).slice(0, 300) }, 502, headersOrigin);
+  }
+}
 
 async function handleBook(request, env, headersOrigin) {
     if (!env.OPENAI_API_KEY || !env.APP_ACCESS_TOKEN) {
