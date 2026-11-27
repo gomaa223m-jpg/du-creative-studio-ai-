@@ -1,4 +1,4 @@
-name: Deploy image generation Worker
+name: Deploy EDU Creative Studio Worker
 
 on:
   workflow_dispatch:
@@ -14,39 +14,42 @@ permissions:
 
 jobs:
   deploy:
-    name: Validate configuration and deploy Worker
+    name: Validate and deploy secure Worker
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       APP_ACCESS_TOKEN: ${{ secrets.APP_ACCESS_TOKEN }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       IMAGE_ENGINE_URL: ${{ secrets.IMAGE_ENGINE_URL }}
       IMAGE_CHECKPOINT: ${{ vars.IMAGE_CHECKPOINT }}
+      IMAGE_ENGINE_TOKEN: ${{ secrets.IMAGE_ENGINE_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate required deployment settings
+      - name: Validate deployment credentials
         shell: bash
         run: |
           set -euo pipefail
           missing=()
-          [[ -n "$CLOUDFLARE_API_TOKEN" ]] || missing+=("GitHub Secret: CLOUDFLARE_API_TOKEN")
-          [[ -n "$CLOUDFLARE_ACCOUNT_ID" ]] || missing+=("GitHub Secret: CLOUDFLARE_ACCOUNT_ID")
-          [[ -n "$APP_ACCESS_TOKEN" ]] || missing+=("GitHub Secret: APP_ACCESS_TOKEN")
-          [[ -n "$IMAGE_ENGINE_URL" ]] || missing+=("GitHub Secret: IMAGE_ENGINE_URL")
-          [[ -n "$IMAGE_CHECKPOINT" ]] || missing+=("GitHub Variable: IMAGE_CHECKPOINT")
+          [[ -n "$CLOUDFLARE_API_TOKEN" ]] || missing+=("CLOUDFLARE_API_TOKEN")
+          [[ -n "$CLOUDFLARE_ACCOUNT_ID" ]] || missing+=("CLOUDFLARE_ACCOUNT_ID")
+          [[ -n "$APP_ACCESS_TOKEN" ]] || missing+=("APP_ACCESS_TOKEN")
           if (( ${#missing[@]} )); then
-            printf '::error::Worker deployment blocked. Configure these repository settings:\n'
+            printf '::error::Worker deployment blocked. Add these GitHub Actions secrets:\n'
             printf ' - %s\n' "${missing[@]}"
             exit 1
           fi
-          case "$IMAGE_ENGINE_URL" in
-            https://*) ;;
-            *) echo "::error::IMAGE_ENGINE_URL must be a protected HTTPS URL."; exit 1 ;;
-          esac
+          if [[ -n "$IMAGE_ENGINE_URL" && "$IMAGE_ENGINE_URL" != https://* ]]; then
+            echo "::error::IMAGE_ENGINE_URL must use HTTPS."
+            exit 1
+          fi
+          if [[ -n "$IMAGE_ENGINE_URL" && -z "$IMAGE_CHECKPOINT" ]]; then
+            echo "::warning::IMAGE_ENGINE_URL is set but IMAGE_CHECKPOINT is missing; image generation will remain unavailable."
+          fi
 
-      - name: Deploy Worker and apply image engine configuration
+      - name: Deploy Worker core
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
@@ -54,10 +57,38 @@ jobs:
           command: deploy --config wrangler.toml
           secrets: |
             APP_ACCESS_TOKEN
-            IMAGE_ENGINE_URL
-          vars: |
-            IMAGE_CHECKPOINT
         env:
           APP_ACCESS_TOKEN: ${{ env.APP_ACCESS_TOKEN }}
+
+      - name: Configure optional cloud text AI
+        if: ${{ env.OPENAI_API_KEY != '' }}
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: secret put OPENAI_API_KEY
+        env:
+          OPENAI_API_KEY: ${{ env.OPENAI_API_KEY }}
+
+      - name: Configure optional ComfyUI image engine
+        if: ${{ env.IMAGE_ENGINE_URL != '' && env.IMAGE_CHECKPOINT != '' }}
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.toml
+          secrets: |
+            IMAGE_ENGINE_URL
+        env:
           IMAGE_ENGINE_URL: ${{ env.IMAGE_ENGINE_URL }}
           IMAGE_CHECKPOINT: ${{ env.IMAGE_CHECKPOINT }}
+
+      - name: Configure optional ComfyUI bearer token
+        if: ${{ env.IMAGE_ENGINE_TOKEN != '' && env.IMAGE_ENGINE_URL != '' && env.IMAGE_CHECKPOINT != '' }}
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: secret put IMAGE_ENGINE_TOKEN
+        env:
+          IMAGE_ENGINE_TOKEN: ${{ env.IMAGE_ENGINE_TOKEN }}
