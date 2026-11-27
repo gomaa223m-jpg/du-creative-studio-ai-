@@ -250,7 +250,7 @@ export default {
 
     const url = new URL(request.url);
     if (request.method === "GET" && ["/health", "/api/v1/health"].includes(url.pathname)) {
-      return json({ ok: true, service: "edu-creative-studio-api", apiVersion: "v1", mcp: "/mcp", tools: ["health", "generate_book"] }, 200, headersOrigin);
+      return json({ ok: true, service: "edu-creative-studio-api", apiVersion: "v1", mcp: "/mcp", tools: ["health", "generate_video_plan", "generate_book"] }, 200, headersOrigin);
     }
 
     if (url.pathname.startsWith("/api/v1/images/")) return handleImageEngine(request, env, headersOrigin, url);
@@ -264,6 +264,7 @@ export default {
         servers: [{ url: url.origin }],
         paths: {
           "/api/v1/health": { get: { summary: "Service health", responses: { "200": { description: "Service status" } } } },
+          "/api/generate": { post: { summary: "Generate an Arabic educational video script and scene plan", security: [{ bearerAuth: [] }], requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["topic"], properties: { task: { type: "string" }, topic: { type: "string" }, subject: { type: "string" }, grade: { type: "string" }, context: { type: "string" } } } } } }, responses: { "200": { description: "Generated script and scene plan" }, "401": { description: "Unauthorized" }, "503": { description: "Cloud AI is not configured" } } } },
           "/api/v1/books/generate": { post: { summary: "Generate an educational book", security: [{ bearerAuth: [] }], requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["title"], properties: { title: { type: "string" }, subject: { type: "string" }, grade: { type: "string" }, term: { type: "string" }, type: { type: "string" }, size: { type: "string" }, level: { type: "string" }, design: { type: "string" }, extra: { type: "string" } } } } } }, responses: { "200": { description: "Generated book and review" }, "401": { description: "Unauthorized" }, "503": { description: "Service not configured" } } } }
         },
         components: { securitySchemes: { bearerAuth: { type: "http", scheme: "bearer" } } }
