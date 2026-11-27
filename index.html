@@ -725,7 +725,7 @@ renderProjects();
 function extractByTerms(terms){const t=needContent();if(!t)return null;const lines=t.split(/\\r?\\n/);const hits=[];let active=false;for(const line of lines){const heading=/^\\s*(?:#{1,4}\\s*)?/.test(line)&&terms.some(x=>line.includes(x));if(heading){active=true;hits.push(line);continue}if(active&&/^\\s*(?:#{1,4}\\s*)?(?:[0-9٠-٩]+[.、)\\-]|القسم|الوحدة|الفصل)\\s*/.test(line)&&!terms.some(x=>line.includes(x)))active=false;if(active)hits.push(line)}return hits.length?hits.join('\\n'):null}
 $('exportWorksheets').addEventListener('click',()=>{const t=extractByTerms(['أوراق العمل','ورقة العمل','ورقة عمل']);if(!t){$('exportStatus').textContent='لم أجد عنواناً واضحاً لأوراق العمل؛ تأكد من وجود قسم مستقل بهذا الاسم.';return}saveBlob(safeFileName($('topic').value)+'-أوراق-العمل.txt',t,'text/plain;charset=utf-8');$('exportStatus').textContent='تم استخراج قسم أوراق العمل.'});
 $('exportLesson').addEventListener('click',()=>{const t=extractByTerms(['التحضير','الشرح الكامل','خطة الدرس']);if(!t){$('exportStatus').textContent='لم أجد قسماً واضحاً للتحضير أو الشرح.';return}saveBlob(safeFileName($('topic').value)+'-التحضير-والشرح.txt',t,'text/plain;charset=utf-8');$('exportStatus').textContent='تم استخراج التحضير والشرح.'});
-$('exportVideoPlan').addEventListener('click',()=>{const t=extractByTerms(['الفيديوهات التعليمية','سيناريو الفيديو','الفيديو التعليمي']);const source=t||needContent();if(!source)return;const lines=source.split(/\\r?\\n/).filter(Boolean);const srt=lines.filter(x=>/تعليق صوتي|المشهد|مشهد|لقطة|الثانية|00:|مدة الفيديو/.test(x)).map((x,i)=>{const start=i*8;const fmt=n=>[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':')+',000';return (i+1)+'\\n'+fmt(start)+' --> '+fmt(start+7)+'\\n'+x}).join('\\n\\n');saveBlob(safeFileName($('topic').value)+'-خطة-الفيديو.txt',source,'text/plain;charset=utf-8');if(srt)saveBlob(safeFileName($('topic').value)+'-ترجمة-مبدئية.srt',srt,'text/plain;charset=utf-8');$('exportStatus').textContent='تم تصدير خطة الفيديو'+(srt?' وملف ترجمة مبدئي SRT.':'؛ لم تُستخرج أسطر مناسبة للترجمة.')});
+$('exportVideoPlan').addEventListener('click',()=>{const t=extractByTerms(['الفيديوهات التعليمية','سيناريو الفيديو','الفيديو التعليمي']);const source=t||needContent();if(!source)return;const lines=source.split(/\\r?\\n/).filter(Boolean);const srt=lines.filter(x=>/تعليق صوتي|المشهد|مشهد|لقطة|الثانية|00:|مدة الفيديو/.test(x)).map((x,i)=>{const start=i*8;const fmt=n=>[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':')+',000';return (i+1)+'\\n'+fmt(start)+' --> '+fmt(start+7)+'\\n'+x}).join('\n\n');saveBlob(safeFileName($('topic').value)+'-خطة-الفيديو.txt',source,'text/plain;charset=utf-8');if(srt)saveBlob(safeFileName($('topic').value)+'-ترجمة-مبدئية.srt',srt,'text/plain;charset=utf-8');$('exportStatus').textContent='تم تصدير خطة الفيديو'+(srt?' وملف ترجمة مبدئي SRT.':'؛ لم تُستخرج أسطر مناسبة للترجمة.')});
 $('exportPptx').addEventListener('click',async()=>{
  const raw=needContent();if(!raw)return;
  const btn=$('exportPptx');btn.disabled=true;btn.textContent='جارٍ تحليل المحتوى وتصميم الشرائح...';
@@ -931,7 +931,7 @@ function autoBuildVideoScript(){
  const supplied=($('generatedContent')&&$('generatedContent').value.trim())||'';
  let body='';
  if(supplied){
-  body=supplied.split(/\\n+/).map(x=>x.trim()).filter(x=>x.length>25).slice(0,18).join('\\n\\n');
+  body=supplied.split(/\n+/).map(x=>x.trim()).filter(x=>x.length>25).slice(0,18).join('\n\n');
  }
  if(!body){
   body=[
@@ -944,7 +944,7 @@ function autoBuildVideoScript(){
    'اختبر فهمك: اطرح سؤالاً قصيراً ثم اعرض الإجابة وتفسيرها في المشهد التالي.',
    'خلاصة بصرية: لخص ثلاث رسائل أساسية في بطاقة واضحة.',
    'دعوة للتفاعل: اختم بسؤال للجمهور وعبارة ختامية قصيرة.'
-  ].join('\\n\\n');
+  ].join('\n\n');
  }
  $('videoScript').value=body;
  makeVideoScenes();drawVideoScene(0,0);
@@ -963,7 +963,7 @@ $('speakVideoScript').addEventListener('click',()=>{
  u.onerror=()=>{$('videoStatus').textContent='تعذر تشغيل الصوت في هذا الجهاز.'};
  window.speechSynthesis.speak(u);
 });
-function makeVideoScenes(){const raw=$('videoScript').value.trim()||$('generatedContent').value.trim()||$('out').textContent;const lines=raw.split(/\\n+/).map(x=>x.replace(/^\\s*(?:[-*#]+|[0-9٠-٩]+[.)、-])\\s*/,'').trim()).filter(x=>x.length>12);const unique=lines.filter((x,i)=>i===0||x!==lines[i-1]);videoScenes=(unique.length?unique:[$('topic').value||'رحلة تعلم ممتعة']).slice(0,36).map((text,i)=>({title:i===0?currentVideoTitle():('الفكرة '+(i+1)),text:text.slice(0,240)}));return videoScenes}
+function makeVideoScenes(){const raw=$('videoScript').value.trim()||$('generatedContent').value.trim()||$('out').textContent;const lines=raw.split(/\n+/).map(x=>x.replace(/^\s*(?:[-*#]+|[0-9٠-٩]+[.)、-])\s*/,'').trim()).filter(x=>x.length>12);const unique=lines.filter((x,i)=>i===0||x!==lines[i-1]);videoScenes=(unique.length?unique:[$('topic').value||'رحلة تعلم ممتعة']).slice(0,36).map((text,i)=>({title:i===0?currentVideoTitle():('الفكرة '+(i+1)),text:text.slice(0,240)}));return videoScenes}
 function directScene(s,i){
  const k=sceneKind(s),t=(s.title+' '+s.text).toLowerCase();
  const plan={
@@ -1097,7 +1097,7 @@ const panelX=style==='infographic'?90:440,panelW=W-panelX-95;rr(panelX,95,panelW
 rr(panelX,H-330,panelW,235,25,'rgba(2,12,26,.82)','rgba(255,255,255,.2)');vctx.fillStyle='#f5f8fc';vctx.font='bold 37px Tahoma';wrapCanvasText(s.text,W-135,H-245,panelW-100,57);
 if($('subtitleMode')&&$('subtitleMode').value==='on'){const sub=avatarActiveCue?.text||(s.text||s.title);rr(440,H-430,W-535,76,18,'rgba(0,0,0,.82)','rgba(255,255,255,.48)');vctx.textAlign='center';vctx.direction='rtl';vctx.fillStyle='#fff';vctx.font='bold 27px Tahoma';wrapCanvasText(sub,W-95,H-382,W-610,33)}
 vctx.fillStyle='rgba(255,255,255,.25)';vctx.fillRect(95,H-55,W-190,8);vctx.fillStyle=pal[2];vctx.fillRect(95,H-55,(W-190)*Math.max(.03,progress),8);vctx.textAlign='left';vctx.direction='ltr';vctx.fillStyle='#fff';vctx.font='26px Tahoma';vctx.fillText((index+1)+' / '+videoScenes.length,100,H-75);vctx.textAlign='right';vctx.direction='rtl';vctx.fillText(style==='anime'?'ANIME EDU':style==='cartoon'?'3D CARTOON':style==='science'?'SCIENCE LAB':style==='infographic'?'MOTION INFOGRAPHIC':'CINEMATIC EDU',W-100,H-75)}
-function wrapCanvasText(text,x,y,maxWidth,lineHeight){const words=String(text).split(/\\s+/);let line='',yy=y;for(const word of words){const test=line?line+' '+word:word;if(vctx.measureText(test).width>maxWidth&&line){vctx.fillText(line,x,yy);line=word;yy+=lineHeight}else line=test}if(line)vctx.fillText(line,x,yy)}
+function wrapCanvasText(text,x,y,maxWidth,lineHeight){const words=String(text).split(/\s+/);let line='',yy=y;for(const word of words){const test=line?line+' '+word:word;if(vctx.measureText(test).width>maxWidth&&line){vctx.fillText(line,x,yy);line=word;yy+=lineHeight}else line=test}if(line)vctx.fillText(line,x,yy)}
 $('previewVideo').addEventListener('click',()=>{if(!videoScenes.length||!videoScenes[0].director)autoDirectVideo();videoFrame=0;let started=performance.now(),idx=0;if(videoPreviewTimer)clearInterval(videoPreviewTimer);const tick=()=>{const s=videoScenes[idx],dur=(s.director&&s.director.duration||Number($('videoSeconds').value)||7)*1000,elapsed=performance.now()-started;if(elapsed>=dur){idx=(idx+1)%videoScenes.length;started=performance.now()}videoFrame=idx;drawVideoScene(idx,Math.min(1,(performance.now()-started)/dur));};tick();videoPreviewTimer=setInterval(tick,80);$('videoStatus').textContent='المعاينة تعمل بتوقيت كل مشهد، مع الترجمة الظاهرة وفق الإعداد.'});
 $('shareVideo').addEventListener('click',async()=>{
  if(!lastRenderedVideoFile){$('videoStatus').textContent='أنشئ الفيديو أولاً.';return}
